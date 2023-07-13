@@ -9,8 +9,7 @@ Welcome to RedefiningFE's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-
+	cells   <cell_complex.rst>
 
 Indices and tables
 ==================
