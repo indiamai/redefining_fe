@@ -25,17 +25,30 @@ class CellComplex():
 	def __init__(self):
 		self.points = {}
 		self.edges ={} 
+		self.dmplex = None
 
-	def add_point(self, point, num):
+	def add_point(self, point):
 		assert isinstance(point, Point)
-		if num not in self.points.keys(): 
-			self.points[num] = point
-		else:
-			print("Point already exists")
+		num = len(self.points) 
+		self.points[num] = point
 	
 	def connect(self, upper, lower, immersion, orientation):
 		assert self.points[upper].dim < self.points[lower].dim
 		self.edges[lower, upper] = (immersion, orientation)	
+	
+	def construct_dmplex(self):
+		self.dmplex = PETSc.DMPlex().create()
+		self.dmplex.setChart(0, len(self.points))		
+		cones = {}
+		for u,l in self.edges:
+			if u in cones.keys():
+				cones[u].append(l)
+			else:
+				cones[u] = [l]	
+		
+		for cone in cones:
+			print(cone)		
+		
 		
 class Point():
 	"""
@@ -58,30 +71,24 @@ class Vertex(Point):
 
 class Interval(Point):
 	"""
+	Class to represent interval points
 	Dimension 1
-	Coordinate System: [-1,1]
+	Coordinate System: (x)
 	"""
 
 	def __init__(self):
 		self.dim = 1
 		super(Interval, self).__init__(Group.S2)
+	
 
 class Triangle(CellComplex):
-	""" Class to represent triangle cells
-
+	""" 
+	Class to represent triangle points 
 	Dimension 2
-
-	Hasse Diagram:
-
-		1     2     3
-                | / \   /\  | 
-		4     6     5 
-		 \    |     /
-		      0
+	Coordinate System: (x,y)
 	"""
 	def __init__(self):
-		self.dmplex = PETSc.DMPlex().createFromCellList(2, [[0,1,2]], [[-1,-np.sqrt(3)/3],[1.,-np.sqrt(3)/3], [0, 2*np.sqrt(3)/3]])
-		super(CellComplex).__init__()
+		super(Triangle, self).__init__(Group.S3)
 
 
 
@@ -90,8 +97,10 @@ if __name__== "__main__":
 	a = Vertex()
 	print(a.group)
 	cell = CellComplex()
-	cell.add_point(a, 1)
-	cell.add_point(Vertex(), 2)
-	cell.add_point(Interval(), 0)
-	cell.connect(1, 0, "immersion", "orientation")
+	cell.add_point(a)
+	cell.add_point(Vertex())
+	cell.add_point(Interval())
+	cell.connect(0, 2, "immersion", "orientation")
+	cell.connect(1, 2, "immersion", "orientation")
 	print(cell.edges)
+	cell.construct_dmplex()
