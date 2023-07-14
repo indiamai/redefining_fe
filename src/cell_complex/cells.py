@@ -33,8 +33,6 @@ class CellComplex():
 		self.points[num] = point
 	
 	def connect(self, upper, lower, immersion, orientation):
-		print("upper", self.points[upper].dim)
-		print("lower", self.points[lower].dim)
 		assert self.points[upper].dim < self.points[lower].dim
 		self.edges[lower, upper] = (immersion, orientation)	
 	
@@ -85,6 +83,7 @@ class Interval(Point):
 	def __init__(self):
 		self.dim = 1
 		super(Interval, self).__init__(Group.S2)
+
 	
 
 class Triangle(Point):
@@ -112,7 +111,7 @@ if __name__== "__main__":
 	print(cell.edges)
 	cell.construct_dmplex()
 	for i in range(3):
-		print(cell.dmplex.getCone(i))
+		print(i, " ",cell.dmplex.getCone(i))
 
 	cell2 = CellComplex()
 	cell2.add_point(Triangle())
