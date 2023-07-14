@@ -16,7 +16,7 @@ class Group(Enum):
 
 class CellComplex():
 	"""
-	Abstract* Class for cell complexes
+	Abstract Class for cell complexes
 
 	Defines operational structure of cell complexes
 
@@ -33,6 +33,8 @@ class CellComplex():
 		self.points[num] = point
 	
 	def connect(self, upper, lower, immersion, orientation):
+		print("upper", self.points[upper].dim)
+		print("lower", self.points[lower].dim)
 		assert self.points[upper].dim < self.points[lower].dim
 		self.edges[lower, upper] = (immersion, orientation)	
 	
@@ -46,8 +48,12 @@ class CellComplex():
 			else:
 				cones[u] = [l]	
 		
-		for cone in cones:
-			print(cone)		
+		for i in cones.keys():
+			self.dmplex.setConeSize(i, len(cones[i]))	
+		self.dmplex.setUp()
+		for i in cones.keys():
+			self.dmplex.setCone(i, cones[i])
+	
 		
 		
 class Point():
@@ -81,13 +87,14 @@ class Interval(Point):
 		super(Interval, self).__init__(Group.S2)
 	
 
-class Triangle(CellComplex):
+class Triangle(Point):
 	""" 
 	Class to represent triangle points 
 	Dimension 2
 	Coordinate System: (x,y)
 	"""
 	def __init__(self):
+		self.dim = 2
 		super(Triangle, self).__init__(Group.S3)
 
 
@@ -104,3 +111,28 @@ if __name__== "__main__":
 	cell.connect(1, 2, "immersion", "orientation")
 	print(cell.edges)
 	cell.construct_dmplex()
+	for i in range(3):
+		print(cell.dmplex.getCone(i))
+
+	cell2 = CellComplex()
+	cell2.add_point(Triangle())
+	cell2.add_point(Vertex())
+	cell2.add_point(Vertex())
+	cell2.add_point(Vertex())
+	cell2.add_point(Interval())
+	cell2.add_point(Interval())
+	cell2.add_point(Interval())
+	
+	cell2.connect(4,0, "i2", "o2")
+	cell2.connect(5,0, "i2", "o2")
+	cell2.connect(6,0, "i2", "o2")
+	cell2.connect(1,4, "i1", "o1")
+	cell2.connect(2,4, "i1", "o1")
+	cell2.connect(2,5, "i1", "o1")
+	cell2.connect(3,5, "i1", "o1")
+	cell2.connect(1,6, "i1", "o1")
+	cell2.connect(3,6, "i1", "o1")
+
+	cell2.construct_dmplex()
+	for i in range(7):
+		print(i, " ", cell2.dmplex.getCone(i))
