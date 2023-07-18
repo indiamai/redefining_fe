@@ -11,14 +11,14 @@ class Group():
 		print(g.G.elements)
 		print(N.G.elements)
 		print(self.G.coset_transversal(N.G))
-		for 
 
 if __name__== "__main__":
 	g = Group(SymmetricGroup(3))
 	print(g.G.is_group)
 	print(g.G.conjugacy_classes())
-	print(g.G.elements)
-	print(g.G.identity)
+	print("elements",g.G.elements)
+	print("id",g.G.identity)
+	print("gen",g.G.generators)
 	g2 = Group(SymmetricGroup(2))
 	print(g2.G.is_subgroup(g.G, strict = False))
 	p = Permutation([0,2,1])
@@ -29,3 +29,5 @@ if __name__== "__main__":
 	perm = PermutationGroup([p])
 	N= Group(perm)
 	g.quotient(N)
+	tet = Group(SymmetricGroup(4))
+	print("gen tet:",tet.G.generators)
