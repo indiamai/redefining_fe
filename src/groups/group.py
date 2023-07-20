@@ -1,5 +1,6 @@
 from sympy.combinatorics.named_groups import SymmetricGroup
 from sympy.combinatorics import Permutation, PermutationGroup
+
 class Group():
 	
 	def __init__(self, G):
@@ -12,6 +13,23 @@ class Group():
 		print(N.G.elements)
 		print(self.G.coset_transversal(N.G))
 
+	def elements(self):
+		return self.G.elements
+
+	def is_element(self, e):
+		return self.G.contains(e)
+
+class S1(Group):
+	def __init__(self):
+		super(S1, self).__init__(SymmetricGroup(1))
+
+class S2(Group):
+	def __init__(self):
+		super(S2, self).__init__(SymmetricGroup(2))
+
+class S3(Group):
+	def __init__(self):
+		super(S3, self).__init__(SymmetricGroup(3))
 if __name__== "__main__":
 	g = Group(SymmetricGroup(3))
 	print(g.G.is_group)
@@ -25,9 +43,12 @@ if __name__== "__main__":
 	print(g.G.contains(p))
 	g3 = g.G.subgroup([p])
 	print(g.G.coset_factor(p))
-
+	
 	perm = PermutationGroup([p])
 	N= Group(perm)
 	g.quotient(N)
 	tet = Group(SymmetricGroup(4))
 	print("gen tet:",tet.G.generators)
+	
+	for e in g.G.elements:
+		print(p*e)	
