@@ -98,6 +98,14 @@ class Interval(Point):
 		self.dim = 1
 		super(Interval, self).__init__(S2())
 
+	def default_cell_complex(self):
+		cell = CellComplex()
+		cell.add_point(Interval())
+		cell.add_point(Vertex())
+		cell.add_point(Vertex())
+		cell.connect(2, 0, "immersion")
+		cell.connect(1, 0, "immersion")
+		return cell
 	
 
 class Triangle(Point):
@@ -110,7 +118,26 @@ class Triangle(Point):
 		self.dim = 2
 		super(Triangle, self).__init__(S3())
 
-
+	def default_cell_complex(self):
+		cell = CellComplex()
+		cell.add_point(Triangle())
+		cell.add_point(Vertex())
+		cell.add_point(Vertex())
+		cell.add_point(Vertex())
+		cell.add_point(Interval())
+		cell.add_point(Interval())
+		cell.add_point(Interval())
+		r = Permutation([1,0])
+		cell.connect(4,0, "i2")
+		cell.connect(5,0, "i2",)
+		cell.connect(6,0, "i2",r)
+		cell.connect(1,4, "i1")
+		cell.connect(2,4, "i1")
+		cell.connect(2,5, "i1")
+		cell.connect(3,5, "i1")
+		cell.connect(1,6, "i1")
+		cell.connect(3,6, "i1")
+		return cell
 
 class Tetrahedron(Point):
 	""" 
@@ -130,35 +157,12 @@ if __name__== "__main__":
 	m = Interval()
 	e = m.group.G.identity	
 	a = Vertex()
-	cell = CellComplex()
-	cell.add_point(a)
-	cell.add_point(Vertex())
-	cell.add_point(Interval())
-	cell.connect(0, 2, "immersion")
-	cell.connect(1, 2, "immersion")
+	cell = m.default_cell_complex() 
 	cell.construct_dmplex()
 	cell.plot()
 	for i in range(3):
 		print(i, " ",cell.dmplex.getCone(i))
-	cell2 = CellComplex()
-	cell2.add_point(Triangle())
-	cell2.add_point(Vertex())
-	cell2.add_point(Vertex())
-	cell2.add_point(Vertex())
-	cell2.add_point(Interval())
-	cell2.add_point(Interval())
-	cell2.add_point(Interval())
-	r = Permutation([1,0])
-	print(Vertex().group.G.identity == r)
-	cell2.connect(4,0, "i2")
-	cell2.connect(5,0, "i2", r)
-	cell2.connect(6,0, "i2", r)
-	cell2.connect(1,4, "i1")
-	cell2.connect(2,4, "i1")
-	cell2.connect(2,5, "i1")
-	cell2.connect(3,5, "i1")
-	cell2.connect(1,6, "i1")
-	cell2.connect(3,6, "i1")
+	cell2 =Triangle().default_cell_complex() 
 	cell2.plot()
 	cell2.construct_dmplex()
 	for i in range(7):
