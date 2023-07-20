@@ -2,7 +2,7 @@ from petsc4py import PETSc
 import numpy as np
 from enum import Enum
 from sympy.combinatorics import Permutation
-from src.groups.group import S1,S2,S3 
+from src.groups.group import S1,S2,S3,S4 
 import matplotlib.pyplot as plt
 
 class CellComplex():
@@ -63,6 +63,8 @@ class CellComplex():
 			(x1,y1) = coords[u]
 			(x2,y2) = coords[l]
 			plt.plot([x1,x2], [y1,y2], color="black")
+			print(self.edges[u,l])
+			plt.annotate(self.points[l].group.perm_name(self.edges[u,l][1]), ((x1+x2)/2, (y1+y2)/2))
 			
 		plt.axis('off')		
 		plt.show()
@@ -110,14 +112,23 @@ class Triangle(Point):
 
 
 
+class Tetrahedron(Point):
+	""" 
+	Class to represent triangle points 
+	Dimension 3
+	Coordinate System: (x,y,z)
+	TODO: Check symmetry group of tets
+	"""
+	def __init__(self):
+		self.dim = 3
+		super(Tetrahedron, self).__init__(S4())
+
+
+
 
 if __name__== "__main__":
 	m = Interval()
-	print(m.group.elements())
 	e = m.group.G.identity	
-	print(m.group.G.identity)
-	print(e)
-	assert m.group.is_element(e)
 	a = Vertex()
 	cell = CellComplex()
 	cell.add_point(a)
@@ -125,7 +136,6 @@ if __name__== "__main__":
 	cell.add_point(Interval())
 	cell.connect(0, 2, "immersion")
 	cell.connect(1, 2, "immersion")
-	print(cell.edges)
 	cell.construct_dmplex()
 	cell.plot()
 	for i in range(3):
@@ -138,7 +148,8 @@ if __name__== "__main__":
 	cell2.add_point(Interval())
 	cell2.add_point(Interval())
 	cell2.add_point(Interval())
-	r = Permutation([0,1])
+	r = Permutation([1,0])
+	print(Vertex().group.G.identity == r)
 	cell2.connect(4,0, "i2")
 	cell2.connect(5,0, "i2", r)
 	cell2.connect(6,0, "i2", r)
@@ -149,7 +160,19 @@ if __name__== "__main__":
 	cell2.connect(1,6, "i1")
 	cell2.connect(3,6, "i1")
 	cell2.plot()
-	exit()
 	cell2.construct_dmplex()
 	for i in range(7):
 		print(i, " ", cell2.dmplex.getCone(i))
+
+	cell3 = CellComplex()
+	cell3.add_point(Tetrahedron())
+	cell3.add_point(Triangle())
+	cell3.add_point(Triangle())
+	cell3.add_point(Triangle())
+	print(cell3.points)
+	rot = Permutation([2,0,1])
+	r = Permutation([0,2,1])
+	cell3.connect(1,0, "i3", rot)
+	cell3.connect(2,0, "i3", r)
+	cell3.connect(3,0, "i3")
+	cell3.plot()
