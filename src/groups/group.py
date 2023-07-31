@@ -1,17 +1,12 @@
 from sympy.combinatorics.named_groups import SymmetricGroup
 from sympy.combinatorics import Permutation, PermutationGroup
+from sympy.combinatorics.fp_groups import CosetTable
 
 class Group():
 	
 	def __init__(self, G):
 		assert G.is_group
 		self.G = G
-	
-	def quotient(self, N):
-		print("Quotient")
-		print(g.G.elements)
-		print(N.G.elements)
-		print(self.G.coset_transversal(N.G))
 	
 	def __truediv__(self, N):
 		print("div")
@@ -22,6 +17,13 @@ class Group():
 		for e in self.G.coset_transversal(N.G):
 			print("a",(p*e).array_form)	
 			print("b",(p*e*e).array_form)
+		quotientGroup = Group(PermutationGroup(coset))
+		print("coset", coset)
+		print("quotient group", quotientGroup.elements())
+		print("main group", self.elements())
+		print(self.G.equals(Group(PermutationGroup(coset))))
+		cst = CosetTable(self.G, N.G)
+		print(cst.table)		
 		return Group(PermutationGroup(coset))
 
 	def elements(self):
@@ -74,16 +76,8 @@ class S4(Group):
 
 if __name__== "__main__":
 	g = S3() 
-	print(g.G.is_group)
 	print(g.perm_name(Permutation([0,2,1])))
-	print(g.G.conjugacy_classes())
-	print("elements",g.G.elements)
-	print("id",g.G.identity)
-	print("gen",g.G.generators)
-	g2 = Group(SymmetricGroup(2))
-	print(g2.G.is_subgroup(g.G, strict = False))
 	p = Permutation([0,2,1])
-	print(g.G.contains(p))
 	g3 = g.G.subgroup([p])
 	print(g.G.coset_factor(p))
 	
@@ -91,9 +85,8 @@ if __name__== "__main__":
 	N= Group(perm)
 	print("N elements")
 	print(N.elements())
-	g.quotient(N)
 	quot = g/N
-	print(quot.elements())
+	print( "Quotient group",quot.elements())
 	tet = Group(SymmetricGroup(4))
 	print("gen tet:",tet.G.generators)
 	
