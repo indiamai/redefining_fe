@@ -129,7 +129,7 @@ class Triangle(Point):
 		cell.add_point(Interval())
 		r = Permutation([1,0])
 		cell.connect(4,0, "i2")
-		cell.connect(5,0, "i2",)
+		cell.connect(5,0, "i2",r)
 		cell.connect(6,0, "i2",r)
 		cell.connect(1,4, "i1")
 		cell.connect(2,4, "i1")
