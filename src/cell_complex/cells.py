@@ -50,10 +50,13 @@ class CellComplex():
 
 	def get_immersion_operator(self,initial_level, output_level, entity_association):
 		# note entity association is currently given by the numbering in the dmplex but may need to look at this
+		# function could have an added option to check all possible paths? that might be too complex. need to assert all paths should be the same.
 		immersion_ops = []
+		current_entity = entity_association
 		for i in range(output_level - initial_level):
-			ops = [self.edges[upper, entity_association][0] for upper in range(len(self.points)) if (upper, entity_association) in self.edges]
-			immersion_ops.append(ops[0])
+			ops = [(upper, self.edges[upper, current_entity][0]) for upper in range(len(self.points)) if (upper, current_entity) in self.edges]
+			current_entity = ops[0][0]
+			immersion_ops.append(ops[0][1])
 
 		#hacky way to nest the functions
 		def immersion_op(x):
@@ -63,6 +66,7 @@ class CellComplex():
 				print(i)
 			return res
 		print(immersion_op("hi"))
+		return immersion_op
 
 	def plot(self):
 		counter = {}
