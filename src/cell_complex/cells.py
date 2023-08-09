@@ -63,9 +63,7 @@ class CellComplex():
 			res = x
 			for i in range(len(immersion_ops), 0, -1):
 				res = immersion_ops[i-1](res)
-				print(i)
 			return res
-		print(immersion_op("hi"))
 		return immersion_op
 
 	def plot(self):
@@ -90,11 +88,6 @@ class CellComplex():
 		plt.axis('off')		
 		plt.show()
 
-def trace_point(v, p):
-	return v(p)
-
-def trace_edge(v, p):
-	pass
 class Point():
 	"""
 	Class to represent Point types
@@ -132,8 +125,10 @@ class Interval(Point):
 		cell.add_point(Interval())
 		cell.add_point(Vertex())
 		cell.add_point(Vertex())
-		cell.connect(2, 0, "immersion")
-		cell.connect(1, 0, "immersion")
+		i_0 = lambda v: v(-1)
+		i_1 = lambda v: v(1)
+		cell.connect(2, 0, i_0)
+		cell.connect(1, 0, i_1)
 		return cell
 		
 	
@@ -158,17 +153,20 @@ class Triangle(Point):
 		cell.add_point(Interval())
 		cell.add_point(Interval())
 		r = Permutation([1,0])
-		i2 = lambda x: "2"+x
-		i1 = lambda x: "1"+x
-		cell.connect(4,0, i2)
-		cell.connect(5,0, i2,r)
-		cell.connect(6,0, i2,r)
-		cell.connect(1,4, i1)
-		cell.connect(2,4, i1)
-		cell.connect(2,5, i1)
-		cell.connect(3,5, i1)
-		cell.connect(1,6, i1)
-		cell.connect(3,6, i1)
+		i_v0 = lambda v: v(-1)
+		i_v1 = lambda v: v(1)
+		i_e0 = lambda v: (lambda x: v(x, -np.sqrt(3)/3)) 
+		i_e1 = lambda v: (lambda a: v(-1+a, -np.sqrt(3)/3 + a*np.sqrt(3)))
+		i_e2 = lambda v: (lambda a: v(1-a, -np.sqrt(3)/3 + a*np.sqrt(3)))
+		cell.connect(4,0, i_e0)
+		cell.connect(5,0, i_e1)
+		cell.connect(6,0, i_e2)
+		cell.connect(1,4, i_v0)
+		cell.connect(2,4, i_v1)
+		cell.connect(2,5, i_v0)
+		cell.connect(3,5, i_v1)
+		cell.connect(1,6, i_v0)
+		cell.connect(3,6, i_v1)
 		return cell
 
 class Tetrahedron(Point):
@@ -191,13 +189,21 @@ if __name__== "__main__":
 	cell = m.default_cell_complex() 
 	cell.construct_dmplex()
 #	cell.plot()
+	imm = cell.get_immersion_operator(0,1,1)
+	print("entity 1")
+	print(imm(lambda x: x**2 + 1))
+	imm = cell.get_immersion_operator(0,1,2)
+	print("entity 2")
+	print("output", imm(lambda x: x**2 + 1))
 	for i in range(3):
 		print(i, " ",cell.dmplex.getCone(i))
 	cell2 =Triangle().default_cell_complex() 
-	cell2.plot()
+#	cell2.plot()
 	cell2.construct_dmplex()
-	cell2.get_immersion_operator(0,1,2)
-	cell2.get_immersion_operator(0,2,2)
+	i1 = cell2.get_immersion_operator(0,1,2)
+	i2 = cell2.get_immersion_operator(0,2,2)
+	print(i1(lambda x: x**2))
+	print(i2(lambda x,y:x**2 + y))
 	for i in range(7):
 		print(i, " ", cell2.dmplex.getCone(i))
 
