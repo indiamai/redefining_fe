@@ -82,7 +82,6 @@ class CellComplex():
 			(x1,y1) = coords[u]
 			(x2,y2) = coords[l]
 			plt.plot([x1,x2], [y1,y2], color="black")
-			print(self.edges[u,l])
 			plt.annotate(self.points[l].group.perm_name(self.edges[u,l][1]), ((x1+x2)/2, (y1+y2)/2))
 			
 		plt.axis('off')		
@@ -156,8 +155,8 @@ class Triangle(Point):
 		i_v0 = lambda v: v(-1)
 		i_v1 = lambda v: v(1)
 		i_e0 = lambda v: (lambda x: v(x, -np.sqrt(3)/3)) 
-		i_e1 = lambda v: (lambda a: v(-1+a, -np.sqrt(3)/3 + a*np.sqrt(3)))
-		i_e2 = lambda v: (lambda a: v(1-a, -np.sqrt(3)/3 + a*np.sqrt(3)))
+		i_e1 = lambda v: (lambda a: v(-1+(a + 1)/2, -np.sqrt(3)/3 + ((a+1)/2)*np.sqrt(3)))
+		i_e2 = lambda v: (lambda a: v(1-(a+1)/2, -np.sqrt(3)/3 + ((a+1)/2)*np.sqrt(3)))
 		cell.connect(4,0, i_e0)
 		cell.connect(5,0, i_e1)
 		cell.connect(6,0, i_e2)
@@ -195,18 +194,28 @@ if __name__== "__main__":
 	imm = cell.get_immersion_operator(0,1,2)
 	print("entity 2")
 	print("output", imm(lambda x: x**2 + 1))
-	for i in range(3):
-		print(i, " ",cell.dmplex.getCone(i))
 	cell2 =Triangle().default_cell_complex() 
 #	cell2.plot()
 	cell2.construct_dmplex()
 	i1 = cell2.get_immersion_operator(0,1,2)
-	i2 = cell2.get_immersion_operator(0,2,2)
-	print(i1(lambda x: x**2))
-	print(i2(lambda x,y:x**2 + y))
-	for i in range(7):
-		print(i, " ", cell2.dmplex.getCone(i))
-
+	i2 = cell2.get_immersion_operator(0,2,3)
+	i4 = cell2.get_immersion_operator(1,2,4)
+	i5 = cell2.get_immersion_operator(1,2,5)
+	i6 = cell2.get_immersion_operator(1,2,6)
+	print(i1(lambda x: x))
+	print(i2(lambda x,y:y))
+	print(i4(lambda x,y: y))
+	space = np.linspace(-1,1,20)
+	edge0 = ([i4(lambda x,y: (x,y))(s) for s in space])
+	unzipped0 = list(zip(*edge0))
+	plt.plot(unzipped0[0], unzipped0[:][1])
+	edge1 = [i6(lambda x,y: (x,y))(s) for s in space]
+	unzipped1 = list(zip(*edge1))
+	plt.plot(unzipped1[0], unzipped1[1])
+	edge2 = [i5(lambda x,y: (x,y))(s) for s in space]
+	unzipped2 = list(zip(*edge2))
+	plt.plot(unzipped2[0], unzipped2[1])
+	plt.show()
 	cell3 = CellComplex()
 	cell3.add_point(Tetrahedron())
 	cell3.add_point(Triangle())
