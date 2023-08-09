@@ -2,7 +2,7 @@ from petsc4py import PETSc
 import numpy as np
 from enum import Enum
 from sympy.combinatorics import Permutation
-from src.groups.group import S1,S2,S3,S4 
+from groups.group import S1,S2,S3,S4 
 import matplotlib.pyplot as plt
 
 class CellComplex():
@@ -22,6 +22,7 @@ class CellComplex():
 		assert isinstance(point, Point)
 		num = len(self.points) 
 		self.points[num] = point
+
 	
 	def connect(self, lower, upper, immersion, orientation=None):
 		assert self.points[lower].dim < self.points[upper].dim
@@ -47,6 +48,22 @@ class CellComplex():
 			self.dmplex.setCone(i, cones[i])
 	
 
+	def get_immersion_operator(self,initial_level, output_level, entity_association):
+		# note entity association is currently given by the numbering in the dmplex but may need to look at this
+		immersion_ops = []
+		for i in range(output_level - initial_level):
+			ops = [self.edges[upper, entity_association][0] for upper in range(len(self.points)) if (upper, entity_association) in self.edges]
+			immersion_ops.append(ops[0])
+
+		#hacky way to nest the functions
+		def immersion_op(x):
+			res = x
+			for i in range(len(immersion_ops), 0, -1):
+				res = immersion_ops[i-1](res)
+				print(i)
+			return res
+		print(immersion_op("hi"))
+
 	def plot(self):
 		counter = {}
 		coords = {}
@@ -68,6 +85,12 @@ class CellComplex():
 			
 		plt.axis('off')		
 		plt.show()
+
+def trace_point(v, p):
+	return v(p)
+
+def trace_edge(v, p):
+	pass
 class Point():
 	"""
 	Class to represent Point types
@@ -85,7 +108,9 @@ class Vertex(Point):
 
 	def __init__(self):
 		self.dim = 0
+		self.coord = ()
 		super(Vertex, self).__init__(S1())
+
 
 class Interval(Point):
 	"""
@@ -95,7 +120,7 @@ class Interval(Point):
 	"""
 
 	def __init__(self):
-		self.dim = 1
+		self.dim = 1	
 		super(Interval, self).__init__(S2())
 
 	def default_cell_complex(self):
@@ -106,6 +131,7 @@ class Interval(Point):
 		cell.connect(2, 0, "immersion")
 		cell.connect(1, 0, "immersion")
 		return cell
+		
 	
 
 class Triangle(Point):
@@ -128,15 +154,17 @@ class Triangle(Point):
 		cell.add_point(Interval())
 		cell.add_point(Interval())
 		r = Permutation([1,0])
-		cell.connect(4,0, "i2")
-		cell.connect(5,0, "i2",r)
-		cell.connect(6,0, "i2",r)
-		cell.connect(1,4, "i1")
-		cell.connect(2,4, "i1")
-		cell.connect(2,5, "i1")
-		cell.connect(3,5, "i1")
-		cell.connect(1,6, "i1")
-		cell.connect(3,6, "i1")
+		i2 = lambda x: "2"+x
+		i1 = lambda x: "1"+x
+		cell.connect(4,0, i2)
+		cell.connect(5,0, i2,r)
+		cell.connect(6,0, i2,r)
+		cell.connect(1,4, i1)
+		cell.connect(2,4, i1)
+		cell.connect(2,5, i1)
+		cell.connect(3,5, i1)
+		cell.connect(1,6, i1)
+		cell.connect(3,6, i1)
 		return cell
 
 class Tetrahedron(Point):
@@ -152,19 +180,20 @@ class Tetrahedron(Point):
 
 
 
-
 if __name__== "__main__":
 	m = Interval()
 	e = m.group.G.identity	
 	a = Vertex()
 	cell = m.default_cell_complex() 
 	cell.construct_dmplex()
-	cell.plot()
+#	cell.plot()
 	for i in range(3):
 		print(i, " ",cell.dmplex.getCone(i))
 	cell2 =Triangle().default_cell_complex() 
 	cell2.plot()
 	cell2.construct_dmplex()
+	cell2.get_immersion_operator(0,1,2)
+	cell2.get_immersion_operator(0,2,2)
 	for i in range(7):
 		print(i, " ", cell2.dmplex.getCone(i))
 
@@ -179,4 +208,5 @@ if __name__== "__main__":
 	cell3.connect(1,0, "i3", rot)
 	cell3.connect(2,0, "i3", r)
 	cell3.connect(3,0, "i3")
-	cell3.plot()
+#	cell3.get_immersion_operator(0,2,2)
+#	cell3.plot()
