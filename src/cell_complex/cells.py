@@ -24,6 +24,13 @@ def topo_pos(G):
 
     return pos_dict
 
+# nested function composition helper function, right to left
+def reduce(func_list, x):
+        prev = x
+        for func in reversed(func_list):
+                prev = func(prev)
+        return prev
+
 class Point():
      
      id_iter = itertools.count()
@@ -46,34 +53,42 @@ class Point():
      def dim(self):
         return self.dimension
 
-     def hasse_diagram(self, show=True, counter = 0):
-        if show:
-                ax = plt.axes()
-        nx.draw_networkx(self.G, pos = topo_pos(self.G), with_labels=True)
-        if show:
-                plt.show()
+     def hasse_diagram(self, counter = 0):
+        ax = plt.axes()
+        nx.draw_networkx(self.G, pos = topo_pos(self.G), with_labels=True, ax=ax)
+        plt.show()
+
+
+     def get_d_entities(self, d, get_class=False):
+        levels = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        if get_class:
+                return [ self.G.nodes.data("point_class")[i] for i in levels[self.dimension - d]]
+        return levels[self.dimension - d]
+     
+     def vertices(self, get_class=False):
+           return self.get_d_entities(0, get_class)
 
      def makeArrow(self, ax,mid,edge,direction=1):
              delta = 0.0001 if direction >= 0 else -0.0001
              x, y = edge(mid)
              dir_x, dir_y = edge(mid+delta)
-             print("arrow")
-             print((x,y))
-             print((dir_x,dir_y))
              ax.arrow(x,y,x-dir_x,y-dir_y,head_width=0.05,head_length=0.1)
 
      def plot(self, show=True, attach= lambda x: x):
         # for now into 2 dimensional space
 
-
         if self.dimension == 2:
                 xs = np.linspace(-1,1, 20)
                 ax = plt.axes()
-                for edge in self.edges:
-                        edgevals = np.array([attach(edge(x)) for x in xs])
-                        plt.plot(edgevals[:, 0], edgevals[:,1])
-                        self.makeArrow(ax, 0, edge)
-                        edge.point.plot(False,edge)
+                for (s,d) in self.G.edges:
+                        attach = self.get_attachment_route(s,d)
+                        if not isinstance(attach(0), int):
+                                edgevals = np.array([attach(x) for x in xs])
+                                print(edgevals)
+                                plt.plot(edgevals[:, 0], edgevals[:,1])
+                        
+                        # self.makeArrow(ax, 0, edge)
+                        # edge.point.plot(False,edge)
         elif self.dimension == 1:
                 xs = [0]
                 for edge in self.edges:
@@ -83,6 +98,12 @@ class Point():
                 raise "Error not implemented general plotting"
         plt.show()
 
+
+
+     def get_attachment_route(self, source, dst):
+        paths = nx.all_simple_edge_paths(self.G, source, dst)
+        attachments = [[self.G[s][d]["edge_class"] for (s,d) in path] for path in paths]
+        return lambda x: reduce(attachments[0], x)
         
         
 
@@ -115,6 +136,8 @@ if __name__ == "__main__":
         edges.append(Point(1, [Edge(vertices[0], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
         edges.append(Point(1, [Edge(vertices[1], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
         a4 = Point(2, [Edge(edges[0], lambda x: [x,-np.sqrt(3)/3]), Edge(edges[1], lambda x: [(x-1)/2, np.sqrt(3)*(3*x +1)/6]), Edge(edges[2], lambda x: [(x+1)/2, np.sqrt(3)*(-3*x +1)/6])])
-        # a4.plot()
-        a4.hasse_diagram()
+        a4.plot()
+        print(a4.vertices())
+        print(a4.get_attachment_route(6,0)(0))
+        # a4.hasse_diagram()
 
