@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import itertools
+import networkx as nx
 
 #temporary group implementation
 e = lambda x: x
@@ -10,14 +12,34 @@ r_tri = lambda x,y : [-x, y]
 # rotation by 60 degrees on triangle
 rot = lambda x,y : [-x/2 - np.sqrt(3)*y/2, np.sqrt(3)*x/2 - y/2]   
 
+# helper function for hasse diagram visualisation
+def topo_pos(G):
+    """Display in topological order, with simple offsetting for legibility"""
+    pos_dict = {}
+    for i, node_list in enumerate(nx.topological_generations(G)):
+        x_offset = len(node_list) / 2
+        y_offset = 0
+        for j, name in enumerate(node_list):
+            pos_dict[name] = (j - x_offset, -i + j * y_offset)
+
+    return pos_dict
+
 class Point():
+     
+     id_iter = itertools.count()
 
      def __init__(self, d, edges=[]):
+        self.id = next(self.id_iter)
         self.dimension = d
         if d == 0:
                 assert(edges == [])
+
+        self.G = nx.DiGraph()
+        self.G.add_node(self.id, point_class = self)
         for edge in edges:
                 assert edge.lower_dim() < self.dimension
+                self.G.add_edge(self.id, edge.point.id, edge_class=edge)
+        self.G = nx.compose_all([self.G] + [edge.point.G for edge in edges])
         self.edges = edges
 
 
@@ -25,14 +47,9 @@ class Point():
         return self.dimension
 
      def hasse_diagram(self, show=True, counter = 0):
-        # this is currently incorrect
         if show:
                 ax = plt.axes()
-        plt.plot(counter, self.dimension, marker = "o")
-        lower_counter = counter
-        for edge in self.edges:
-                ax = edge.hasse_diagram(False, self.dimension, counter, lower_counter)
-                lower_counter += 1
+        nx.draw_networkx(self.G, pos = topo_pos(self.G), with_labels=True)
         if show:
                 plt.show()
 
@@ -46,7 +63,7 @@ class Point():
              ax.arrow(x,y,x-dir_x,y-dir_y,head_width=0.05,head_length=0.1)
 
      def plot(self, show=True, attach= lambda x: x):
-        # for now into 2 dimensional spaceo
+        # for now into 2 dimensional space
 
 
         if self.dimension == 2:
@@ -87,15 +104,17 @@ class Edge():
         def hasse_diagram(self, show, dim, upper_counter, lower_counter):
                 plt.plot([upper_counter, lower_counter], [dim, self.point.dim()])
                 return self.point.hasse_diagram(show, lower_counter)
-
-        #def plot(self):
         
 
 if __name__ == "__main__":
-        a1 = Point(0)
-        a2 = Point(0)
-        a3 = Point(1, [Edge(a1, lambda x: -1), Edge(a2, lambda x: 1)])
-        a4 = Point(2, [Edge(a3, lambda x: [x,-np.sqrt(3)/3],r), Edge(a3, lambda x: [(x-1)/2, np.sqrt(3)*(3*x +1)/6]), Edge(a3, lambda x: [(x+1)/2, np.sqrt(3)*(-3*x +1)/6])])
-        a4.plot()
+        vertices = []
+        for i in range(3):
+               vertices.append(Point(0))
+        edges = []
+        edges.append(Point(1, [Edge(vertices[0], lambda x: -1), Edge(vertices[1], lambda x: 1)]))
+        edges.append(Point(1, [Edge(vertices[0], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
+        edges.append(Point(1, [Edge(vertices[1], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
+        a4 = Point(2, [Edge(edges[0], lambda x: [x,-np.sqrt(3)/3]), Edge(edges[1], lambda x: [(x-1)/2, np.sqrt(3)*(3*x +1)/6]), Edge(edges[2], lambda x: [(x+1)/2, np.sqrt(3)*(-3*x +1)/6])])
+        # a4.plot()
         a4.hasse_diagram()
 
