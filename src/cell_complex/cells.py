@@ -67,6 +67,23 @@ class Point():
      
      def vertices(self, get_class=False):
            return self.get_d_entities(0, get_class)
+     
+     def basis_vectors(self, return_coords = False):
+           vertices = self.vertices()
+           top_level_node = self.get_d_entities(self.dimension)[0]
+           v_0 = vertices[0]
+           if return_coords:
+                v_0_coords = np.array((self.get_attachment_route(top_level_node, v_0)(0)))
+                print(v_0_coords)
+           basis_vecs = []
+           for v in vertices[1:]:
+                 if return_coords:
+                       v_coords = np.array((self.get_attachment_route(top_level_node, v)(0)))
+                       basis_vecs.append(v_coords - v_0_coords)
+                 else:
+                        basis_vecs.append((v, v_0))
+           return basis_vecs
+                 
 
      def makeArrow(self, ax,mid,edge,direction=1):
              delta = 0.0001 if direction >= 0 else -0.0001
@@ -76,26 +93,22 @@ class Point():
 
      def plot(self, show=True, attach= lambda x: x):
         # for now into 2 dimensional space
+        
+        top_level_node = self.get_d_entities(self.dimension)[0]
+        xs = np.linspace(-1,1, 20)
 
-        if self.dimension == 2:
-                xs = np.linspace(-1,1, 20)
-                ax = plt.axes()
-                for (s,d) in self.G.edges:
-                        attach = self.get_attachment_route(s,d)
-                        if not isinstance(attach(0), int):
-                                edgevals = np.array([attach(x) for x in xs])
-                                print(edgevals)
-                                plt.plot(edgevals[:, 0], edgevals[:,1])
-                        
-                        # self.makeArrow(ax, 0, edge)
-                        # edge.point.plot(False,edge)
-        elif self.dimension == 1:
-                xs = [0]
-                for edge in self.edges:
-                        edgevals = np.array([attach(edge(x)) for x in xs])
-                        plt.plot(edgevals[:, 0], edgevals[:,1], marker = "o")
-        else:
-                raise "Error not implemented general plotting"
+        for i in range(self.dimension-1, -1 , -1):
+              nodes = self.get_d_entities(i)
+              for node in nodes:
+                    attach = self.get_attachment_route(top_level_node, node)
+                    if i == 0 :
+                          plt.plot(attach(0)[0], attach(0)[1],'bo')
+                    elif i == 1:
+                          edgevals = np.array([attach(x) for x in xs])
+                          plt.plot(edgevals[:, 0], edgevals[:,1])
+                          # this is missing arrows on edges
+                    else:
+                          raise "Error not implemented general plotting"
         plt.show()
 
 
@@ -136,8 +149,9 @@ if __name__ == "__main__":
         edges.append(Point(1, [Edge(vertices[0], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
         edges.append(Point(1, [Edge(vertices[1], lambda x: -1), Edge(vertices[2], lambda x: 1)]))
         a4 = Point(2, [Edge(edges[0], lambda x: [x,-np.sqrt(3)/3]), Edge(edges[1], lambda x: [(x-1)/2, np.sqrt(3)*(3*x +1)/6]), Edge(edges[2], lambda x: [(x+1)/2, np.sqrt(3)*(-3*x +1)/6])])
-        a4.plot()
+        # a4.plot()
         print(a4.vertices())
-        print(a4.get_attachment_route(6,0)(0))
+        print(a4.basis_vectors())
+        print(a4.basis_vectors(return_coords=True))
         # a4.hasse_diagram()
 
