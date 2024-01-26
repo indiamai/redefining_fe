@@ -41,6 +41,7 @@ def topo_pos(G):
 def fold_reduce(func_list, x):
     """ nested function composition helper function, right to left """
     prev = x
+
     for func in reversed(func_list):
         prev = func(prev)
     return prev
@@ -80,6 +81,14 @@ class Point():
                     for i in levels[self.dimension - d]]
         return levels[self.dimension - d]
 
+    def get_dim_of_node(self, node):
+        levels = [sorted(generation)
+                  for generation in nx.topological_generations(self.G)]
+        for i in range(len(levels)):
+            if node in levels[i]:
+                return self.dimension - i
+        raise "Error: Node not found in graph"
+
     def vertices(self, get_class=False):
         return self.get_d_entities(0, get_class)
 
@@ -104,14 +113,14 @@ class Point():
         delta = 0.0001 if direction >= 0 else -0.0001
         x, y = edge(mid)
         dir_x, dir_y = edge(mid + delta)
-        ax.arrow(x, y, x - dir_x, y - dir_y, head_width=0.05, head_length=0.1)
+        ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
 
     def plot(self, show=True, attach=lambda x: x):
         """ for now into 2 dimensional space """
 
         top_level_node = self.get_d_entities(self.dimension)[0]
         xs = np.linspace(-1, 1, 20)
-
+        ax = plt.gca()
         for i in range(self.dimension - 1, -1, -1):
             nodes = self.get_d_entities(i)
             for node in nodes:
@@ -121,16 +130,24 @@ class Point():
                 elif i == 1:
                     edgevals = np.array([attach(x) for x in xs])
                     plt.plot(edgevals[:, 0], edgevals[:, 1])
-                    # this is missing arrows on edges
+                    self.make_arrow(ax, 0, attach)
                 else:
                     raise "Error not implemented general plotting"
         plt.show()
 
     def get_attachment_route(self, source, dst):
-        # add assertion that the paths are the same
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
+
+        # check all attachments resolve to the same function
+        source_dim = self.get_dim_of_node(source)
+        basis = np.eye(source_dim)
+        for i in range(source_dim):
+            vals = [fold_reduce(attachment, basis[i])
+                    for attachment in attachments]
+            assert all(val == vals[0] for val in vals)
+
         return lambda x: fold_reduce(attachments[0], x)
 
     def orient(self, o):
@@ -174,11 +191,12 @@ if __name__ == "__main__":
     a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
                    Edge(edges[1], lambda x: [(x - 1) / 2,
                                              np.sqrt(3) * (3 * x + 1) / 6]),
-                   Edge(edges[2], lambda x: [(x + 1) / 2,
-                                             np.sqrt(3) * (-3 * x + 1) / 6])])
-#     a4.plot()
+                   Edge(edges[2], lambda x: [(1 - x) / 2,
+                                             np.sqrt(3) * (3 * x + 1) / 6])])
+    a4.plot()
     # print(a4.vertices())
     # print(a4.basis_vectors())
     # print(a4.basis_vectors(return_coords=True))
-    a4.hasse_diagram()
+#     print(a4.get_attachment_route(6, 0))
+#     a4.hasse_diagram()
 #     a4.orient(lambda x: x)
