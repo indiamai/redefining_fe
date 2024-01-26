@@ -9,12 +9,18 @@ import networkx as nx
 def e(x): return x
 
 # reflection on reference interval
+
+
 def r(x): return -x
 
 # reflection on triangle
+
+
 def r_tri(x, y): return [-x, y]
 
 # rotation by 60 degrees on triangle
+
+
 def rot(x, y): return [-x / 2 - np.sqrt(3) * y / 2, np.sqrt(3) * x / 2 - y / 2]
 
 # helper function for hasse diagram visualisation
@@ -30,8 +36,6 @@ def topo_pos(G):
             pos_dict[name] = (j - x_offset, i - j * y_offset)
 
     return pos_dict
-
-
 
 
 def fold_reduce(func_list, x):
@@ -123,7 +127,7 @@ class Point():
         plt.show()
 
     def get_attachment_route(self, source, dst):
-        #add assertion that the paths are the same
+        # add assertion that the paths are the same
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
@@ -168,8 +172,10 @@ if __name__ == "__main__":
                   Edge(vertices[2], lambda x: 1)]))
 
     a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
-                   Edge(edges[1], lambda x: [(x - 1) / 2, np.sqrt(3) * (3 * x + 1) / 6]), 
-                   Edge(edges[2], lambda x: [(x + 1) / 2, np.sqrt(3) * (-3 * x + 1) / 6])])
+                   Edge(edges[1], lambda x: [(x - 1) / 2,
+                                             np.sqrt(3) * (3 * x + 1) / 6]),
+                   Edge(edges[2], lambda x: [(x + 1) / 2,
+                                             np.sqrt(3) * (-3 * x + 1) / 6])])
 #     a4.plot()
     # print(a4.vertices())
     # print(a4.basis_vectors())

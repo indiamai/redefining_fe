@@ -9,7 +9,8 @@ class LinearFunctional():
         self.entity = entity
 
     def transform(self):
-        return LinearFunctional(self.K, self.A.transform(), self.entity.transform())
+        return LinearFunctional(self.K, self.A.transform(),
+                                self.entity.transform())
 
     def eval(self, v):
         return integrate(self.K * self.A(v), self.entity)
