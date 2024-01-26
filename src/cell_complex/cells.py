@@ -27,7 +27,7 @@ def topo_pos(G):
         x_offset = len(node_list) / 2
         y_offset = 0
         for j, name in enumerate(node_list):
-            pos_dict[name] = (j - x_offset, -i + j * y_offset)
+            pos_dict[name] = (j - x_offset, i - j * y_offset)
 
     return pos_dict
 
@@ -96,7 +96,7 @@ class Point():
                 basis_vecs.append((v, v_0))
         return basis_vecs
 
-    def makeArrow(self, ax, mid, edge, direction=1):
+    def make_arrow(self, ax, mid, edge, direction=1):
         delta = 0.0001 if direction >= 0 else -0.0001
         x, y = edge(mid)
         dir_x, dir_y = edge(mid + delta)
@@ -123,6 +123,7 @@ class Point():
         plt.show()
 
     def get_attachment_route(self, source, dst):
+        #add assertion that the paths are the same
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
@@ -169,9 +170,9 @@ if __name__ == "__main__":
     a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
                    Edge(edges[1], lambda x: [(x - 1) / 2, np.sqrt(3) * (3 * x + 1) / 6]), 
                    Edge(edges[2], lambda x: [(x + 1) / 2, np.sqrt(3) * (-3 * x + 1) / 6])])
-    # a4.plot()
+#     a4.plot()
     # print(a4.vertices())
     # print(a4.basis_vectors())
     # print(a4.basis_vectors(return_coords=True))
-    # a4.hasse_diagram()
-    a4.orient(lambda x: x)
+    a4.hasse_diagram()
+#     a4.orient(lambda x: x)

@@ -4,10 +4,10 @@ cell\_complex package
 Submodules
 ----------
 
-cell\_complex.cell\_complex module
-----------------------------------
+cell\_complex.cells module
+--------------------------
 
-.. automodule:: cell_complex.cell_complex
+.. automodule:: cell_complex.cells
    :members:
    :undoc-members:
    :show-inheritance:
