@@ -42,7 +42,6 @@ def topo_pos(G):
 def fold_reduce(func_list, x):
     """ nested function composition helper function, right to left """
     prev = x
-
     for func in reversed(func_list):
         prev = func(prev)
     return prev
@@ -99,7 +98,6 @@ class Point():
         return levels[self.graph_dim() - d]
 
     def get_dim_of_node(self, node):
-
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
         for i in range(len(levels)):
@@ -170,6 +168,7 @@ class Point():
         return lambda x: fold_reduce(attachments[0], x)
 
     def orient(self, o):
+        """ Orientation node is always labelled with -1 """
         top_level_node = self.get_d_entities(self.dimension)[0]
         self.G.add_node(-1, point_class=None)
         self.G.add_edge(-1, top_level_node, edge_class=Edge(None, o=o))
@@ -203,21 +202,21 @@ if __name__ == "__main__":
         Point(1, [Edge(vertices[0], lambda x: -1),
                   Edge(vertices[1], lambda x: 1)]))
     edges.append(
-        Point(1, [Edge(vertices[0], lambda x: -1),
-                  Edge(vertices[2], lambda x: 1)]))
+        Point(1, [Edge(vertices[0], lambda x: 1),
+                  Edge(vertices[2], lambda x: -1)]))
     edges.append(
         Point(1, [Edge(vertices[1], lambda x: -1),
                   Edge(vertices[2], lambda x: 1)]))
 
     a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
-                   Edge(edges[1], lambda x: [(x - 1) / 2,
-                                             np.sqrt(3) * (3 * x + 1) / 6]),
+                   Edge(edges[1], lambda x: [(- x - 1) / 2,
+                                             np.sqrt(3) * (3 * -x + 1) / 6]),
                    Edge(edges[2], lambda x: [(1 - x) / 2,
                                              np.sqrt(3) * (3 * x + 1) / 6])])
     a4.plot()
     print(a4.vertices())
     print(a4.basis_vectors(return_coords=True))
     a4.orient(rot)
-    print(a4.basis_vectors(return_coords=True))
-    a4.hasse_diagram()
+    # print(a4.basis_vectors(return_coords=True))
+    # a4.hasse_diagram()
     a4.plot()
