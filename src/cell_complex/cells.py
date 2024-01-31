@@ -3,31 +3,32 @@ import numpy as np
 import itertools
 import networkx as nx
 
-# temporary group implementation
+
+def e(x):
+    # identity
+    return x
 
 
-def e(x): return x
-
-# reflection on reference interval
-
-
-def r(x): return -x
-
-# reflection on triangle
+def r(x):
+    # reflection on reference interval
+    return -x
 
 
-def r_tri(x, y): return [-x, y]
+def r_tri(xs):
+    # reflection on triangle
+    x, y = xs[0], xs[1]
+    return [-x, y]
 
-# rotation by 60 degrees on triangle
 
-
-def rot(x, y): return [-x / 2 - np.sqrt(3) * y / 2, np.sqrt(3) * x / 2 - y / 2]
-
-# helper function for hasse diagram visualisation
+def rot(xs):
+    # rotation by 60 degrees on triangle
+    x, y = xs
+    return [-x / 2 - np.sqrt(3) * y / 2, np.sqrt(3) * x / 2 - y / 2]
 
 
 def topo_pos(G):
-    """Display in topological order, with simple offsetting for legibility"""
+    """ helper function for hasse diagram visualisation
+    Display in topological order, with simple offsetting for legibility"""
     pos_dict = {}
     for i, node_list in enumerate(nx.topological_generations(G)):
         x_offset = len(node_list) / 2
@@ -62,15 +63,31 @@ class Point():
         for edge in edges:
             assert edge.lower_dim() < self.dimension
             self.G.add_edge(self.id, edge.point.id, edge_class=edge)
-        self.G = nx.compose_all([self.G] + [edge.point.G for edge in edges])
+        self.G = nx.compose_all([self.G]
+                                + [edge.point.get_G() for edge in edges])
         self.edges = edges
 
     def dim(self):
         return self.dimension
 
+    def graph_dim(self):
+        if -1 in self.G.nodes:
+            dim = self.dimension + 1
+        else:
+            dim = self.dimension
+        return dim
+
+    def get_G(self):
+        if -1 in self.G.nodes():
+            temp_G = self.G.copy()
+            temp_G.remove_node(-1)
+            return temp_G
+        return self.G
+
     def hasse_diagram(self, counter=0):
         ax = plt.axes()
-        nx.draw_networkx(self.G, pos=topo_pos(self.G), with_labels=True, ax=ax)
+        nx.draw_networkx(self.get_G(), pos=topo_pos(self.get_G()),
+                         with_labels=True, ax=ax)
         plt.show()
 
     def get_d_entities(self, d, get_class=False):
@@ -78,15 +95,16 @@ class Point():
                   for generation in nx.topological_generations(self.G)]
         if get_class:
             return [self.G.nodes.data("point_class")[i]
-                    for i in levels[self.dimension - d]]
-        return levels[self.dimension - d]
+                    for i in levels[self.graph_dim() - d]]
+        return levels[self.graph_dim() - d]
 
     def get_dim_of_node(self, node):
+
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
         for i in range(len(levels)):
             if node in levels[i]:
-                return self.dimension - i
+                return self.graph_dim() - i
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=False):
@@ -94,7 +112,7 @@ class Point():
 
     def basis_vectors(self, return_coords=False):
         vertices = self.vertices()
-        top_level_node = self.get_d_entities(self.dimension)[0]
+        top_level_node = self.get_d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
         if return_coords:
             v_0_coords = np.array(
@@ -118,7 +136,7 @@ class Point():
     def plot(self, show=True, attach=lambda x: x):
         """ for now into 2 dimensional space """
 
-        top_level_node = self.get_d_entities(self.dimension)[0]
+        top_level_node = self.get_d_entities(self.graph_dim())[0]
         xs = np.linspace(-1, 1, 20)
         ax = plt.gca()
         for i in range(self.dimension - 1, -1, -1):
@@ -127,6 +145,7 @@ class Point():
                 attach = self.get_attachment_route(top_level_node, node)
                 if i == 0:
                     plt.plot(attach(0)[0], attach(0)[1], 'bo')
+                    plt.annotate(node, (attach(0)[0], attach(0)[1]))
                 elif i == 1:
                     edgevals = np.array([attach(x) for x in xs])
                     plt.plot(edgevals[:, 0], edgevals[:, 1])
@@ -152,12 +171,14 @@ class Point():
 
     def orient(self, o):
         top_level_node = self.get_d_entities(self.dimension)[0]
-        print(self.G.edges(top_level_node))
+        self.G.add_node(-1, point_class=None)
+        self.G.add_edge(-1, top_level_node, edge_class=Edge(None, o=o))
+        # maybe duplicate the object here rather than just modifying in place
 
 
 class Edge():
 
-    def __init__(self, point, attachment, o=lambda x: x):
+    def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
         self.attachment = attachment
         self.point = point
         self.o = o
@@ -194,9 +215,9 @@ if __name__ == "__main__":
                    Edge(edges[2], lambda x: [(1 - x) / 2,
                                              np.sqrt(3) * (3 * x + 1) / 6])])
     a4.plot()
-    # print(a4.vertices())
-    # print(a4.basis_vectors())
-    # print(a4.basis_vectors(return_coords=True))
-#     print(a4.get_attachment_route(6, 0))
-#     a4.hasse_diagram()
-#     a4.orient(lambda x: x)
+    print(a4.vertices())
+    print(a4.basis_vectors(return_coords=True))
+    a4.orient(rot)
+    print(a4.basis_vectors(return_coords=True))
+    a4.hasse_diagram()
+    a4.plot()
