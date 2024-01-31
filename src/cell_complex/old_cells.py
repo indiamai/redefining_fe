@@ -2,7 +2,7 @@ from petsc4py import PETSc
 import numpy as np
 from enum import Enum
 from sympy.combinatorics import Permutation
-from groups.group import S1, S2, S3, S4
+from src.groups.old_group import S1, S2, S3, S4
 import matplotlib.pyplot as plt
 
 
