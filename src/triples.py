@@ -23,7 +23,6 @@ class Triple():
 class E():
 
     def __init__(self, X, G_1, G_2):
-        print(G_1)
         assert isinstance(G_1, Group)
         assert isinstance(G_2, Group)
         self.g1 = G_1
@@ -31,8 +30,8 @@ class E():
         self.x = X
 
     def generate(self):
-        l = []
+        ls = []
         for g in self.g1.members:
             for l_g in self.x:
-                l.append(l_g(g))
-        return l
+                ls.append(l_g(g))
+        return ls

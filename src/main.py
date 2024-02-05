@@ -1,5 +1,5 @@
 # top level file for linking together all the packages
-# from firedrake import *
+from firedrake import *
 import numpy as np
 import sympy as sp
 from groups.groups import r, rot, S1, S2, S3
@@ -35,9 +35,29 @@ a4.orient(rot)
 # a4.plot()
 
 
-# set up of CG1
+# set up of DG1
 x = sp.Symbol("x")
 v = sp.Function("v")(x)
-x = [lambda g: v.subs({"x": g(x)})]
-dg1 = Triple(edges[0], ("L2"), E(x, S2(), S1()))
-print(dg1.generate())
+# func1 = v(x)
+xs = [lambda g: v.subs({"x": g(x)})]
+dg1 = Triple(edges[0], ("L2"), E(xs, S2(), S1()))
+ls = dg1.generate()
+print(ls)
+
+# def my_v(*x):
+#     print("in my v")
+#     print(x)
+#     return -1
+# from sympy import log, sin, cos, tan, Wild, Mul, Add
+# from sympy.abc import y
+# print(sp.sympify("k+x").evalf(subs={"k": 1}))
+# f = sp.log(sp.sin(y)) + sp.tan(sp.sin(y**2))
+# print(f.replace(sp.sin, sp.cos))
+# print(f.replace(sp.sin, my_v))
+
+# for l in ls:
+#     print(l)
+#     print(sp.srepr(l))
+#     print(l.replace(v, my_v))
+#     # print(l.replace(v(*), my_v(*)))
+    

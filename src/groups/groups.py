@@ -7,16 +7,18 @@ class Group():
         self.members = []
 
 
-
 def e(x):
     # identity
     return x
 
 
 def r(x):
-    # reflects the first component of the input array
-    x[0] = -x[0]
-    return x
+    if isinstance(x, np.ndarray):
+        # if input is array, reflects the first component
+        x[0] = -x[0]
+        return x
+    # otherwise just inverts the input
+    return -x
 
 
 def rot(xs, rad=2*np.pi/3):

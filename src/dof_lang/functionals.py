@@ -1,12 +1,15 @@
 
 
-class LinearFunctional():
+class Generator():
 
-    def __init__(self, K, A, entity):
+    def __init__(self, functional):
 
         self.K = K
         self.A = A
         self.entity = entity
+    
+    def __call__(self, g):
+        
 
     def transform(self):
         return LinearFunctional(self.K, self.A.transform(),
