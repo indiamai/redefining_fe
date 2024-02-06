@@ -4,6 +4,8 @@ import numpy as np
 import sympy as sp
 from groups.groups import r, rot, S1, S2, S3
 from cell_complex.cells import Point, Edge
+from FIAT.functional import PointEvaluation
+from FIAT.reference_element import UFCInterval, UFCTriangle
 from triples import Triple, E
 
 
@@ -26,7 +28,7 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
                                          np.sqrt(3) * (3 * -x + 1) / 6]),
                Edge(edges[2], lambda x: [(1 - x) / 2,
                                          np.sqrt(3) * (3 * x + 1) / 6])])
-# a4.plot()
+a4.plot()
 # print(a4.vertices())
 # print(a4.basis_vectors(return_coords=True))
 a4.orient(rot)
@@ -35,14 +37,39 @@ a4.orient(rot)
 # a4.plot()
 
 
-# set up of DG1
-x = sp.Symbol("x")
-v = sp.Function("v")(x)
-# func1 = v(x)
-xs = [lambda g: v.subs({"x": g(x)})]
+# set up of DG1 on the interval
+# x = sp.Symbol("x")
+# v = sp.Function("v")(x)
+# # func1 = v(x)
+# xs = [lambda g: v.subs({"x": g(x)})]
+# dg1 = Triple(edges[0], ("L2"), E(xs, S2(), S1()))
+# ls = dg1.generate()
+# print(ls)
+
+# alt dg1 on interval
+ref_interval = UFCInterval()
+xs = [lambda g: PointEvaluation(ref_interval, g((-1,)))]
 dg1 = Triple(edges[0], ("L2"), E(xs, S2(), S1()))
 ls = dg1.generate()
-print(ls)
+for l in ls:
+    print(l.tostr())
+
+# alt dg1 on interval
+ref_triangle = UFCTriangle()
+xs = [lambda g: PointEvaluation(ref_triangle, g((-1, -np.sqrt(3)/3)))]
+dg1 = Triple(a4, ("L2"), E(xs, S3()/S2(), S1()))
+ls = dg1.generate()
+for l in ls:
+    print(l.tostr())
+
+# set up of DG1 on the triangle
+# x = sp.Symbol("x")
+# y = sp.Symbol("y")
+# v = sp.Function("v")(x, y)
+# xs = [lambda g: v.subs({"x": g(x, y)[0], "y": g(x, y)[1]})]
+# dg1 = Triple(edges[0], ("L2"), E(xs, S2(), S1()))
+# ls = dg1.generate()
+# print(ls)
 
 # def my_v(*x):
 #     print("in my v")
