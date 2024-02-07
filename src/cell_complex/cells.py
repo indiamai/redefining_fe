@@ -26,6 +26,13 @@ def fold_reduce(func_list, x):
     return prev
 
 
+def construct_attach_func(attachments, x):
+    res = fold_reduce(attachments[0], x)
+    if isinstance(res, int):
+        return (res,)
+    return tuple(res)
+
+
 class Point():
 
     id_iter = itertools.count()
@@ -42,7 +49,7 @@ class Point():
             assert edge.lower_dim() < self.dimension
             self.G.add_edge(self.id, edge.point.id, edge_class=edge)
         self.G = nx.compose_all([self.G]
-                                + [edge.point.get_G() for edge in edges])
+                                + [edge.point.get_graph() for edge in edges])
         self.edges = edges
 
     def dim(self):
@@ -55,7 +62,7 @@ class Point():
             dim = self.dimension
         return dim
 
-    def get_G(self):
+    def get_graph(self):
         if -1 in self.G.nodes():
             temp_G = self.G.copy()
             temp_G.remove_node(-1)
@@ -64,7 +71,7 @@ class Point():
 
     def hasse_diagram(self, counter=0):
         ax = plt.axes()
-        nx.draw_networkx(self.get_G(), pos=topo_pos(self.get_G()),
+        nx.draw_networkx(self.get_graph(), pos=topo_pos(self.get_graph()),
                          with_labels=True, ax=ax)
         plt.show()
 
@@ -144,7 +151,12 @@ class Point():
                     for attachment in attachments]
             assert all(val == vals[0] for val in vals)
 
-        return lambda x: fold_reduce(attachments[0], x)
+        return lambda x: construct_attach_func(attachments, x)
+ 
+    def get_G(self, dst):
+        print(dst)
+        top_level_node = self.get_d_entities(self.graph_dim())[0]
+        return self.get_attachment_route(top_level_node, dst)
 
     def orient(self, o):
         """ Orientation node is always labelled with -1 """
