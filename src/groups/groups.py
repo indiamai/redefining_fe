@@ -14,6 +14,8 @@ def e(x):
 
 def r(x):
     # reflection in the first component
+    if isinstance(x, int):
+        x = [x]
     x_list = list(x)
     x_list[0] = -x_list[0]
     return tuple(x_list)
