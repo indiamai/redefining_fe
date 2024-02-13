@@ -7,8 +7,18 @@ class Group():
         self.members = members
 
 
+class GroupMember():
+    def __init__(self, name):
+        self.name = name
+
+
+# class e(GroupMember):
+#     # identity
+
+#     def __call__(x):
+#         return x
+
 def e(x):
-    # identity
     return x
 
 
@@ -28,49 +38,49 @@ def rot(xs, rad=2*np.pi/3):
     return res
 
 
-class S1(Group):
+class clsS1(Group):
 
     def __init__(self):
-        super(S1, self).__init__()
-        self.members = [lambda x: x]
+        super(clsS1, self).__init__()
+        self.members = [e]
+        
 
-
-class S2(Group):
+class clsS2(Group):
     def __init__(self):
-        super(S2, self).__init__()
+        super(clsS2, self).__init__()
         self.members = [e, r]
 
 
-class S3(Group):
+class clsS3(Group):
 
     def __init__(self):
         self.rot = rot
-        super(S3, self).__init__(members=[e, r, self.rot,
-                                          lambda x: self.rot(r(x)),
-                                          lambda x: self.rot(self.rot(x)),
-                                          lambda x: self.rot(self.rot(r(x)))])
+        super(clsS3, self).__init__(members=[e, r, self.rot,
+                                             lambda x: self.rot(r(x)),
+                                             lambda x: self.rot(self.rot(x)),
+                                             lambda x: self.rot(self.rot(r(x)))])
 
     def __truediv__(self, other_frac):
-        if isinstance(other_frac, S2):
+        if isinstance(other_frac, clsS2):
             return Group([e, self.rot, lambda x: self.rot(self.rot(x))])
         else:
             raise "Unknown quotient"
 
 
-class D4(Group):
+class clsD4(Group):
     def __init__(self):
         self.rot = lambda x: rot(x, np.pi / 2)
-        super(D4, self).__init__(members=[e, r, self.rot,
-                                          lambda x: self.rot(r(x)),
-                                          lambda x: self.rot(self.rot(x)),
-                                          lambda x: self.rot(self.rot(r(x))),
-                                          lambda x: self.rot(
-                                                    self.rot(self.rot(x))),
-                                          lambda x: self.rot(
-                                                    self.rot(self.rot(r(x))))])
+        super(clsD4, self).__init__(members=[e, r, self.rot,
+                                             lambda x: self.rot(r(x)),
+                                             lambda x: self.rot(self.rot(x)),
+                                             lambda x: self.rot(self.rot(r(x))),
+                                             lambda x: self.rot(
+                                                       self.rot(self.rot(x))),
+                                             lambda x: self.rot(
+                                                       self.rot(self.rot(r(x))))])
 
     def __truediv__(self, other_frac):
-        if isinstance(other_frac, S2):
+        if isinstance(other_frac, clsS2):
             return Group([e, self.rot,
                           lambda x: self.rot(self.rot(x)),
                           lambda x: self.rot(self.rot(self.rot(x)))])
@@ -78,5 +88,9 @@ class D4(Group):
             raise "Unknown quotient"
 
 
+S1 = clsS1()
+S2 = clsS2()
+S3 = clsS3()
+D4 = clsD4()
 if __name__ == "__main__":
     print(rot([4, 5]))

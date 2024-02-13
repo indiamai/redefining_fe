@@ -34,6 +34,13 @@ def construct_attach_func(attachments, x):
     return tuple(res)
 
 
+def make_arrow(ax, mid, edge, direction=1):
+    delta = 0.0001 if direction >= 0 else -0.0001
+    x, y = edge(mid)
+    dir_x, dir_y = edge(mid + delta)
+    ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
+
+
 class Point():
 
     id_iter = itertools.count()
@@ -103,24 +110,18 @@ class Point():
         v_0 = vertices[0]
         if return_coords:
             v_0_coords = np.array(
-                (self.attachment_route(top_level_node, v_0)(0)))
+                (self.attachment(top_level_node, v_0)(0)))
         basis_vecs = []
         for v in vertices[1:]:
             if return_coords:
                 v_coords = np.array(
-                    (self.attachment_route(top_level_node, v)(0)))
+                    (self.attachment(top_level_node, v)(0)))
                 basis_vecs.append(v_coords - v_0_coords)
             else:
                 basis_vecs.append((v, v_0))
         return basis_vecs
 
-    def make_arrow(self, ax, mid, edge, direction=1):
-        delta = 0.0001 if direction >= 0 else -0.0001
-        x, y = edge(mid)
-        dir_x, dir_y = edge(mid + delta)
-        ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
-
-    def plot(self, show=True, attach=lambda x: x):
+    def plot(self):
         """ for now into 2 dimensional space """
 
         top_level_node = self.d_entities(self.graph_dim())[0]
@@ -129,7 +130,7 @@ class Point():
         for i in range(self.dimension - 1, -1, -1):
             nodes = self.d_entities(i)
             for node in nodes:
-                attach = self.attachment_route(top_level_node, node)
+                attach = self.attachment(top_level_node, node)
                 if i == 0:
                     plotted = attach(0)
                     if len(plotted) < 2:
@@ -143,7 +144,7 @@ class Point():
                         plt.plot(edgevals[:, 0], 0)
                     else:
                         plt.plot(edgevals[:, 0], edgevals[:, 1])
-                    self.make_arrow(ax, 0, attach)
+                    make_arrow(ax, 0, attach)
                 elif i == 2:
                     # write surface plot here
                     continue
@@ -151,7 +152,7 @@ class Point():
                     raise "Error not implemented general plotting"
         plt.show()
 
-    def attachment_route(self, source, dst):
+    def attachment(self, source, dst):
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
@@ -170,9 +171,9 @@ class Point():
 
         return lambda x: construct_attach_func(attachments, x)
 
-    def cell_attachment_route(self, dst):
+    def cell_attachment(self, dst):
         top_level_node = self.d_entities(self.graph_dim())[0]
-        return self.attachment_route(top_level_node, dst)
+        return self.attachment(top_level_node, dst)
 
     def orient(self, o):
         """ Orientation node is always labelled with -1 """
@@ -193,7 +194,6 @@ class Edge():
         self.attachment = attachment
         self.point = point
         self.o = o
-        self.testname = "hi"
 
     def __call__(self, x):
         return self.attachment(self.o(x))
@@ -201,6 +201,6 @@ class Edge():
     def lower_dim(self):
         return self.point.dim()
 
-    def hasse_diagram(self, show, dim, upper_counter, lower_counter):
-        plt.plot([upper_counter, lower_counter], [dim, self.point.dim()])
-        return self.point.hasse_diagram(show, lower_counter)
+    # def hasse_diagram(self, show, dim, upper_counter, lower_counter):
+    #     plt.plot([upper_counter, lower_counter], [dim, self.point.dim()])
+    #     return self.point.hasse_diagram(show, lower_counter)

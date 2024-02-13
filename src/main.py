@@ -34,7 +34,7 @@ print(a4.basis_vectors(return_coords=True))
 a4rot = a4.orient(rot)
 # a4.hasse_diagram()
 a4.plot()
-a4rot.plot()
+# a4rot.plot()
 
 # e2 = edges[0].orient(r)
 # print("original")
@@ -52,37 +52,37 @@ a4rot.plot()
 # e2.plot()
 
 
-# # dg0 on point
-# print("DG0 on point")
-# ref_elem = fiatPoint()
-# xs = [lambda g: PointEvaluation(ref_elem, g(()))]
-# dg0 = Triple(vertices[0], ("P0", L2(), "C0"), E(xs, S1(), S1()))
-# ls = dg0.generate()
-# for dof in ls:
-#     print(dof.tostr())
+# dg0 on point
+print("DG0 on point")
+ref_elem = fiatPoint()
+xs = [lambda g: PointEvaluation(ref_elem, g(()))]
+dg0 = Triple(vertices[0], ("P0", L2(), "C0"), E(xs, S1, S1))
+ls = dg0.generate()
+for dof in ls:
+    print(dof.tostr())
 
-# # cg1 on interval
-# print("CG1 on interval")
-# xs = [lambda g: immerse(g, edges[0].cell_attachment_route(0), dg0)]
-# cg1 = Triple(edges[0], ("P1", H1(), "C0"), E(xs, S2(), S1()))
-# ls = cg1.generate()
-# for dof in ls:
-#     print(dof.tostr())
+# cg1 on interval
+print("CG1 on interval")
+xs = [lambda g: immerse(g, edges[0].cell_attachment(0), dg0)]
+cg1 = Triple(edges[0], ("P1", H1(), "C0"), E(xs, S2, S1))
+ls = cg1.generate()
+for dof in ls:
+    print(dof.tostr())
 
-# # # dg1 on interval
-# print("DG1 on interval")
-# ref_interval = UFCInterval()
-# xs = [lambda g: PointEvaluation(ref_interval, g((-1,)))]
-# dg1 = Triple(edges[0], ("P1", "L2", "C0"), E(xs, S2(), S1()))
-# ls = dg1.generate()
-# for dof in ls:
-#     print(dof.tostr())
+# # dg1 on interval
+print("DG1 on interval")
+ref_interval = UFCInterval()
+xs = [lambda g: PointEvaluation(ref_interval, g((-1,)))]
+dg1 = Triple(edges[0], ("P1", "L2", "C0"), E(xs, S2, S1))
+ls = dg1.generate()
+for dof in ls:
+    print(dof.tostr())
 
-# # dg1 on triangle
-# print("DG1 on triangle")
-# ref_triangle = UFCTriangle()
-# xs = [lambda g: PointEvaluation(ref_triangle, g((-1, -np.sqrt(3)/3)))]
-# dg1 = Triple(a4, ("P2", "L2", "C0"), E(xs, S3()/S2(), S1()))
-# ls = dg1.generate()
-# for dof in ls:
-#     print(dof.tostr())
+# dg1 on triangle
+print("DG1 on triangle")
+ref_triangle = UFCTriangle()
+xs = [lambda g: PointEvaluation(ref_triangle, g((-1, -np.sqrt(3)/3)))]
+dg1 = Triple(a4, ("P2", "L2", "C0"), E(xs, S3/S2, S1))
+ls = dg1.generate()
+for dof in ls:
+    print(dof.tostr())

@@ -8,7 +8,7 @@ from spaces.continuous_spaces import ContinuousFunctionSpace
 
 
 class Triple():
-    
+
     def __init__(self, c, v, e):
         assert isinstance(c, Point)
         assert isinstance(e, E)
@@ -33,9 +33,14 @@ class E():
     def __init__(self, X, G_1, G_2):
         assert isinstance(G_1, Group)
         assert isinstance(G_2, Group)
+        self.x = X
         self.g1 = G_1
         self.g2 = G_2
-        self.x = X
+
+    def __iter__(self):
+        yield self.x
+        yield self.g1
+        yield self.g2
 
     def generate(self):
         ls = []
@@ -48,17 +53,17 @@ class E():
         return ls
 
 
-def immerse(g, G, triple):
+def immerse(g, attachment, triple):
     assert isinstance(triple, Triple)
     C, V, E = triple
     new_dofs = []
     for l in E.generate():
-        new_dofs.append(trace(lambda x: g(G(x)), V, l))
+        new_dofs.append(trace(lambda x: g(attachment(x)), V, l))
     return new_dofs
 
 
-def trace(G, V, v):
+def trace(attachment, V, v):
     # limited to point evaluations for now
     l_pts = v.pt_dict
-    v_tilde_res = PointEvaluation(v.ref_el, G(list(l_pts.keys())[0]))
+    v_tilde_res = PointEvaluation(v.ref_el, attachment(list(l_pts.keys())[0]))
     return V[1].pullback(v_tilde_res)

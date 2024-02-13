@@ -1,5 +1,5 @@
 
-class ElementSpaceTuple():
+class ElementSpaces():
 
     def __init__(self, v, sobolev, interp_domain):
         assert isinstance(v, ContinuousFunctionSpace)
@@ -26,7 +26,7 @@ class H1(ContinuousFunctionSpace):
         super(H1, self).__init__("H1")
 
     def pullback(self, v):
-        # temporarily everything is reference spacE?
+        # temporarily everything is reference space?
         return v
 
 
@@ -36,7 +36,7 @@ class L2(ContinuousFunctionSpace):
         super(L2, self).__init__("L2")
 
     def pullback(self, v):
-        # temporarily everything is reference spacE?
+        # temporarily everything is reference space?
         return v
 
 if __name__ == "__main__":
