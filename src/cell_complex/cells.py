@@ -200,7 +200,3 @@ class Edge():
 
     def lower_dim(self):
         return self.point.dim()
-
-    # def hasse_diagram(self, show, dim, upper_counter, lower_counter):
-    #     plt.plot([upper_counter, lower_counter], [dim, self.point.dim()])
-    #     return self.point.hasse_diagram(show, lower_counter)
