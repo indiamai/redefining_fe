@@ -1,7 +1,7 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.new_groups import r, rot, S1, S2, S3, D4
+from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import Point as fiatPoint, UFCInterval, UFCTriangle
@@ -88,5 +88,3 @@ dg1 = Triple(a4, ("P2", "L2", "C0"), E(xs, S3/S2, S1))
 ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())
-
-print((D4/S2).members)

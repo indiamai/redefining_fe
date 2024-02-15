@@ -93,25 +93,26 @@ class GroupRepresentation(object):
         raise ValueError("Permutation not a member of group")
 
     def __truediv__(self, other_frac):
-        """ Not sure this is a mathematically accuracte representation of
+        """ This isn't a mathematically accurate representation of
             what it means to be a quotient group but it works on S3/S2
             Have to compare cyclic forms as groups may not be defined on
-            the same number of elements"""
+            the same number of elements
+            Doesn't work on D4/S2 but does on D4/C4 """
         assert isinstance(other_frac, GroupRepresentation)
         self_cyclic_gens = [gen.perm.cyclic_form
                             for gen in self.generators]
         other_cyclic_gens = [gen.perm.cyclic_form
                              for gen in other_frac.generators]
 
-        assert all([c2 in self_cyclic_gens for c2 in other_cyclic_gens])
-
+        if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
+            raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen.perm for gen in self.generators
                            if gen.perm.cyclic_form not in other_cyclic_gens]
         remaining_reps = [gen.rep for gen in self.generators
                           if gen.perm.cyclic_form not in other_cyclic_gens]
 
         if len(remaining_perms) == 0:
-            raise ValueError("Invalid Quotient")
+            raise ValueError("Invalid Quotient - no group formed")
 
         return GroupRepresentation(PermutationGroup(remaining_perms),
                                    remaining_reps)
