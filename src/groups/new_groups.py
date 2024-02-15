@@ -1,5 +1,5 @@
-from sympy.combinatorics import PermutationGroup
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup
+from sympy.combinatorics import PermutationGroup, Permutation
+from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -42,6 +42,7 @@ class GroupRepresentation(object):
 
     def __init__(self, base_group, generator_reps):
         assert isinstance(base_group, PermutationGroup)
+        self.base_group = base_group
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
         for (perm, rep) in zip(base_group.generators, generator_reps):
@@ -53,10 +54,9 @@ class GroupRepresentation(object):
 
         temp_group_elems = base_group._elements
         temp_group_elems.remove(base_group.identity)
-        remaining_members = self.compute_reps(base_group.identity, None, temp_group_elems)
+        remaining_members = self.compute_reps(base_group.identity,
+                                              None, temp_group_elems)
         assert (len(remaining_members) == 0)
-
-        print(self.members)
 
     def compute_reps(self, g, path, remaining_members):
         # breadth first search to find generator representations of all members
@@ -92,6 +92,32 @@ class GroupRepresentation(object):
                 return m
         raise ValueError("Permutation not a member of group")
 
+    def __truediv__(self, other_frac):
+        """ Not sure this is a mathematically accuracte representation of
+            what it means to be a quotient group but it works on S3/S2
+            Have to compare cyclic forms as groups may not be defined on
+            the same number of elements"""
+        assert isinstance(other_frac, GroupRepresentation)
+        self_cyclic_gens = [gen.perm.cyclic_form
+                            for gen in self.generators]
+        other_cyclic_gens = [gen.perm.cyclic_form
+                             for gen in other_frac.generators]
+
+        assert all([c2 in self_cyclic_gens for c2 in other_cyclic_gens])
+
+        remaining_perms = [gen.perm for gen in self.generators
+                           if gen.perm.cyclic_form not in other_cyclic_gens]
+        remaining_reps = [gen.rep for gen in self.generators
+                          if gen.perm.cyclic_form not in other_cyclic_gens]
+
+        if len(remaining_perms) == 0:
+            raise ValueError("Invalid Quotient")
+
+        return GroupRepresentation(PermutationGroup(remaining_perms),
+                                   remaining_reps)
+
+# Function Representation of the coordinate transforms that make up the groups.
+
 
 def e(x):
     return x
@@ -107,54 +133,60 @@ def r(x):
 
 
 def rot(xs, rad=2*np.pi/3):
-    # rotation by rad radians
+    # rotation by rad radians, default is 60 deg
     x, y = xs[0], xs[1]
     res = (x*np.cos(rad) - y*np.sin(rad), x*np.sin(rad) + y*np.cos(rad))
     return res
 
 
 def sqrot(xs):
+    # 90 degree rotation
     return rot(xs, np.pi / 2)
 
 
+S1 = GroupRepresentation(SymmetricGroup(1), [])
+S2 = GroupRepresentation(SymmetricGroup(2), [r])
+S3 = GroupRepresentation(SymmetricGroup(3), [rot, r])
+
+D4 = GroupRepresentation(DihedralGroup(4), [sqrot, r])
+C4 = GroupRepresentation(CyclicGroup(4), [sqrot])
+
 if __name__ == "__main__":
-    s3 = SymmetricGroup(3)
-    myS3 = GroupRepresentation(s3, [rot, r])
+    print(C4.members)
+    print((D4/C4).members)
+    print((S3/S2).base_group._elements)
+    # s3 = SymmetricGroup(3)
+    # refS3 = GroupRepresentation(s3, [rot, r])
 
-    for m in myS3.members:
-        print(m)
-        print(m((-1, -np.sqrt(3)/3)))
-        coord = m((-0.9, -np.sqrt(3)/3))
-        plt.scatter(coord[0], coord[1], marker="o")
-        plt.text(coord[0], coord[1], repr(m))
+    # for m in refS3.members:
+    #     print(m)
+    #     print(m((-1, -np.sqrt(3)/3)))
+    #     coord = m((-0.9, -np.sqrt(3)/3))
+    #     plt.scatter(coord[0], coord[1], marker="o")
+    #     plt.text(coord[0], coord[1], repr(m))
 
-    plt.show()
+    # plt.show()
 
-    d4 = DihedralGroup(4)
-    myD4 = GroupRepresentation(d4, [sqrot, r])
-    source = (-1, -0.9)
-    for m in myD4.members:
-        print(m)
-        print(m(source))
-        coord = m(source)
-        plt.scatter(coord[0], coord[1], marker="o")
-        plt.text(coord[0], coord[1], repr(m))
-    plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
-    plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
-    plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
-    plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
+    # d4 = DihedralGroup(4)
+    # refD4 = GroupRepresentation(d4, [sqrot, r])
+    # source = (-1, -0.9)
+    # for m in refD4.members:
+    #     print(m)
+    #     print(m(source))
+    #     coord = m(source)
+    #     plt.scatter(coord[0], coord[1], marker="o")
+    #     plt.text(coord[0], coord[1], repr(m))
+    # plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
+    # plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
+    # plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
+    # plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
 
-    plt.show()
+    # plt.show()
 
-    gens = myD4.generators
-    myrot = gens[1]
-    myr = gens[0]
-    # rotr = myrot * myr
-    # print("rotr")
-    # print(rotr.perm)
-    # print(rotr)
+    # gens = refD4.generators
+    # d4rot = gens[1]
+    # d4r = gens[0]
 
-    point = myrot * myrot * myrot * myrot
-    print(point.perm)
-    print(point)
-    print(point(coord))
+    # point = d4rot * d4rot * d4rot * d4rot
+    # print(point)
+    # print(point(coord))

@@ -31,8 +31,8 @@ class Triple():
 class E():
 
     def __init__(self, X, G_1, G_2):
-        assert isinstance(G_1, Group)
-        assert isinstance(G_2, Group)
+        # assert isinstance(G_1, Group)
+        # assert isinstance(G_2, Group)
         self.x = X
         self.g1 = G_1
         self.g2 = G_2

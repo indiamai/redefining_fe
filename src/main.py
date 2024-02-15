@@ -1,12 +1,13 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.groups import r, rot, S1, S2, S3
+from groups.new_groups import r, rot, S1, S2, S3, D4
 from cell_complex.cells import Point, Edge
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import Point as fiatPoint, UFCInterval, UFCTriangle
 from triples import Triple, E, immerse
 from spaces.continuous_spaces import H1, L2
+
 
 
 vertices = []
@@ -28,12 +29,12 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
                                          np.sqrt(3) * (3 * -x + 1) / 6]),
                Edge(edges[2], lambda x: [(1 - x) / 2,
                                          np.sqrt(3) * (3 * x + 1) / 6])])
-print(a4.vertices())
-print(a4.basis_vectors())
-print(a4.basis_vectors(return_coords=True))
-a4rot = a4.orient(rot)
+# print(a4.vertices())
+# print(a4.basis_vectors())
+# print(a4.basis_vectors(return_coords=True))
+# a4rot = a4.orient(rot)
 # a4.hasse_diagram()
-a4.plot()
+# a4.plot()
 # a4rot.plot()
 
 # e2 = edges[0].orient(r)
@@ -78,6 +79,7 @@ ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())
 
+print((S3/S2).members)
 # dg1 on triangle
 print("DG1 on triangle")
 ref_triangle = UFCTriangle()
@@ -86,3 +88,5 @@ dg1 = Triple(a4, ("P2", "L2", "C0"), E(xs, S3/S2, S1))
 ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())
+
+print((D4/S2).members)
