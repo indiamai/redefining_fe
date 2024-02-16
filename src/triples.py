@@ -4,38 +4,37 @@ from cell_complex.cells import Point, Edge
 import sympy as sp
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import UFCInterval, UFCTriangle
-from spaces.continuous_spaces import ContinuousFunctionSpace
+from spaces.element_sobolev_spaces import ElementSobolevSpace
 
 
-class Triple():
+class ElementTriple():
 
-    def __init__(self, c, v, e):
-        assert isinstance(c, Point)
-        assert isinstance(e, E)
-        # for space in v:
-        #     assert isinstance(space, ContinuousFunctionSpace)
-        self.C = c
-        self.V = v
-        self.E = e
+    def __init__(self, cell, spaces, dof_gen):
+        assert isinstance(cell, Point)
+        assert isinstance(dof_gen, DOFGenerator)
+
+        self.cell = cell
+        self.spaces = spaces
+        self.DOFGenerator = dof_gen
 
     def generate(self):
-        L = self.E.generate()
-        return L
+        return self.DOFGenerator.generate()
 
     def __iter__(self):
-        yield self.C
-        yield self.V
-        yield self.E
+        yield self.cell
+        yield self.spaces
+        yield self.DOFGenerator
+    
 
 
-class E():
+class DOFGenerator():
 
-    def __init__(self, X, G_1, G_2):
+    def __init__(self, generator_funcs, gen_group, trans_group):
         # assert isinstance(G_1, Group)
         # assert isinstance(G_2, Group)
-        self.x = X
-        self.g1 = G_1
-        self.g2 = G_2
+        self.x = generator_funcs
+        self.g1 = gen_group
+        self.g2 = trans_group
 
     def __iter__(self):
         yield self.x
@@ -54,15 +53,17 @@ class E():
 
 
 def immerse(g, attachment, triple):
-    assert isinstance(triple, Triple)
-    C, V, E = triple
+    assert isinstance(triple, ElementTriple)
+
+    C, V, DOFGenerator = triple
     new_dofs = []
-    for l in E.generate():
-        new_dofs.append(trace(lambda x: g(attachment(x)), V, l))
+    for generated_func in DOFGenerator.generate():
+        new_dofs.append(trace(lambda x: g(attachment(x)), V, generated_func))
     return new_dofs
 
 
 def trace(attachment, V, v):
+    # should this be a property of the space
     # limited to point evaluations for now
     l_pts = v.pt_dict
     v_tilde_res = PointEvaluation(v.ref_el, attachment(list(l_pts.keys())[0]))

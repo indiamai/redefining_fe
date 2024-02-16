@@ -150,9 +150,12 @@ S2 = GroupRepresentation(SymmetricGroup(2), [r])
 S3 = GroupRepresentation(SymmetricGroup(3), [rot, r])
 
 D4 = GroupRepresentation(DihedralGroup(4), [sqrot, r])
+
+C3 = GroupRepresentation(CyclicGroup(3), [rot])
 C4 = GroupRepresentation(CyclicGroup(4), [sqrot])
 
 if __name__ == "__main__":
+    print(C3.members)
     print(C4.members)
     print((D4/C4).members)
     print((S3/S2).base_group._elements)

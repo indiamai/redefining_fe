@@ -5,9 +5,8 @@ from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import Point as fiatPoint, UFCInterval, UFCTriangle
-from triples import Triple, E, immerse
-from spaces.continuous_spaces import H1, L2
-
+from triples import ElementTriple, DOFGenerator, immerse
+from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv
 
 
 vertices = []
@@ -52,12 +51,21 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # edges[0].plot()
 # e2.plot()
 
+intervalH1 = CellH1(edges[0])
+intervalHDiv = CellHDiv(edges[0])
+intervalL2 = CellL2(edges[0])
+triangleL2 = CellL2(a4)
+print(intervalH1)
+print(intervalHDiv)
+# this comparision should also check that the cells are the same of (subspaces?)
+print(intervalH1 < intervalHDiv)
 
 # dg0 on point
 print("DG0 on point")
 ref_elem = fiatPoint()
 xs = [lambda g: PointEvaluation(ref_elem, g(()))]
-dg0 = Triple(vertices[0], ("P0", L2(), "C0"), E(xs, S1, S1))
+dg0 = ElementTriple(vertices[0], ("P0", intervalL2, "C0"),
+                    DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
 for dof in ls:
     print(dof.tostr())
@@ -65,7 +73,8 @@ for dof in ls:
 # cg1 on interval
 print("CG1 on interval")
 xs = [lambda g: immerse(g, edges[0].cell_attachment(0), dg0)]
-cg1 = Triple(edges[0], ("P1", H1(), "C0"), E(xs, S2, S1))
+cg1 = ElementTriple(edges[0], ("P1", intervalH1, "C0"),
+                    DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
 for dof in ls:
     print(dof.tostr())
@@ -74,17 +83,18 @@ for dof in ls:
 print("DG1 on interval")
 ref_interval = UFCInterval()
 xs = [lambda g: PointEvaluation(ref_interval, g((-1,)))]
-dg1 = Triple(edges[0], ("P1", "L2", "C0"), E(xs, S2, S1))
+dg1 = ElementTriple(edges[0], ("P1", intervalL2, "C0"),
+                    DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())
 
-print((S3/S2).members)
 # dg1 on triangle
 print("DG1 on triangle")
 ref_triangle = UFCTriangle()
 xs = [lambda g: PointEvaluation(ref_triangle, g((-1, -np.sqrt(3)/3)))]
-dg1 = Triple(a4, ("P2", "L2", "C0"), E(xs, S3/S2, S1))
+dg1 = ElementTriple(a4, ("P2", triangleL2, "C0"),
+                    DOFGenerator(xs, S3/S2, S1))
 ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())

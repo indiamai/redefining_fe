@@ -177,7 +177,6 @@ class Point():
 
     def orient(self, o):
         """ Orientation node is always labelled with -1 """
-        # maybe duplicate the object here rather than just modifying in place
         oriented_point = copy.deepcopy(self)
         top_level_node = oriented_point.d_entities(
             oriented_point.dimension)[0]
