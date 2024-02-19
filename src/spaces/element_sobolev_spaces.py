@@ -24,7 +24,7 @@ class ElementSobolevSpace(SobolevSpace):
         raise NotImplementedError("Trace not implemented for", str(type(self)))
 
     def pullback(self, v):
-        raise NotImplementedError("Trace not implemented for", str(type(self)))
+        raise NotImplementedError("Pullback not implemented for", str(type(self)))
 
 
 class CellH1(ElementSobolevSpace):
@@ -55,7 +55,3 @@ class CellL2(ElementSobolevSpace):
     def pullback(self, v):
         # temporarily everything is reference space?
         return v
-
-if __name__ == "__main__":
-    h1 = ContinuousFunctionSpace("H1")
-    h1.trace()

@@ -40,13 +40,20 @@ class GroupMemberRep(object):
 
 class GroupRepresentation(object):
 
-    def __init__(self, base_group, generator_reps):
+    def __init__(self, base_group, reps_dict):
         assert isinstance(base_group, PermutationGroup)
         self.base_group = base_group
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
-        for (perm, rep) in zip(base_group.generators, generator_reps):
-            self.generators.append(GroupMemberRep(perm, rep, self))
+        print(reps_dict)
+        print(base_group.generators)
+        for perm in reps_dict.keys():
+            print(perm)
+            if perm in base_group.generators:
+                self.generators.append(GroupMemberRep(perm,
+                                                      reps_dict[perm], self))
+            else:
+                raise ValueError("Generator key does not match any generator in the base group")
 
         # this order produces simpler generator lists
         self.generators.reverse()
@@ -145,24 +152,24 @@ def sqrot(xs):
     return rot(xs, np.pi / 2)
 
 
-S1 = GroupRepresentation(SymmetricGroup(1), [])
-S2 = GroupRepresentation(SymmetricGroup(2), [r])
-S3 = GroupRepresentation(SymmetricGroup(3), [rot, r])
+S1 = GroupRepresentation(SymmetricGroup(1), {})
+S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
+S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,
+                                             Permutation([1, 0, 2]): r})
 
-D4 = GroupRepresentation(DihedralGroup(4), [sqrot, r])
+D4 = GroupRepresentation(DihedralGroup(4), {Permutation(0, 1, 2, 3): sqrot,
+                                            Permutation([3, 2, 1, 0]): r})
 
-C3 = GroupRepresentation(CyclicGroup(3), [rot])
-C4 = GroupRepresentation(CyclicGroup(4), [sqrot])
+C3 = GroupRepresentation(CyclicGroup(3), {Permutation(0, 1, 2): rot})
+C4 = GroupRepresentation(CyclicGroup(4), {Permutation(0, 1, 2, 3): sqrot})
 
 if __name__ == "__main__":
-    print(C3.members)
-    print(C4.members)
-    print((D4/C4).members)
-    print((S3/S2).base_group._elements)
-    # s3 = SymmetricGroup(3)
-    # refS3 = GroupRepresentation(s3, [rot, r])
+    # print(C3.members)
+    # print(C4.members)
+    # print((D4/C4).members)
+    # print((S3/S2).base_group._elements)
 
-    # for m in refS3.members:
+    # for m in S3.members:
     #     print(m)
     #     print(m((-1, -np.sqrt(3)/3)))
     #     coord = m((-0.9, -np.sqrt(3)/3))
@@ -171,21 +178,19 @@ if __name__ == "__main__":
 
     # plt.show()
 
-    # d4 = DihedralGroup(4)
-    # refD4 = GroupRepresentation(d4, [sqrot, r])
-    # source = (-1, -0.9)
-    # for m in refD4.members:
-    #     print(m)
-    #     print(m(source))
-    #     coord = m(source)
-    #     plt.scatter(coord[0], coord[1], marker="o")
-    #     plt.text(coord[0], coord[1], repr(m))
-    # plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
-    # plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
-    # plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
-    # plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
+    source = (-1, -0.9)
+    for m in D4.members:
+        print(m)
+        print(m(source))
+        coord = m(source)
+        plt.scatter(coord[0], coord[1], marker="o")
+        plt.text(coord[0], coord[1], repr(m))
+    plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
+    plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
+    plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
+    plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
 
-    # plt.show()
+    plt.show()
 
     # gens = refD4.generators
     # d4rot = gens[1]
