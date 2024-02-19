@@ -45,8 +45,7 @@ class GroupRepresentation(object):
         self.base_group = base_group
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
-        print(reps_dict)
-        print(base_group.generators)
+
         for perm in reps_dict.keys():
             print(perm)
             if perm in base_group.generators:
@@ -115,14 +114,14 @@ class GroupRepresentation(object):
             raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen.perm for gen in self.generators
                            if gen.perm.cyclic_form not in other_cyclic_gens]
-        remaining_reps = [gen.rep for gen in self.generators
-                          if gen.perm.cyclic_form not in other_cyclic_gens]
+        rep_dict = {gen.perm: gen.rep for gen in self.generators
+                    if gen.perm.cyclic_form not in other_cyclic_gens}
 
         if len(remaining_perms) == 0:
             raise ValueError("Invalid Quotient - no group formed")
 
         return GroupRepresentation(PermutationGroup(remaining_perms),
-                                   remaining_reps)
+                                   rep_dict)
 
 # Function Representation of the coordinate transforms that make up the groups.
 

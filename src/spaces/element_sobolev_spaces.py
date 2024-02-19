@@ -1,11 +1,13 @@
 from firedrake import *
 from ufl.sobolevspace import SobolevSpace
+from polynomial_spaces import PolynomialSpace
+
 
 class ElementSpaceTriple():
 
     def __init__(self, v, sobolev, interp_domain):
-        # assert isinstance(v, ContinuousFunctionSpace)
-        # assert isinstance(sobolev, ContinuousFunctionSpace)
+        assert isinstance(v, PolynomialSpace)
+        assert isinstance(sobolev, SobolevSpace)
         # assert isinstance(interp_domain, ContinuousFunctionSpace)
 
         self.v = v

@@ -24,7 +24,6 @@ class ElementTriple():
         yield self.cell
         yield self.spaces
         yield self.DOFGenerator
-    
 
 
 class DOFGenerator():
