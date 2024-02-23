@@ -15,20 +15,20 @@ for i in range(3):
     vertices.append(Point(0))
 edges = []
 edges.append(
-    Point(1, [Edge(vertices[0], lambda x: -1),
-              Edge(vertices[1], lambda x: 1)]))
+    Point(1, [Edge(vertices[0], lambda x: (-1,)),
+              Edge(vertices[1], lambda x: (1,))]))
 edges.append(
-    Point(1, [Edge(vertices[0], lambda x: 1),
-              Edge(vertices[2], lambda x: -1)]))
+    Point(1, [Edge(vertices[0], lambda x: (1,)),
+              Edge(vertices[2], lambda x: (-1,))]))
 edges.append(
-    Point(1, [Edge(vertices[1], lambda x: -1),
-              Edge(vertices[2], lambda x: 1)]))
+    Point(1, [Edge(vertices[1], lambda x: (-1,)),
+              Edge(vertices[2], lambda x: (1,))]))
 
-a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
-               Edge(edges[1], lambda x: [(- x - 1) / 2,
-                                         np.sqrt(3) * (3 * -x + 1) / 6]),
-               Edge(edges[2], lambda x: [(1 - x) / 2,
-                                         np.sqrt(3) * (3 * x + 1) / 6])])
+a4 = Point(2, [Edge(edges[0], lambda x: [x[0], -np.sqrt(3) / 3]),
+               Edge(edges[1], lambda x: [(- x[0] - 1) / 2,
+                                         np.sqrt(3) * (3 * -x[0] + 1) / 6]),
+               Edge(edges[2], lambda x: [(1 - x[0]) / 2,
+                                         np.sqrt(3) * (3 * x[0] + 1) / 6])])
 # print(a4.vertices())
 # print(a4.basis_vectors())
 # print(a4.basis_vectors(return_coords=True))
@@ -36,13 +36,13 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # a4.hasse_diagram()
 # a4.plot()
 # a4rot.plot()
-
+edges[0].plot()
 # e2 = edges[0].orient(r)
 # print("original")
 # print(edges[0].G)
 # print(edges[0].graph().edges)
 # print(edges[0].graph()[3][1]["edge_class"])
-# edge_class1 = edges[0].cell_attachment_route(0)
+# edge_class1 = edges[0].cell_attachment(0)
 
 
 # print("copied")
@@ -99,3 +99,33 @@ dg1 = ElementTriple(a4, (P2, triangleL2, "C0"),
 ls = dg1.generate()
 for dof in ls:
     print(dof.tostr())
+
+print("DG0 on interval")
+ref_interval = UFCInterval()
+xs = [lambda g: PointEvaluation(ref_interval, g((0,)))]
+dg0_int = ElementTriple(edges[0], (P0, intervalL2, "C0"),
+                    DOFGenerator(xs, S1, S1))
+ls = dg0_int.generate()
+for dof in ls:
+    print(dof.tostr())
+dg0_int.plot()
+
+# cg3 on triangle
+print("CG3")
+ref_triangle = UFCTriangle()
+v_xs = [lambda g: immerse(g, a4.cell_attachment(0), dg0)]
+vertices = DOFGenerator(v_xs, S3/S2, S1)
+
+e_xs = [lambda g: immerse(g, a4.cell_attachment(3), dg0_int)]
+edges = DOFGenerator(e_xs, S3/S2, S1)
+
+i_xs = [lambda g: PointEvaluation(ref_triangle, g((0, 0)))]
+interior = DOFGenerator(i_xs, S1, S1)
+
+cg3 = ElementTriple(a4, (P2, triangleL2, "C0"),
+                    [vertices, edges, interior])
+
+ls = cg3.generate()
+for dof in ls:
+    print(dof.tostr())
+cg3.plot()

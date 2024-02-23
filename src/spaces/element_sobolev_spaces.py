@@ -1,6 +1,6 @@
 from firedrake import *
 from ufl.sobolevspace import SobolevSpace
-from polynomial_spaces import PolynomialSpace
+from spaces.polynomial_spaces import PolynomialSpace
 
 
 class ElementSpaceTriple():

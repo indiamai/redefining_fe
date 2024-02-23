@@ -47,7 +47,6 @@ class GroupRepresentation(object):
         self.generators = []
 
         for perm in reps_dict.keys():
-            print(perm)
             if perm in base_group.generators:
                 self.generators.append(GroupMemberRep(perm,
                                                       reps_dict[perm], self))
@@ -141,6 +140,7 @@ def r(x):
 
 def rot(xs, rad=2*np.pi/3):
     # rotation by rad radians, default is 60 deg
+    print(xs)
     x, y = xs[0], xs[1]
     res = (x*np.cos(rad) - y*np.sin(rad), x*np.sin(rad) + y*np.cos(rad))
     return res
@@ -168,14 +168,14 @@ if __name__ == "__main__":
     # print((D4/C4).members)
     # print((S3/S2).base_group._elements)
 
-    # for m in S3.members:
-    #     print(m)
-    #     print(m((-1, -np.sqrt(3)/3)))
-    #     coord = m((-0.9, -np.sqrt(3)/3))
-    #     plt.scatter(coord[0], coord[1], marker="o")
-    #     plt.text(coord[0], coord[1], repr(m))
+    for m in S3.members:
+        print(m)
+        print(m((-1, -np.sqrt(3)/3)))
+        coord = m((-0.9, -np.sqrt(3)/3))
+        plt.scatter(coord[0], coord[1], marker="o")
+        plt.text(coord[0], coord[1], repr(m))
 
-    # plt.show()
+    plt.show()
 
     source = (-1, -0.9)
     for m in D4.members:

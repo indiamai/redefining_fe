@@ -37,7 +37,7 @@ def construct_attach_func(attachments, x):
 def make_arrow(ax, mid, edge, direction=1):
     delta = 0.0001 if direction >= 0 else -0.0001
     x, y = edge(mid)
-    dir_x, dir_y = edge(mid + delta)
+    dir_x, dir_y = edge((mid[0] + delta,))
     ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
 
 
@@ -121,12 +121,23 @@ class Point():
                 basis_vecs.append((v, v_0))
         return basis_vecs
 
-    def plot(self):
+    def plot(self, show=True, plain=False):
         """ for now into 2 dimensional space """
 
         top_level_node = self.d_entities(self.graph_dim())[0]
         xs = np.linspace(-1, 1, 20)
         ax = plt.gca()
+
+        if self.dimension == 1:
+            # line plot in 1D case
+            nodes = self.d_entities(0)
+            points = []
+            for node in nodes:
+                attach = self.attachment(top_level_node, node)
+                points.extend(attach(0))
+            plt.plot(np.array(points), np.zeros_like(points), color="black")
+
+
         for i in range(self.dimension - 1, -1, -1):
             nodes = self.d_entities(i)
             for node in nodes:
@@ -135,22 +146,25 @@ class Point():
                     plotted = attach(0)
                     if len(plotted) < 2:
                         plotted = (plotted[0], 0)
-                    plt.plot(plotted[0], plotted[1], 'bo')
-                    plt.annotate(node, (plotted[0], plotted[1]))
+                    
+                    if not plain:
+                        plt.plot(plotted[0], plotted[1], 'bo')
+                        plt.annotate(node, (plotted[0], plotted[1]))
                 elif i == 1:
-                    # line plots for 1d need to be figured out
-                    edgevals = np.array([attach(x) for x in xs])
+                    edgevals = np.array([attach((x,)) for x in xs])
                     if len(edgevals[0]) < 2:
-                        plt.plot(edgevals[:, 0], 0)
+                        plt.plot(edgevals[:, 0], 0, color="black")
                     else:
-                        plt.plot(edgevals[:, 0], edgevals[:, 1])
-                    make_arrow(ax, 0, attach)
+                        plt.plot(edgevals[:, 0], edgevals[:, 1], color="black")
+                    if not plain:
+                        make_arrow(ax, (0,), attach)
                 elif i == 2:
                     # write surface plot here
                     continue
                 else:
                     raise "Error not implemented general plotting"
-        plt.show()
+        if show:
+            plt.show()
 
     def attachment(self, source, dst):
         paths = nx.all_simple_edge_paths(self.G, source, dst)

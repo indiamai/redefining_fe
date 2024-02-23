@@ -5,25 +5,47 @@ import sympy as sp
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import UFCInterval, UFCTriangle
 from spaces.element_sobolev_spaces import ElementSobolevSpace
+import matplotlib.pyplot as plt
+
 
 
 class ElementTriple():
 
     def __init__(self, cell, spaces, dof_gen):
         assert isinstance(cell, Point)
-        assert isinstance(dof_gen, DOFGenerator)
+        if isinstance(dof_gen, DOFGenerator):
+            dof_gen = [dof_gen]
+        for d in dof_gen:
+            assert isinstance(d, DOFGenerator)
 
         self.cell = cell
         self.spaces = spaces
         self.DOFGenerator = dof_gen
 
     def generate(self):
-        return self.DOFGenerator.generate()
+        res = []
+        for dof_gen in self.DOFGenerator:
+            res.extend(dof_gen.generate())
+        return res
 
     def __iter__(self):
         yield self.cell
         yield self.spaces
         yield self.DOFGenerator
+
+    def plot(self):
+        dofs = self.generate()
+        self.cell.plot(show=False, plain=True)
+        for dof in dofs:
+            l_pts = dof.pt_dict
+            print("pts keys", list(l_pts.keys())[0])
+            coord = list(l_pts.keys())[0]
+            if self.cell.dimension == 1:
+                coord = (coord, 0)
+            if self.cell.dimension == 0:
+                coord = (0, 0)
+            plt.scatter(coord[0], coord[1], marker="o", color="blue")
+        plt.show()
 
 
 class DOFGenerator():
@@ -54,9 +76,9 @@ class DOFGenerator():
 def immerse(g, attachment, triple):
     assert isinstance(triple, ElementTriple)
 
-    C, V, DOFGenerator = triple
+    C, V, _ = triple
     new_dofs = []
-    for generated_func in DOFGenerator.generate():
+    for generated_func in triple.generate():
         new_dofs.append(trace(lambda x: g(attachment(x)), V, generated_func))
     return new_dofs
 
@@ -64,6 +86,7 @@ def immerse(g, attachment, triple):
 def trace(attachment, V, v):
     # should this be a property of the space
     # limited to point evaluations for now
+    # how attachments work in 3d will require thought
     l_pts = v.pt_dict
     v_tilde_res = PointEvaluation(v.ref_el, attachment(list(l_pts.keys())[0]))
     return V[1].pullback(v_tilde_res)
