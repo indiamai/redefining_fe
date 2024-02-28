@@ -146,7 +146,6 @@ class Point():
                     plotted = attach(0)
                     if len(plotted) < 2:
                         plotted = (plotted[0], 0)
-                    
                     if not plain:
                         plt.plot(plotted[0], plotted[1], 'bo')
                         plt.annotate(node, (plotted[0], plotted[1]))

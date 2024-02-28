@@ -8,7 +8,6 @@ from spaces.element_sobolev_spaces import ElementSobolevSpace
 import matplotlib.pyplot as plt
 
 
-
 class ElementTriple():
 
     def __init__(self, cell, spaces, dof_gen):
@@ -22,6 +21,8 @@ class ElementTriple():
         self.spaces = spaces
         self.DOFGenerator = dof_gen
 
+        assert self.num_dofs() > self.spaces[0].subdegree
+
     def generate(self):
         res = []
         for dof_gen in self.DOFGenerator:
@@ -33,12 +34,14 @@ class ElementTriple():
         yield self.spaces
         yield self.DOFGenerator
 
+    def num_dofs(self):
+        return sum([dof_gen.num_dofs() for dof_gen in self.DOFGenerator])
+
     def plot(self):
         dofs = self.generate()
         self.cell.plot(show=False, plain=True)
         for dof in dofs:
             l_pts = dof.pt_dict
-            print("pts keys", list(l_pts.keys())[0])
             coord = list(l_pts.keys())[0]
             if self.cell.dimension == 1:
                 coord = (coord, 0)
@@ -61,6 +64,9 @@ class DOFGenerator():
         yield self.x
         yield self.g1
         yield self.g2
+
+    def num_dofs(self):
+        return len(self.x) * self.g1.size()
 
     def generate(self):
         ls = []

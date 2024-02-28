@@ -63,6 +63,10 @@ class GroupRepresentation(object):
                                               None, temp_group_elems)
         assert (len(remaining_members) == 0)
 
+    def size(self):
+        assert len(self.members) == self.base_group.order()
+        return self.base_group.order()
+
     def compute_reps(self, g, path, remaining_members):
         # breadth first search to find generator representations of all members
         if len(remaining_members) == 0:
@@ -140,7 +144,6 @@ def r(x):
 
 def rot(xs, rad=2*np.pi/3):
     # rotation by rad radians, default is 60 deg
-    print(xs)
     x, y = xs[0], xs[1]
     res = (x*np.cos(rad) - y*np.sin(rad), x*np.sin(rad) + y*np.cos(rad))
     return res

@@ -20,6 +20,7 @@ class PolynomialSpace(object):
         self.subdegree = subdegree
         self.superdegree = superdegree
 
+
     def complete(self):
         return self.subdegree == self.superdegree
 
