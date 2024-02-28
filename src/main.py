@@ -5,6 +5,7 @@ from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import Point as fiatPoint, UFCInterval, UFCTriangle
+from dof_lang.dof import construct_point_eval
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2
@@ -54,6 +55,7 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x[0], -np.sqrt(3) / 3]),
 
 intervalH1 = CellH1(edges[0])
 intervalHDiv = CellHDiv(edges[0])
+pointL2 = CellL2(vertices[0])
 intervalL2 = CellL2(edges[0])
 triangleL2 = CellL2(a4)
 print(intervalH1)
@@ -63,14 +65,13 @@ print(intervalH1 < intervalHDiv)
 
 # dg0 on point
 print("DG0 on point")
-ref_elem = fiatPoint()
-xs = [lambda g: PointEvaluation(ref_elem, g(()))]
-dg0 = ElementTriple(vertices[0], (P0, intervalL2, "C0"),
+xs = [lambda g: construct_point_eval(g(()), vertices[0], pointL2)]
+dg0 = ElementTriple(vertices[0], (P0, pointL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
 print("num dofs ", dg0.num_dofs())
 for dof in ls:
-    print(dof.tostr())
+    print(dof)
 
 # cg1 on interval
 print("CG1 on interval")
@@ -80,7 +81,7 @@ cg1 = ElementTriple(edges[0], (P1, intervalH1, "C0"),
 ls = cg1.generate()
 print("num dofs ", cg1.num_dofs())
 for dof in ls:
-    print(dof.tostr())
+    print(dof)
 
 # # dg1 on interval
 print("DG1 on interval")
@@ -106,32 +107,32 @@ for dof in ls:
 
 print("DG0 on interval")
 ref_interval = UFCInterval()
-xs = [lambda g: PointEvaluation(ref_interval, g((0,)))]
+xs = [lambda g: construct_point_eval(g((0,)), edges[0], intervalL2)]
 dg0_int = ElementTriple(edges[0], (P0, intervalL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 ls = dg0_int.generate()
 print("num dofs ", dg0_int.num_dofs())
 for dof in ls:
-    print(dof.tostr())
+    print(dof)
 # dg0_int.plot()
 
 # cg3 on triangle
 print("CG3")
 ref_triangle = UFCTriangle()
 v_xs = [lambda g: immerse(g, a4.cell_attachment(0), dg0)]
-vertices = DOFGenerator(v_xs, S3/S2, S1)
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
 e_xs = [lambda g: immerse(g, a4.cell_attachment(3), dg0_int)]
-edges = DOFGenerator(e_xs, S3/S2, S1)
+e_dofs = DOFGenerator(e_xs, S3/S2, S1)
 
-i_xs = [lambda g: PointEvaluation(ref_triangle, g((0, 0)))]
-interior = DOFGenerator(i_xs, S1, S1)
+i_xs = [lambda g: construct_point_eval(g((0, 0)), a4, triangleL2)]
+i_dofs = DOFGenerator(i_xs, S1, S1)
 
 cg3 = ElementTriple(a4, (P3, triangleL2, "C0"),
-                    [vertices, edges, interior])
+                    [v_dofs, e_dofs, i_dofs])
 
 ls = cg3.generate()
 print("num dofs ", cg3.num_dofs())
 for dof in ls:
-    print(dof.tostr())
+    print(dof)
 # cg3.plot()

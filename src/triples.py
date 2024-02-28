@@ -5,6 +5,7 @@ import sympy as sp
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import UFCInterval, UFCTriangle
 from spaces.element_sobolev_spaces import ElementSobolevSpace
+from dof_lang.dof import DeltaKernel, construct_point_eval
 import matplotlib.pyplot as plt
 
 
@@ -82,17 +83,18 @@ class DOFGenerator():
 def immerse(g, attachment, triple):
     assert isinstance(triple, ElementTriple)
 
-    C, V, _ = triple
+    C, V, E = triple
     new_dofs = []
     for generated_func in triple.generate():
-        new_dofs.append(trace(lambda x: g(attachment(x)), V, generated_func))
+        new_dofs.append(trace(lambda x: g(attachment(x)), V, generated_func, C))
     return new_dofs
 
 
-def trace(attachment, V, v):
+def trace(attachment, V, v, cell):
     # should this be a property of the space
     # limited to point evaluations for now
     # how attachments work in 3d will require thought
-    l_pts = v.pt_dict
-    v_tilde_res = PointEvaluation(v.ref_el, attachment(list(l_pts.keys())[0]))
-    return V[1].pullback(v_tilde_res)
+    if isinstance(v.kernel, DeltaKernel):
+        v_tilde_res = construct_point_eval(attachment(v.kernel.pt), cell, V[1])
+        return V[1].pullback(v_tilde_res)
+    raise NotImplementedError("Trace not implemented for functionals other than point eval")
