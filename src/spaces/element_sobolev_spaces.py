@@ -47,6 +47,15 @@ class CellHDiv(ElementSobolevSpace):
     def pullback(self, v):
         # temporarily everything is reference space?
         return v
+    
+class CellHCurl(ElementSobolevSpace):
+
+    def __init__(self, cell):
+        super(CellHCurl, self).__init__(HCurl, cell)
+
+    def pullback(self, v):
+        # temporarily everything is reference space?
+        return v
 
 
 class CellL2(ElementSobolevSpace):

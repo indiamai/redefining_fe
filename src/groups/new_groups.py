@@ -1,6 +1,7 @@
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup
 import numpy as np
+from cell_complex.cells import Point
 import matplotlib.pyplot as plt
 
 
@@ -24,6 +25,8 @@ class GroupMemberRep(object):
         self.group = group
 
     def __call__(self, x):
+        if isinstance(x, Point):
+            return x.orient(self)
         return fold_reduce(self.rep, x)
 
     def __mul__(self, x):

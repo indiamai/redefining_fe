@@ -60,7 +60,7 @@ class Point():
             self.G.add_edge(self.id, edge.point.id, edge_class=edge)
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
-        self.edges = edges
+        self.connections = edges
 
     def dim(self):
         return self.dimension
@@ -100,9 +100,17 @@ class Point():
             if node in levels[i]:
                 return self.graph_dim() - i
         raise "Error: Node not found in graph"
-
+    
     def vertices(self, get_class=False):
+        if self.oriented:
+            print(self.oriented)
+            return self.oriented.perm(self.d_entities(0, get_class))
         return self.d_entities(0, get_class)
+    
+    def edges(self, get_class=False):
+        if self.oriented:
+            return self.oriented.perm(self.d_entities(1, get_class))
+        return self.d_entities(1, get_class)
 
     def basis_vectors(self, return_coords=False):
         vertices = self.vertices()
@@ -112,11 +120,14 @@ class Point():
             v_0_coords = np.array(
                 (self.attachment(top_level_node, v_0)(0)))
         basis_vecs = []
+        print(vertices)
         for v in vertices[1:]:
+            print("V",v)
             if return_coords:
                 v_coords = np.array(
                     (self.attachment(top_level_node, v)(0)))
                 basis_vecs.append(v_coords - v_0_coords)
+                print(basis_vecs)
             else:
                 basis_vecs.append((v, v_0))
         return basis_vecs
@@ -178,7 +189,7 @@ class Point():
         source_dim = source_dim = self.dim_of_node(source)
         basis = np.eye(source_dim)
         for i in range(source_dim):
-            vals = [fold_reduce(attachment, basis[i])
+            vals = [list(fold_reduce(attachment, basis[i]))
                     for attachment in attachments]
             assert all(val == vals[0] for val in vals)
 
@@ -196,7 +207,7 @@ class Point():
         oriented_point.G.add_node(-1, point_class=None)
         oriented_point.G.add_edge(-1, top_level_node,
                                   edge_class=Edge(None, o=o))
-        oriented_point.oriented = True
+        oriented_point.oriented = o
         return oriented_point
 
 

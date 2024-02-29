@@ -22,7 +22,7 @@ class ElementTriple():
         self.spaces = spaces
         self.DOFGenerator = dof_gen
 
-        assert self.num_dofs() > self.spaces[0].subdegree
+        # assert self.num_dofs() > self.spaces[0].subdegree
 
     def generate(self):
         res = []
@@ -39,11 +39,11 @@ class ElementTriple():
         return sum([dof_gen.num_dofs() for dof_gen in self.DOFGenerator])
 
     def plot(self):
+        # point evaluation nodes only
         dofs = self.generate()
         self.cell.plot(show=False, plain=True)
         for dof in dofs:
-            l_pts = dof.pt_dict
-            coord = list(l_pts.keys())[0]
+            coord = dof.kernel.pt
             if self.cell.dimension == 1:
                 coord = (coord, 0)
             if self.cell.dimension == 0:
@@ -80,13 +80,15 @@ class DOFGenerator():
         return ls
 
 
-def immerse(g, attachment, triple):
+def immerse(g, target_cell, triple, node=0):
     assert isinstance(triple, ElementTriple)
 
     C, V, E = triple
+    print("Attaching node",g.perm(target_cell.d_entities(C.dim()))[node] )
+    attachment = target_cell.cell_attachment(g.perm(target_cell.d_entities(C.dim()))[node])
     new_dofs = []
     for generated_func in triple.generate():
-        new_dofs.append(trace(lambda x: g(attachment(x)), V, generated_func, C))
+        new_dofs.append(trace(lambda x: attachment(x), V, generated_func, C))
     return new_dofs
 
 

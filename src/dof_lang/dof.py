@@ -1,5 +1,5 @@
 
-
+from cell_complex.cells import Point, Edge
 from typing import Any
 
 
@@ -35,7 +35,7 @@ class L2InnerProd(Pairing):
         pass
 
     def __repr__(self, kernel):
-        return "integral({0} * v dx)".format(str(kernel))
+        return "integral_{1}({0} * v dx)".format(str(kernel), str(self.entity.id))
 
 
 class DeltaKernel():
@@ -65,12 +65,8 @@ def construct_point_eval(x, E, V):
     delta_x = DeltaKernel(x)
     return DOF(DeltaPairing(E, V[0]), delta_x)
 
-if __name__ == "__main__":
-    delta_0 = DeltaKernel(0)
-    print(delta_0)
 
-    eval_0_dof = DOF(DeltaPairing("edge", "h1"), delta_0)
-    print(eval_0_dof)
-
-    int_e_dof = DOF(L2InnerProd("edge", "h2"), "x")
-    print(int_e_dof)
+def construct_tangent_dof(E, V):
+    print(E.basis_vectors(return_coords=True))
+    tangent = E.basis_vectors(return_coords=True)[0]
+    return DOF(L2InnerProd(E, V), tangent)
