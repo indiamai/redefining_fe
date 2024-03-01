@@ -139,8 +139,9 @@ xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
 dofs = DOFGenerator(xs, S1, S2)
 
 int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
-int_ned.generate()
-
+ls = int_ned.generate()
+for dof in ls:
+    print(dof)
 
 xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
@@ -151,9 +152,9 @@ ls = ned.generate()
 for dof in ls:
     print(dof)
 
-xs = [lambda g: immerse(g, a4, int_ned)]
-tri_dofs = DOFGenerator(xs, S3/S2, S3)
+# xs = [lambda g: immerse(g, a4, int_ned)]
+# tri_dofs = DOFGenerator(xs, S3/S2, S3)
 
-ned = ElementTriple(a4, (P3, intervalHCurl, "C0"),
-                    [tri_dofs])
-ls = ned.generate()
+# ned = ElementTriple(a4, (P3, intervalHCurl, "C0"),
+#                     [tri_dofs])
+# ls = ned.generate()

@@ -103,13 +103,12 @@ class Point():
     
     def vertices(self, get_class=False):
         if self.oriented:
-            print(self.oriented)
-            return self.oriented.perm(self.d_entities(0, get_class))
+            return self.oriented.permute(self.d_entities(0, get_class))
         return self.d_entities(0, get_class)
     
     def edges(self, get_class=False):
         if self.oriented:
-            return self.oriented.perm(self.d_entities(1, get_class))
+            return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
 
     def basis_vectors(self, return_coords=False):
@@ -117,17 +116,13 @@ class Point():
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
         if return_coords:
-            v_0_coords = np.array(
-                (self.attachment(top_level_node, v_0)(0)))
+            v_0_coords = self.attachment(top_level_node, v_0)(0)
         basis_vecs = []
         print(vertices)
         for v in vertices[1:]:
-            print("V",v)
             if return_coords:
-                v_coords = np.array(
-                    (self.attachment(top_level_node, v)(0)))
-                basis_vecs.append(v_coords - v_0_coords)
-                print(basis_vecs)
+                v_coords = self.attachment(top_level_node, v)(0)
+                basis_vecs.append(tuple(np.subtract(v_coords, v_0_coords)))
             else:
                 basis_vecs.append((v, v_0))
         return basis_vecs
@@ -189,7 +184,7 @@ class Point():
         source_dim = source_dim = self.dim_of_node(source)
         basis = np.eye(source_dim)
         for i in range(source_dim):
-            vals = [list(fold_reduce(attachment, basis[i]))
+            vals = [fold_reduce(attachment, basis[i])
                     for attachment in attachments]
             assert all(val == vals[0] for val in vals)
 

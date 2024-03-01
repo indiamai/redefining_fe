@@ -67,6 +67,5 @@ def construct_point_eval(x, E, V):
 
 
 def construct_tangent_dof(E, V):
-    print(E.basis_vectors(return_coords=True))
     tangent = E.basis_vectors(return_coords=True)[0]
     return DOF(L2InnerProd(E, V), tangent)
