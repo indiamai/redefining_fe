@@ -118,7 +118,6 @@ class Point():
         if return_coords:
             v_0_coords = self.attachment(top_level_node, v_0)(0)
         basis_vecs = []
-        print(vertices)
         for v in vertices[1:]:
             if return_coords:
                 v_coords = self.attachment(top_level_node, v)(0)
@@ -204,6 +203,10 @@ class Point():
                                   edge_class=Edge(None, o=o))
         oriented_point.oriented = o
         return oriented_point
+    
+    def __repr__(self):
+        entity_name = ["v", "e", "f", "v"]
+        return entity_name[self.dimension] + str(self.id)
 
 
 class Edge():

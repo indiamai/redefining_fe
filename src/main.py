@@ -63,6 +63,10 @@ print(intervalHDiv)
 # this comparision should also check that the cells are the same (subspaces?)
 print(intervalH1 < intervalHDiv)
 
+
+def test_p1_v(x):
+    return 2*x + 3
+
 # dg0 on point
 print("DG0 on point")
 xs = [lambda g: construct_point_eval(g(()), vertices[0], pointL2)]
@@ -82,6 +86,7 @@ ls = cg1.generate()
 print("num dofs ", cg1.num_dofs())
 for dof in ls:
     print(dof)
+    print(dof(test_p1_v))
 
 # # dg1 on interval
 print("DG1 on interval")
@@ -92,6 +97,7 @@ ls = dg1.generate()
 print("num dofs ", dg1.num_dofs())
 for dof in ls:
     print(dof)
+    print(dof(test_p1_v))
 
 # dg1 on triangle
 print("DG1 on triangle")
@@ -134,7 +140,7 @@ for dof in ls:
 # cg3.plot()
 
 
-print("rotation of edges")
+print("Integral Moment")
 xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
 dofs = DOFGenerator(xs, S1, S2)
 
@@ -143,18 +149,21 @@ ls = int_ned.generate()
 for dof in ls:
     print(dof)
 
+print("Rotation of integral moments")
 xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
 
-ned = ElementTriple(a4, (P3, triHCurl, "C0"),
+ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
+                      [tri_dofs])
+ls = ned_dg.generate()
+for dof in ls:
+    print(dof)
+
+xs = [lambda g: immerse(g, a4, int_ned)]
+tri_dofs = DOFGenerator(xs, S3/S2, S3)
+
+ned = ElementTriple(a4, (P3, intervalHCurl, "C0"),
                     [tri_dofs])
 ls = ned.generate()
 for dof in ls:
     print(dof)
-
-# xs = [lambda g: immerse(g, a4, int_ned)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
-
-# ned = ElementTriple(a4, (P3, intervalHCurl, "C0"),
-#                     [tri_dofs])
-# ls = ned.generate()

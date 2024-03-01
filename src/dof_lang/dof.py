@@ -1,6 +1,5 @@
 
 from cell_complex.cells import Point, Edge
-from typing import Any
 
 
 class Pairing():
@@ -17,10 +16,13 @@ class DeltaPairing(Pairing):
 
     def __call__(self, kernel, v):
         assert isinstance(kernel, DeltaKernel)
-        return v(kernel.pt)
+        return v(*kernel.pt)
 
     def __repr__(self, kernel):
         return "v(%s)" % str(kernel)
+    
+    def immerse(self, E):
+        return DeltaPairing(E, self.space)
 
 
 class L2InnerProd(Pairing):
@@ -35,7 +37,10 @@ class L2InnerProd(Pairing):
         pass
 
     def __repr__(self, kernel):
-        return "integral_{1}({0} * v dx)".format(str(kernel), str(self.entity.id))
+        return "integral_{1}({0} * v dx)".format(str(kernel), str(self.entity))
+    
+    def immerse(self, E):
+        raise NotImplementedError("how does the cell transfor")
 
 
 class DeltaKernel():
@@ -46,6 +51,21 @@ class DeltaKernel():
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
+    
+    def immerse(self, attachment, E):
+        return DeltaKernel(attachment(self.pt))
+
+
+class TangentKernel():
+
+    def __init__(self, E):
+        self.tangent = E.basis_vectors(return_coords=True)[0]
+
+    def __repr__(self):
+        return str(self.tangent)
+    
+    def immerse(self, attachment, E):
+        return TangentKernel(E)
 
 
 class DOF():
@@ -56,16 +76,19 @@ class DOF():
 
     def __call__(self, fn):
         return self.pairing(self.kernel, fn)
-    
+
     def __repr__(self):
         return self.pairing.__repr__(self.kernel)
+    
+    def trace(self, attachment, cell):
+        return DOF(self.pairing.immerse(cell),
+                   self.kernel.immerse(attachment, cell))
 
 
 def construct_point_eval(x, E, V):
     delta_x = DeltaKernel(x)
-    return DOF(DeltaPairing(E, V[0]), delta_x)
+    return DOF(DeltaPairing(E, V), delta_x)
 
 
 def construct_tangent_dof(E, V):
-    tangent = E.basis_vectors(return_coords=True)[0]
-    return DOF(L2InnerProd(E, V), tangent)
+    return DOF(L2InnerProd(E, V), TangentKernel(E))
