@@ -1,4 +1,5 @@
 from firedrake import *
+import numpy as np
 from ufl.sobolevspace import SobolevSpace
 from spaces.polynomial_spaces import PolynomialSpace
 
@@ -55,7 +56,12 @@ class CellHCurl(ElementSobolevSpace):
 
     def pullback(self, v):
         # temporarily everything is reference space?
-        return v
+        v_array = np.array(v)
+        tangent = np.array(self.domain.basis_vectors(return_coords=True)[0])
+        print(v_array)
+        print(tangent)
+        print(np.dot(tangent, v))
+        return tuple(np.dot(tangent, v_array))
 
 
 class CellL2(ElementSobolevSpace):
@@ -64,5 +70,5 @@ class CellL2(ElementSobolevSpace):
         super(CellL2, self).__init__(L2, cell)
 
     def pullback(self, v):
-        # temporarily everything is reference space?
         return v
+        # return 0

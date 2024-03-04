@@ -80,7 +80,7 @@ class DOFGenerator():
         return ls
 
 
-def immerse(g, target_cell, triple, node=0):
+def immerse(g, target_cell, triple, target_space, node=0):
     assert isinstance(triple, ElementTriple)
 
     C, V, E = triple
@@ -88,8 +88,11 @@ def immerse(g, target_cell, triple, node=0):
     target_node = g.permute(target_cell.d_entities(C.dim()))[node]
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
-    for generated_func in triple.generate():
-        new_dofs.append(trace(lambda x: attachment(x), V, generated_func, target_cell))
+    for generated_dof in triple.generate():
+        new_dofs.append(lambda v: generated_dof(target_space.pullback(v.attach(attachment))))
+        # new_dofs.append(lambda v: lambda x: generated_dof(target_space.pullback(v(attachment(x)))))
+        new_dofs.append(trace(lambda x: attachment(x), target_space,
+                              generated_func, target_cell))
     return new_dofs
 
 
@@ -101,13 +104,13 @@ def trace(attachment, V, v, cell):
     if isinstance(v.pairing, DeltaPairing):
         # v_tilde_res = construct_point_eval(attachment(v.kernel.pt), cell, V)
 
-        v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell)
-        return V[1].pullback(v_tilde_res)
+        v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell, V)
+        return V.pullback(v_tilde_res)
     elif isinstance(v.pairing, L2InnerProd):
         # print(attachment(v.kernel))
         # print(cell.basis_vectors(return_coords=True))
         # print(cell)
         # # should be like the below but the cell needs rotating
         v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell)
-        return V[1].pullback(v_tilde_res)
+        return V.pullback(v_tilde_res)
     raise NotImplementedError("Trace not implemented for functionals other than point eval")

@@ -40,7 +40,7 @@ class L2InnerProd(Pairing):
         return "integral_{1}({0} * v dx)".format(str(kernel), str(self.entity))
     
     def immerse(self, E):
-        raise NotImplementedError("how does the cell transfor")
+        raise NotImplementedError("how does the cell transform")
 
 
 class DeltaKernel():
@@ -52,8 +52,8 @@ class DeltaKernel():
         x = list(map(str, list(self.pt)))
         return ','.join(x)
     
-    def immerse(self, attachment, E):
-        return DeltaKernel(attachment(self.pt))
+    def immerse(self, attachment, E, V):
+        return DeltaKernel(V.pullback(attachment(self.pt)))
 
 
 class TangentKernel():
@@ -64,7 +64,7 @@ class TangentKernel():
     def __repr__(self):
         return str(self.tangent)
     
-    def immerse(self, attachment, E):
+    def trace(self, attachment, E, V):
         return TangentKernel(E)
 
 
@@ -80,9 +80,33 @@ class DOF():
     def __repr__(self):
         return self.pairing.__repr__(self.kernel)
     
-    def trace(self, attachment, cell):
-        return DOF(self.pairing.immerse(cell),
-                   self.kernel.immerse(attachment, cell))
+    # def trace(self, attachment, cell):
+
+    #     return DOF(self.pairing,
+    #                self.kernel.trace(attachment, cell))
+
+
+class MyTestFunction():
+
+    def __init__(self, eq):
+        self.eq = eq
+        self.attach = None
+
+    def __call__(self, x):
+        return self.eq(self.attach(x))
+    
+    def attach(self, attachment):
+        if not self.attach:
+            self.attach = attachment
+        else:
+            old_attach = self.attach
+            self.attach = lambda x: attachment(old_attach(x))
+
+    def __repr__(self):
+        if self.attach:
+            return "v(G(x))"
+        else:
+            return "v(x)"
 
 
 def construct_point_eval(x, E, V):

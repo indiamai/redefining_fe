@@ -28,7 +28,7 @@ class GroupMemberRep(object):
         if isinstance(x, Point):
             return x.orient(self)
         return fold_reduce(self.rep, x)
-    
+
     def permute(self, lst):
         n = len(lst)
         if n > self.perm.size:
