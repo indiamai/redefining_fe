@@ -4,6 +4,7 @@ import itertools
 import networkx as nx
 from groups.groups import e, r, rot
 import copy
+from inspect import signature
 
 
 def topo_pos(G):
@@ -19,25 +20,26 @@ def topo_pos(G):
     return pos_dict
 
 
-def fold_reduce(func_list, x):
+def fold_reduce(func_list, *x):
     """ nested function composition helper function, right to left """
     prev = x
     for func in reversed(func_list):
-        prev = func(prev)
+        prev = func(*prev)
     return prev
 
 
-def construct_attach_func(attachments, x):
-    res = fold_reduce(attachments[0], x)
-    if isinstance(res, int):
-        return (res,)
-    return tuple(res)
+# def construct_attach_func(attachments, *x):
+
+#     res = fold_reduce(attachments[0], *x)
+#     if isinstance(res, int):
+#         return (res,)
+#     return tuple(res)
 
 
 def make_arrow(ax, mid, edge, direction=1):
     delta = 0.0001 if direction >= 0 else -0.0001
     x, y = edge(mid)
-    dir_x, dir_y = edge((mid[0] + delta,))
+    dir_x, dir_y = edge(mid + delta)
     ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
 
 
@@ -116,11 +118,11 @@ class Point():
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
         if return_coords:
-            v_0_coords = self.attachment(top_level_node, v_0)(0)
+            v_0_coords = self.attachment(top_level_node, v_0)()
         basis_vecs = []
         for v in vertices[1:]:
             if return_coords:
-                v_coords = self.attachment(top_level_node, v)(0)
+                v_coords = self.attachment(top_level_node, v)()
                 basis_vecs.append(tuple(np.subtract(v_coords, v_0_coords)))
             else:
                 basis_vecs.append((v, v_0))
@@ -139,7 +141,7 @@ class Point():
             points = []
             for node in nodes:
                 attach = self.attachment(top_level_node, node)
-                points.extend(attach(0))
+                points.extend(attach())
             plt.plot(np.array(points), np.zeros_like(points), color="black")
 
 
@@ -148,20 +150,21 @@ class Point():
             for node in nodes:
                 attach = self.attachment(top_level_node, node)
                 if i == 0:
-                    plotted = attach(0)
+                    plotted = attach()
                     if len(plotted) < 2:
                         plotted = (plotted[0], 0)
                     if not plain:
                         plt.plot(plotted[0], plotted[1], 'bo')
                         plt.annotate(node, (plotted[0], plotted[1]))
                 elif i == 1:
-                    edgevals = np.array([attach((x,)) for x in xs])
+                    print([attach(x) for x in xs])
+                    edgevals = np.array([attach(x) for x in xs])
                     if len(edgevals[0]) < 2:
                         plt.plot(edgevals[:, 0], 0, color="black")
                     else:
                         plt.plot(edgevals[:, 0], edgevals[:, 1], color="black")
                     if not plain:
-                        make_arrow(ax, (0,), attach)
+                        make_arrow(ax, 0, attach)
                 elif i == 2:
                     # write surface plot here
                     continue
@@ -180,14 +183,15 @@ class Point():
                              .format(source, dst))
 
         # check all attachments resolve to the same function
-        source_dim = source_dim = self.dim_of_node(source)
-        basis = np.eye(source_dim)
-        for i in range(source_dim):
-            vals = [fold_reduce(attachment, basis[i])
-                    for attachment in attachments]
-            assert all(val == vals[0] for val in vals)
+        if len(attachments) > 1:
+            dst_dim = self.dim_of_node(dst)
+            basis = np.eye(dst_dim)
+            for i in range(dst_dim):
+                vals = [fold_reduce(attachment, basis[i])
+                        for attachment in attachments]
+                assert all(val == vals[0] for val in vals)
 
-        return lambda x: construct_attach_func(attachments, x)
+        return lambda *x: fold_reduce(attachments[0], *x)
 
     def cell_attachment(self, dst):
         top_level_node = self.d_entities(self.graph_dim())[0]
@@ -216,8 +220,12 @@ class Edge():
         self.point = point
         self.o = o
 
-    def __call__(self, x):
-        return self.attachment(self.o(x))
+    def __call__(self, *x):
+
+        print(self.point)
+        print(x)
+        print(*self.o(x))
+        return self.attachment(*self.o(x))
 
     def lower_dim(self):
         return self.point.dim()

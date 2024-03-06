@@ -14,20 +14,20 @@ for i in range(3):
     vertices.append(Point(0))
 edges = []
 edges.append(
-    Point(1, [Edge(vertices[0], lambda x: (-1,)),
-              Edge(vertices[1], lambda x: (1,))]))
+    Point(1, [Edge(vertices[0], lambda: (-1,)),
+              Edge(vertices[1], lambda: (1,))]))
 edges.append(
-    Point(1, [Edge(vertices[0], lambda x: (1,)),
-              Edge(vertices[2], lambda x: (-1,))]))
+    Point(1, [Edge(vertices[0], lambda: (1,)),
+              Edge(vertices[2], lambda: (-1,))]))
 edges.append(
-    Point(1, [Edge(vertices[1], lambda x: (-1,)),
-              Edge(vertices[2], lambda x: (1,))]))
+    Point(1, [Edge(vertices[1], lambda: (-1,)),
+              Edge(vertices[2], lambda: (1,))]))
 
-a4 = Point(2, [Edge(edges[0], lambda x: [x[0], -np.sqrt(3) / 3]),
-               Edge(edges[1], lambda x: [(- x[0] - 1) / 2,
-                                         np.sqrt(3) * (3 * -x[0] + 1) / 6]),
-               Edge(edges[2], lambda x: [(1 - x[0]) / 2,
-                                         np.sqrt(3) * (3 * x[0] + 1) / 6])])
+a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
+               Edge(edges[1], lambda x: [(- x - 1) / 2,
+                                         np.sqrt(3) * (3 * -x + 1) / 6]),
+               Edge(edges[2], lambda x: [(1 - x) / 2,
+                                         np.sqrt(3) * (3 * x + 1) / 6])])
 # print(a4.vertices())
 # print(a4.basis_vectors())
 # print(a4.basis_vectors(return_coords=True))
@@ -70,6 +70,7 @@ print(intervalH1 < intervalHDiv)
 
 
 test_func = MyTestFunction(lambda x: 2*x + 3)
+test_func2 = MyTestFunction(lambda x, y: (10*x, y))
 print(test_func)
 # dg0 on point
 print("DG0 on point")
@@ -101,7 +102,7 @@ ls = dg1.generate()
 print("num dofs ", dg1.num_dofs())
 for dof in ls:
     print(dof)
-    print(dof(test_p1_v))
+    print(dof(test_func))
 
 # dg1 on triangle
 print("DG1 on triangle")
@@ -141,6 +142,7 @@ ls = cg3.generate()
 print("num dofs ", cg3.num_dofs())
 for dof in ls:
     print(dof)
+    print(dof(test_func2))
 # cg3.plot()
 
 

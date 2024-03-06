@@ -16,12 +16,14 @@ class DeltaPairing(Pairing):
 
     def __call__(self, kernel, v):
         assert isinstance(kernel, DeltaKernel)
+        print("evaluating v at", kernel.pt)
+        print(v)
         return v(*kernel.pt)
 
     def __repr__(self, kernel):
         return "v(%s)" % str(kernel)
     
-    def immerse(self, E):
+    def attach(self, E, attachment):
         return DeltaPairing(E, self.space)
 
 
@@ -73,12 +75,28 @@ class DOF():
     def __init__(self, pairing, kernel):
         self.pairing = pairing
         self.kernel = kernel
+        self.immersed = False
 
     def __call__(self, fn):
+        if self.immersed:
+            return self.pairing(self.kernel,
+                                self.pullback(fn.attach(self.attachment)))
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
         return self.pairing.__repr__(self.kernel)
+    
+    def immerse(self, attachment, pullback):
+        if not self.immersed:
+            self.attachment = attachment
+            self.pullback = pullback
+        else:
+            old_attach = self.attachment
+            old_pullback = self.pullback
+            self.attachment = lambda x: attachment(old_attach(x))
+            self.pullback = lambda v: pullback(old_pullback(v))
+
+        self.immersed = True
     
     # def trace(self, attachment, cell):
 
@@ -88,22 +106,31 @@ class DOF():
 
 class MyTestFunction():
 
-    def __init__(self, eq):
+    def __init__(self, eq, attach_func = None):
         self.eq = eq
-        self.attach = None
+        self.attach_func = None
 
-    def __call__(self, x):
-        return self.eq(self.attach(x))
+    def __call__(self, *x):
+        print(x)
+        print("attach", self.attach_func)
+        if self.attach_func:
+            print(self.attach_func(tuple(*x)))
+            return self.eq(*self.attach_func(tuple(*x)))
+        else:
+            return self.eq(*x)
     
     def attach(self, attachment):
-        if not self.attach:
-            self.attach = attachment
+        print("Attached")
+        print(attachment())
+        if not self.attach_func:
+            new_attach = attachment
         else:
-            old_attach = self.attach
-            self.attach = lambda x: attachment(old_attach(x))
+            old_attach = self.attach_func
+            new_attach = lambda x: attachment(old_attach(x))
+        return MyTestFunction(self.eq, attach_func=new_attach)
 
     def __repr__(self):
-        if self.attach:
+        if self.attach_func:
             return "v(G(x))"
         else:
             return "v(x)"
