@@ -23,6 +23,27 @@ class PolynomialSpace(object):
 
     def complete(self):
         return self.subdegree == self.superdegree
+    
+    def __mul__(self, x):
+        return VectorPolynomialSpace([self, x])
+
+
+class VectorPolynomialSpace(PolynomialSpace):
+
+    def __init__(self, x):
+        self.component_spaces = x
+
+    def dim(self):
+        return len(self.component_spaces)
+
+    def complete(self):
+        return all([c.complete for c in self.component_spaces])
+
+    def __mul__(self, x):
+        if isinstance(x, PolynomialSpace):
+            return VectorPolynomialSpace(self.component_spaces.extend(x))
+        if isinstance(x, VectorPolynomialSpace):
+            return VectorPolynomialSpace(self.component_spaces.extend(x.component_spaces))
 
 P0 = PolynomialSpace(0, 0)
 P1 = PolynomialSpace(1, 1)
