@@ -15,14 +15,14 @@ class DeltaPairing(Pairing):
         super(DeltaPairing, self).__init__(entity, space)
 
     def __call__(self, kernel, v):
-        assert isinstance(kernel, DeltaKernel)
+        assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
     def __repr__(self, kernel, fn):
         return "{0}({1})".format(fn, str(kernel))
     
-    def attach(self, E, attachment):
-        return DeltaPairing(E, self.space)
+    # def attach(self, E, attachment):
+    #     return DeltaPairing(E, self.space)
 
 
 class L2InnerProd(Pairing):
@@ -45,7 +45,7 @@ class L2InnerProd(Pairing):
         raise NotImplementedError("how does the cell transform")
 
 
-class DeltaKernel():
+class PointKernel():
 
     def __init__(self, x):
         self.pt = x
@@ -53,18 +53,15 @@ class DeltaKernel():
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
-    
-    # def immerse(self, attachment, E, V):
-    #     return DeltaKernel(V.pullback(attachment(self.pt)))
 
 
-class TangentKernel():
+class GeneralKernel():
 
-    def __init__(self, E):
-        self.tangent = E.basis_vectors(return_coords=True)[0]
+    def __init__(self, fn):
+        self.fn = fn
 
     def __repr__(self):
-        return str(self.tangent)
+        return str(self.fn)
 
 
 class DOF():
@@ -76,29 +73,32 @@ class DOF():
 
     def __call__(self, fn):
         if self.immersed:
+            attached_fn = fn.attach(self.attachment)
             return self.pairing(self.kernel,
-                                self.pullback(fn.attach(self.attachment)))
+                                self.target_space.pullback(attached_fn))
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
         fn = "v"
         if self.immersed:
-            fn = "tr_{0}(v)".format(str(self.trace_entity))
+            fn = "tr_{1}_{0}(v)".format(str(self.trace_entity),
+                                        str(self.target_space))
         else:
             fn = "v"
         return self.pairing.__repr__(self.kernel, fn)
     
-    def immerse(self, entity, attachment, pullback):
+    def immerse(self, entity, attachment, target_space):
         if not self.immersed:
             self.trace_entity = entity
             self.attachment = attachment
-            self.pullback = pullback
+            self.target_space = target_space
         else:
-            old_attach = self.attachment
-            old_pullback = self.pullback
-            self.trace_entity = entity
-            self.attachment = lambda x: attachment(old_attach(x))
-            self.pullback = lambda v: pullback(old_pullback(v))
+            raise "Error immersing twice"
+            # old_attach = self.attachment
+            # old_pullback = self.pullback
+            # self.trace_entity = entity
+            # self.attachment = lambda x: attachment(old_attach(x))
+            # self.pullback = lambda v: pullback(old_pullback(v))
 
         self.immersed = True
 
@@ -131,9 +131,9 @@ class MyTestFunction():
 
 
 def construct_point_eval(x, E, V):
-    delta_x = DeltaKernel(x)
+    delta_x = PointKernel(x)
     return DOF(DeltaPairing(E, V), delta_x)
 
 
-def construct_tangent_dof(E, V):
-    return DOF(L2InnerProd(E, V), TangentKernel(E))
+# def construct_tangent_dof(E, V):
+#     return DOF(L2InnerProd(E, V), TangentKernel(E))

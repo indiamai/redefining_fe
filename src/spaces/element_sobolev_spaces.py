@@ -38,6 +38,9 @@ class CellH1(ElementSobolevSpace):
     def pullback(self, v):
         # temporarily everything is reference space?
         return v
+    
+    def __repr__(self):
+        return "H1"
 
 
 class CellHDiv(ElementSobolevSpace):
@@ -46,8 +49,13 @@ class CellHDiv(ElementSobolevSpace):
         super(CellHDiv, self).__init__(HDiv, cell)
 
     def pullback(self, v):
-        # temporarily everything is reference space?
-        return v
+        assert self.domain.dim() <= 2
+        v_array = np.array(v)
+        normal = np.array(self.domain.basis_vectors(return_coords=True)[1])
+        return tuple(v_array[0]*normal[1] - v_array[1]*normal[0])
+
+    def __repr__(self):
+        return "HDiv"
 
 
 class CellHCurl(ElementSobolevSpace):
@@ -56,13 +64,16 @@ class CellHCurl(ElementSobolevSpace):
         super(CellHCurl, self).__init__(HCurl, cell)
 
     def pullback(self, v):
-        # temporarily everything is reference space?
+        assert self.domain.dim() <= 2
         v_array = np.array(v)
         tangent = np.array(self.domain.basis_vectors(return_coords=True)[0])
         print(v_array)
         print(tangent)
-        print(np.dot(tangent, v))
+        print(np.dot(tangent, v_array))
         return tuple(np.dot(tangent, v_array))
+    
+    def __repr__(self):
+        return "HCurl"
 
 
 class CellL2(ElementSobolevSpace):
@@ -71,5 +82,7 @@ class CellL2(ElementSobolevSpace):
         super(CellL2, self).__init__(L2, cell)
 
     def pullback(self, v):
-        return v
-        # return 0
+        return 0
+    
+    def __repr__(self):
+        return "L2"

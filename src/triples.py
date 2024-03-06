@@ -87,26 +87,6 @@ def immerse(g, target_cell, triple, target_space, node=0):
     for generated_dof in triple.generate():
         generated_dof.immerse(target_cell.get_node(target_node),
                               attachment,
-                              target_space.pullback)
+                              target_space)
         new_dofs.append(generated_dof)
     return new_dofs
-
-
-# def trace(attachment, V, v, cell):
-#     # should this be a property of the space
-#     # limited to point evaluations for now
-#     # how attachments work in 3d will require thought
-#     # also inelegant 
-#     if isinstance(v.pairing, DeltaPairing):
-#         # v_tilde_res = construct_point_eval(attachment(v.kernel.pt), cell, V)
-
-#         v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell, V)
-#         return V.pullback(v_tilde_res)
-#     elif isinstance(v.pairing, L2InnerProd):
-#         # print(attachment(v.kernel))
-#         # print(cell.basis_vectors(return_coords=True))
-#         # print(cell)
-#         # # should be like the below but the cell needs rotating
-#         v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell)
-#         return V.pullback(v_tilde_res)
-#     raise NotImplementedError("Trace not implemented for functionals other than point eval")

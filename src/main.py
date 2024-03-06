@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
-from dof_lang.dof import construct_point_eval, construct_tangent_dof, MyTestFunction
+from dof_lang.dof import construct_point_eval, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2
@@ -147,7 +147,8 @@ for dof in ls:
 
 
 print("Integral Moment")
-xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
+# xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
+xs = [lambda g: DOF(L2InnerProd(g(edges[0]), intervalHCurl), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 
 int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
@@ -155,21 +156,28 @@ ls = int_ned.generate()
 for dof in ls:
     print(dof)
 
-print("Rotation of integral moments")
-xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
-tri_dofs = DOFGenerator(xs, S3/S2, S3)
+# print("Rotation of integral moments")
 
-ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
-                      [tri_dofs])
-ls = ned_dg.generate()
-for dof in ls:
-    print(dof)
+# xs = [lambda g: DOF(L2InnerProd(g(a4).edges(get_class=True)[0], triHCurl), PointKernel(1))]
+# # xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
+# tri_dofs = DOFGenerator(xs, S3/S2, S3)
+
+# ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
+#                       [tri_dofs])
+# ls = ned_dg.generate()
+# for dof in ls:
+#     print(dof)
+phi_0 = MyTestFunction(lambda x, y: ((1/2)*(1-y), (1/2)*x))
 
 xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
-
-ned = ElementTriple(a4, (P3, triHCurl, "C0"),
+vecP3 = P3*P3
+print(vecP3)
+print(vecP3.dim())
+print(vecP3.component_spaces)
+ned = ElementTriple(a4, (P3*P3, triHCurl, "C0"),
                     [tri_dofs])
 ls = ned.generate()
 for dof in ls:
     print(dof)
+    # print(dof(phi_0))
