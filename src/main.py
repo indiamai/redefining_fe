@@ -143,33 +143,33 @@ print("num dofs ", cg3.num_dofs())
 for dof in ls:
     print(dof)
     # print(dof(test_func2))
-cg3.plot()
+# cg3.plot()
 
 
-# print("Integral Moment")
-# xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
-# dofs = DOFGenerator(xs, S1, S2)
+print("Integral Moment")
+xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
+dofs = DOFGenerator(xs, S1, S2)
 
-# int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
-# ls = int_ned.generate()
-# for dof in ls:
-#     print(dof)
+int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
+ls = int_ned.generate()
+for dof in ls:
+    print(dof)
 
-# print("Rotation of integral moments")
-# xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
+print("Rotation of integral moments")
+xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
+tri_dofs = DOFGenerator(xs, S3/S2, S3)
 
-# ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
-#                       [tri_dofs])
-# ls = ned_dg.generate()
-# for dof in ls:
-#     print(dof)
+ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
+                      [tri_dofs])
+ls = ned_dg.generate()
+for dof in ls:
+    print(dof)
 
-# xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
+xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
+tri_dofs = DOFGenerator(xs, S3/S2, S3)
 
-# ned = ElementTriple(a4, (P3, triHCurl, "C0"),
-#                     [tri_dofs])
-# ls = ned.generate()
-# for dof in ls:
-#     print(dof)
+ned = ElementTriple(a4, (P3, triHCurl, "C0"),
+                    [tri_dofs])
+ls = ned.generate()
+for dof in ls:
+    print(dof)

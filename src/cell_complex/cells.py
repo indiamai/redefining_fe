@@ -126,7 +126,11 @@ class Point():
         for v in vertices[1:]:
             if return_coords:
                 v_coords = self.attachment(top_level_node, v)()
-                basis_vecs.append(tuple(np.subtract(v_coords, v_0_coords)))
+                sub = np.subtract(v_coords, v_0_coords)
+                if isinstance(sub, np.int64):
+                    basis_vecs.append((sub,))
+                else:
+                    basis_vecs.append(tuple(sub))
             else:
                 basis_vecs.append((v, v_0))
         return basis_vecs
