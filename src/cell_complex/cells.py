@@ -95,6 +95,9 @@ class Point():
                     for i in levels[self.graph_dim() - d]]
         return levels[self.graph_dim() - d]
 
+    def get_node(self, node):
+        return self.G.nodes.data("point_class")[node]
+
     def dim_of_node(self, node):
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
@@ -157,7 +160,6 @@ class Point():
                         plt.plot(plotted[0], plotted[1], 'bo')
                         plt.annotate(node, (plotted[0], plotted[1]))
                 elif i == 1:
-                    print([attach(x) for x in xs])
                     edgevals = np.array([attach(x) for x in xs])
                     if len(edgevals[0]) < 2:
                         plt.plot(edgevals[:, 0], 0, color="black")
@@ -221,10 +223,6 @@ class Edge():
         self.o = o
 
     def __call__(self, *x):
-
-        print(self.point)
-        print(x)
-        print(*self.o(x))
         return self.attachment(*self.o(x))
 
     def lower_dim(self):

@@ -16,12 +16,10 @@ class DeltaPairing(Pairing):
 
     def __call__(self, kernel, v):
         assert isinstance(kernel, DeltaKernel)
-        print("evaluating v at", kernel.pt)
-        print(v)
         return v(*kernel.pt)
 
-    def __repr__(self, kernel):
-        return "v(%s)" % str(kernel)
+    def __repr__(self, kernel, fn):
+        return "{0}({1})".format(fn, str(kernel))
     
     def attach(self, E, attachment):
         return DeltaPairing(E, self.space)
@@ -38,8 +36,10 @@ class L2InnerProd(Pairing):
         # evaluates integral
         pass
 
-    def __repr__(self, kernel):
-        return "integral_{1}({0} * v dx)".format(str(kernel), str(self.entity))
+    def __repr__(self, kernel, fn):
+        return "integral_{1}({0} * {2}) dx)".format(str(kernel),
+                                                    str(self.entity),
+                                                    fn)
     
     def immerse(self, E):
         raise NotImplementedError("how does the cell transform")
@@ -54,8 +54,8 @@ class DeltaKernel():
         x = list(map(str, list(self.pt)))
         return ','.join(x)
     
-    def immerse(self, attachment, E, V):
-        return DeltaKernel(V.pullback(attachment(self.pt)))
+    # def immerse(self, attachment, E, V):
+    #     return DeltaKernel(V.pullback(attachment(self.pt)))
 
 
 class TangentKernel():
@@ -65,9 +65,6 @@ class TangentKernel():
 
     def __repr__(self):
         return str(self.tangent)
-    
-    def trace(self, attachment, E, V):
-        return TangentKernel(E)
 
 
 class DOF():
@@ -84,50 +81,47 @@ class DOF():
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
-        return self.pairing.__repr__(self.kernel)
+        fn = "v"
+        if self.immersed:
+            fn = "tr_{0}(v)".format(str(self.trace_entity))
+        else:
+            fn = "v"
+        return self.pairing.__repr__(self.kernel, fn)
     
-    def immerse(self, attachment, pullback):
+    def immerse(self, entity, attachment, pullback):
         if not self.immersed:
+            self.trace_entity = entity
             self.attachment = attachment
             self.pullback = pullback
         else:
             old_attach = self.attachment
             old_pullback = self.pullback
+            self.trace_entity = entity
             self.attachment = lambda x: attachment(old_attach(x))
             self.pullback = lambda v: pullback(old_pullback(v))
 
         self.immersed = True
-    
-    # def trace(self, attachment, cell):
-
-    #     return DOF(self.pairing,
-    #                self.kernel.trace(attachment, cell))
 
 
 class MyTestFunction():
 
-    def __init__(self, eq, attach_func = None):
+    def __init__(self, eq, attach_func=None):
         self.eq = eq
-        self.attach_func = None
+        self.attach_func = attach_func
 
     def __call__(self, *x):
-        print(x)
-        print("attach", self.attach_func)
         if self.attach_func:
-            print(self.attach_func(tuple(*x)))
-            return self.eq(*self.attach_func(tuple(*x)))
+            return self.eq(*self.attach_func(*x))
         else:
             return self.eq(*x)
-    
+
     def attach(self, attachment):
-        print("Attached")
-        print(attachment())
         if not self.attach_func:
-            new_attach = attachment
+            return MyTestFunction(self.eq, attach_func=attachment)
         else:
             old_attach = self.attach_func
-            new_attach = lambda x: attachment(old_attach(x))
-        return MyTestFunction(self.eq, attach_func=new_attach)
+            return MyTestFunction(self.eq,
+                                  attach_func=lambda *x: attachment(old_attach(*x)))
 
     def __repr__(self):
         if self.attach_func:

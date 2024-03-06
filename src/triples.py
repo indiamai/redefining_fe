@@ -5,7 +5,7 @@ import sympy as sp
 from FIAT.functional import PointEvaluation
 from FIAT.reference_element import UFCInterval, UFCTriangle
 from spaces.element_sobolev_spaces import ElementSobolevSpace
-from dof_lang.dof import construct_point_eval, DeltaPairing, L2InnerProd, DOF
+from dof_lang.dof import construct_point_eval, DeltaPairing, L2InnerProd, DOF, MyTestFunction
 import matplotlib.pyplot as plt
 
 
@@ -43,11 +43,7 @@ class ElementTriple():
         dofs = self.generate()
         self.cell.plot(show=False, plain=True)
         for dof in dofs:
-            coord = dof.kernel.pt
-            if self.cell.dimension == 1:
-                coord = (coord, 0)
-            if self.cell.dimension == 0:
-                coord = (0, 0)
+            coord = dof(MyTestFunction(lambda *x: x))
             plt.scatter(coord[0], coord[1], marker="o", color="blue")
         plt.show()
 
@@ -89,28 +85,28 @@ def immerse(g, target_cell, triple, target_space, node=0):
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
     for generated_dof in triple.generate():
-        new_dofs.append(lambda v: generated_dof(target_space.pullback(v.attach(attachment))))
-        # new_dofs.append(lambda v: lambda x: generated_dof(target_space.pullback(v(attachment(x)))))
-        new_dofs.append(trace(lambda x: attachment(x), target_space,
-                              generated_func, target_cell))
+        generated_dof.immerse(target_cell.get_node(target_node),
+                              attachment,
+                              target_space.pullback)
+        new_dofs.append(generated_dof)
     return new_dofs
 
 
-def trace(attachment, V, v, cell):
-    # should this be a property of the space
-    # limited to point evaluations for now
-    # how attachments work in 3d will require thought
-    # also inelegant 
-    if isinstance(v.pairing, DeltaPairing):
-        # v_tilde_res = construct_point_eval(attachment(v.kernel.pt), cell, V)
+# def trace(attachment, V, v, cell):
+#     # should this be a property of the space
+#     # limited to point evaluations for now
+#     # how attachments work in 3d will require thought
+#     # also inelegant 
+#     if isinstance(v.pairing, DeltaPairing):
+#         # v_tilde_res = construct_point_eval(attachment(v.kernel.pt), cell, V)
 
-        v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell, V)
-        return V.pullback(v_tilde_res)
-    elif isinstance(v.pairing, L2InnerProd):
-        # print(attachment(v.kernel))
-        # print(cell.basis_vectors(return_coords=True))
-        # print(cell)
-        # # should be like the below but the cell needs rotating
-        v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell)
-        return V.pullback(v_tilde_res)
-    raise NotImplementedError("Trace not implemented for functionals other than point eval")
+#         v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell, V)
+#         return V.pullback(v_tilde_res)
+#     elif isinstance(v.pairing, L2InnerProd):
+#         # print(attachment(v.kernel))
+#         # print(cell.basis_vectors(return_coords=True))
+#         # print(cell)
+#         # # should be like the below but the cell needs rotating
+#         v_tilde_res = DOF(v.pairing, v.kernel).trace(attachment, cell)
+#         return V.pullback(v_tilde_res)
+#     raise NotImplementedError("Trace not implemented for functionals other than point eval")
