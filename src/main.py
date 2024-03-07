@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
-from dof_lang.dof import construct_point_eval, DOF, L2InnerProd, MyTestFunction, PointKernel
+from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2
@@ -74,7 +74,8 @@ test_func2 = MyTestFunction(lambda x, y: (10*x, y))
 print(test_func)
 # dg0 on point
 print("DG0 on point")
-xs = [lambda g: construct_point_eval(g(()), vertices[0], pointL2)]
+xs = [lambda g: DOF(DeltaPairing(vertices[0], pointL2),
+                    PointKernel(g(())))]
 dg0 = ElementTriple(vertices[0], (P0, pointL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
@@ -95,7 +96,8 @@ for dof in ls:
 
 # # dg1 on interval
 print("DG1 on interval")
-xs = [lambda g: construct_point_eval(g((-1,)), edges[0], intervalL2)]
+xs = [lambda g:  DOF(DeltaPairing(edges[0], intervalL2),
+                     PointKernel(g((-1,))))]
 dg1 = ElementTriple(edges[0], (P1, intervalL2, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
@@ -106,7 +108,8 @@ for dof in ls:
 
 # dg1 on triangle
 print("DG1 on triangle")
-xs = [lambda g: construct_point_eval(g((-1, -np.sqrt(3)/3)), a4, triangleL2)]
+xs = [lambda g: DOF(DeltaPairing(a4, triangleL2),
+                    PointKernel(g((-1, -np.sqrt(3)/3))))]
 dg1 = ElementTriple(a4, (P1, triangleL2, "C0"),
                     DOFGenerator(xs, S3/S2, S1))
 ls = dg1.generate()
@@ -115,7 +118,7 @@ for dof in ls:
     print(dof)
 
 print("DG0 on interval")
-xs = [lambda g: construct_point_eval(g((0,)), edges[0], intervalL2)]
+xs = [lambda g: DOF(DeltaPairing(edges[0], intervalL2), PointKernel(g((0,))))]
 dg0_int = ElementTriple(edges[0], (P0, intervalL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 ls = dg0_int.generate()
@@ -132,7 +135,7 @@ v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 e_xs = [lambda g: immerse(g, a4, dg0_int, triangleH1)]
 e_dofs = DOFGenerator(e_xs, S3/S2, S1)
 
-i_xs = [lambda g: construct_point_eval(g((0, 0)), a4, triangleL2)]
+i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
 cg3 = ElementTriple(a4, (P3, triangleH1, "C0"),
@@ -147,7 +150,6 @@ for dof in ls:
 
 
 print("Integral Moment")
-# xs = [lambda g: construct_tangent_dof(g(edges[0]), intervalHCurl)]
 xs = [lambda g: DOF(L2InnerProd(g(edges[0]), intervalHCurl), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 
@@ -156,25 +158,12 @@ ls = int_ned.generate()
 for dof in ls:
     print(dof)
 
-# print("Rotation of integral moments")
 
-# xs = [lambda g: DOF(L2InnerProd(g(a4).edges(get_class=True)[0], triHCurl), PointKernel(1))]
-# # xs = [lambda g: construct_tangent_dof(g(a4).edges(get_class=True)[0], triHCurl)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
-
-# ned_dg = ElementTriple(a4, (P3, triHCurl, "C0"),
-#                       [tri_dofs])
-# ls = ned_dg.generate()
-# for dof in ls:
-#     print(dof)
 phi_0 = MyTestFunction(lambda x, y: ((1/2)*(1-y), (1/2)*x))
 
 xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
 vecP3 = P3*P3
-print(vecP3)
-print(vecP3.dim())
-print(vecP3.component_spaces)
 ned = ElementTriple(a4, (P3*P3, triHCurl, "C0"),
                     [tri_dofs])
 ls = ned.generate()

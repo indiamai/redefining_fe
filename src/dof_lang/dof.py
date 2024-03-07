@@ -20,9 +20,6 @@ class DeltaPairing(Pairing):
 
     def __repr__(self, kernel, fn):
         return "{0}({1})".format(fn, str(kernel))
-    
-    # def attach(self, E, attachment):
-    #     return DeltaPairing(E, self.space)
 
 
 class L2InnerProd(Pairing):
@@ -40,9 +37,6 @@ class L2InnerProd(Pairing):
         return "integral_{1}({0} * {2}) dx)".format(str(kernel),
                                                     str(self.entity),
                                                     fn)
-    
-    def immerse(self, E):
-        raise NotImplementedError("how does the cell transform")
 
 
 class PointKernel():
@@ -130,10 +124,6 @@ class MyTestFunction():
             return "v(x)"
 
 
-def construct_point_eval(x, E, V):
-    delta_x = PointKernel(x)
-    return DOF(DeltaPairing(E, V), delta_x)
-
-
-# def construct_tangent_dof(E, V):
-#     return DOF(L2InnerProd(E, V), TangentKernel(E))
+# def construct_point_eval(x, E, V):
+#     delta_x = PointKernel(x)
+#     return DOF(DeltaPairing(E, V), delta_x)
