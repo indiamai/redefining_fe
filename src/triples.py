@@ -2,10 +2,8 @@
 from groups.groups import Group, S1, S2, S3
 from cell_complex.cells import Point, Edge
 import sympy as sp
-from FIAT.functional import PointEvaluation
-from FIAT.reference_element import UFCInterval, UFCTriangle
 from spaces.element_sobolev_spaces import ElementSobolevSpace
-from dof_lang.dof import construct_point_eval, DeltaPairing, L2InnerProd, DOF, MyTestFunction
+from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction
 import matplotlib.pyplot as plt
 
 

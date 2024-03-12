@@ -1,6 +1,9 @@
 
 from cell_complex.cells import Point, Edge
+from FIAT.quadrature import GaussJacobiQuadratureLineRule
+from FIAT.reference_element import UFCInterval
 
+import numpy as np
 
 class Pairing():
 
@@ -29,9 +32,13 @@ class L2InnerProd(Pairing):
     def __init__(self, entity, space):
         super(L2InnerProd, self).__init__(entity, space)
 
-    def __call__(self, x, v):
+    def __call__(self, kernel, v):
         # evaluates integral
-        pass
+        print("evaluating", kernel, v)
+        assert self.entity.dim() == 1
+        quadrature = GaussJacobiQuadratureLineRule(UFCInterval(), 3)
+
+        return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
 
     def __repr__(self, kernel, fn):
         return "integral_{1}({0} * {2}) dx)".format(str(kernel),
@@ -47,6 +54,9 @@ class PointKernel():
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
+    
+    def __call__(self):
+        return self.pt
 
 
 class GeneralKernel():
@@ -56,6 +66,9 @@ class GeneralKernel():
 
     def __repr__(self):
         return str(self.fn)
+
+    def __call__(self):
+        return self.fn
 
 
 class DOF():
@@ -73,7 +86,6 @@ class DOF():
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
-        fn = "v"
         if self.immersed:
             fn = "tr_{1}_{0}(v)".format(str(self.trace_entity),
                                         str(self.target_space))
@@ -122,8 +134,3 @@ class MyTestFunction():
             return "v(G(x))"
         else:
             return "v(x)"
-
-
-# def construct_point_eval(x, E, V):
-#     delta_x = PointKernel(x)
-#     return DOF(DeltaPairing(E, V), delta_x)

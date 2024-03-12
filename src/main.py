@@ -141,11 +141,13 @@ i_dofs = DOFGenerator(i_xs, S1, S1)
 cg3 = ElementTriple(a4, (P3, triangleH1, "C0"),
                     [v_dofs, e_dofs, i_dofs])
 
+phi_0 = MyTestFunction(lambda x, y: ((1/2)*(1-y), (1/2)*x))
 ls = cg3.generate()
 print("num dofs ", cg3.num_dofs())
 for dof in ls:
     print(dof)
     # print(dof(test_func2))
+    print(dof(phi_0))
 # cg3.plot()
 
 
@@ -159,7 +161,14 @@ for dof in ls:
     print(dof)
 
 
-phi_0 = MyTestFunction(lambda x, y: ((1/2)*(1-y), (1/2)*x))
+def test(x, y):
+    return (1-y, x)
+
+
+phi_0 = MyTestFunction(lambda x, y: (-y,  x))
+phi_1 = MyTestFunction(lambda x, y: (y, 1 - x))
+phi_2 = MyTestFunction(test)
+
 
 xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
@@ -169,4 +178,6 @@ ned = ElementTriple(a4, (P3*P3, triHCurl, "C0"),
 ls = ned.generate()
 for dof in ls:
     print(dof)
-    # print(dof(phi_0))
+    print("phi_0 ", dof(phi_0))
+    print("phi_1 ", dof(phi_1))
+    print("phi_2 ", dof(phi_2))

@@ -65,12 +65,15 @@ class CellHCurl(ElementSobolevSpace):
 
     def pullback(self, v):
         assert self.domain.dim() <= 2
-        v_array = np.array(v)
+        # v_array = np.array(v)
         tangent = np.array(self.domain.basis_vectors(return_coords=True)[0])
-        print(v_array)
-        print(tangent)
-        print(np.dot(tangent, v_array))
-        return tuple(np.dot(tangent, v_array))
+# TODO :fix
+        def apply(*x):
+            result = np.dot(tangent, np.array(v(*x)))
+            if isinstance(result, np.float64):
+                return (result,)
+            return tuple(list(result))
+        return apply
     
     def __repr__(self):
         return "HCurl"

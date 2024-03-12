@@ -28,6 +28,10 @@ def fold_reduce(func_list, *x):
     return prev
 
 
+def normalise(v):
+    norm = np.linalg.norm(v)
+    return v / norm
+
 # def construct_attach_func(attachments, *x):
 
 #     res = fold_reduce(attachments[0], *x)
@@ -126,7 +130,7 @@ class Point():
         for v in vertices[1:]:
             if return_coords:
                 v_coords = self.attachment(top_level_node, v)()
-                sub = np.subtract(v_coords, v_0_coords)
+                sub = normalise(np.subtract(v_coords, v_0_coords))
                 if isinstance(sub, np.int64):
                     basis_vecs.append((sub,))
                 else:
