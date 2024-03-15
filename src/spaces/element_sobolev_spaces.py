@@ -26,7 +26,7 @@ class ElementSobolevSpace(SobolevSpace):
     def trace(self, v):
         raise NotImplementedError("Trace not implemented for", str(type(self)))
 
-    def pullback(self, v):
+    def pullback(self, v, trace_entity):
         raise NotImplementedError("Pullback not implemented for", str(type(self)))
 
 
@@ -35,7 +35,7 @@ class CellH1(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellH1, self).__init__(H1, cell)
 
-    def pullback(self, v):
+    def pullback(self, v, trace_entity):
         # temporarily everything is reference space?
         return v
     
@@ -48,7 +48,7 @@ class CellHDiv(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellHDiv, self).__init__(HDiv, cell)
 
-    def pullback(self, v):
+    def pullback(self, v, trace_entity):
         assert self.domain.dim() <= 2
         v_array = np.array(v)
         normal = np.array(self.domain.basis_vectors(return_coords=True)[1])
@@ -63,18 +63,23 @@ class CellHCurl(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellHCurl, self).__init__(HCurl, cell)
 
-    def pullback(self, v):
+    def pullback(self, v, trace_entity):
         assert self.domain.dim() <= 2
         # v_array = np.array(v)
-        tangent = np.array(self.domain.basis_vectors(return_coords=True)[0])
-# TODO :fix
+        tangent = np.array(trace_entity.basis_vectors(return_coords=True)[0])
+        trace_entity_basis = np.array(self.domain.basis_vectors(return_coords=True,
+                                                                entity=trace_entity))
+        
+# TODO : there has to be a better way to do this
+      
         def apply(*x):
-            result = np.dot(tangent, np.array(v(*x)))
+            result = np.dot(np.matmul(tangent, trace_entity_basis), np.array(v(*x)))
+            print(np.matmul(tangent, trace_entity_basis))
             if isinstance(result, np.float64):
                 return (result,)
             return tuple(list(result))
         return apply
-    
+
     def __repr__(self):
         return "HCurl"
 
@@ -84,7 +89,7 @@ class CellL2(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellL2, self).__init__(L2, cell)
 
-    def pullback(self, v):
+    def pullback(self, v, trace_entity):
         return 0
     
     def __repr__(self):

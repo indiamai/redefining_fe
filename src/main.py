@@ -31,6 +31,12 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # print(a4.vertices())
 # print(a4.basis_vectors())
 # print(a4.basis_vectors(return_coords=True))
+# print(a4.basis_vectors(entity=edges[0], return_coords=True))
+# print(a4.basis_vectors(entity=edges[1], return_coords=True))
+# print(a4.basis_vectors(entity=edges[2], return_coords=True))
+# print(a4.basis_vectors(entity=edges[0]))
+# print(a4.basis_vectors(entity=edges[1]))
+# print(a4.basis_vectors(entity=edges[2]))
 # a4rot = a4.orient(rot)
 # a4.hasse_diagram()
 # a4.plot()
@@ -151,6 +157,12 @@ for dof in ls:
 # cg3.plot()
 
 
+def test(x):
+    return (1/2) * (1 - (np.sqrt(3) / 3))
+
+
+phi_2 = MyTestFunction(test)
+
 print("Integral Moment")
 xs = [lambda g: DOF(L2InnerProd(g(edges[0]), intervalHCurl), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
@@ -159,15 +171,16 @@ int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
 ls = int_ned.generate()
 for dof in ls:
     print(dof)
+    print(dof(phi_2))
 
 
 def test(x, y):
-    return (1-y, x)
+    return ((1/2)*(1-y), (1/2)*x)
 
 
+phi_2 = MyTestFunction(test)
 phi_0 = MyTestFunction(lambda x, y: (-y,  x))
 phi_1 = MyTestFunction(lambda x, y: (y, 1 - x))
-phi_2 = MyTestFunction(test)
 
 
 xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
@@ -178,6 +191,6 @@ ned = ElementTriple(a4, (P3*P3, triHCurl, "C0"),
 ls = ned.generate()
 for dof in ls:
     print(dof)
-    print("phi_0 ", dof(phi_0))
+    print("phi_0 ", dof(phi_2))
     print("phi_1 ", dof(phi_1))
     print("phi_2 ", dof(phi_2))

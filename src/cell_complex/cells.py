@@ -120,8 +120,10 @@ class Point():
             return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
 
-    def basis_vectors(self, return_coords=False):
-        vertices = self.vertices()
+    def basis_vectors(self, return_coords=False, entity=None):
+        if not entity:
+            entity = self
+        vertices = entity.vertices()
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
         if return_coords:
@@ -138,6 +140,25 @@ class Point():
             else:
                 basis_vecs.append((v, v_0))
         return basis_vecs
+    
+    # def subentity_basis(self, entity, return_coords = True):
+    #     vertices = entity.vertices()
+    #     top_level_node = self.d_entities(self.graph_dim())[0]
+    #     v_0 = vertices[0]
+    #     if return_coords:
+    #         v_0_coords = self.attachment(top_level_node, v_0)()
+    #     basis_vecs = []
+    #     for v in vertices[1:]:
+    #         if return_coords:
+    #             v_coords = self.attachment(top_level_node, v)()
+    #             sub = normalise(np.subtract(v_coords, v_0_coords))
+    #             if isinstance(sub, np.int64):
+    #                 basis_vecs.append((sub,))
+    #             else:
+    #                 basis_vecs.append(tuple(sub))
+    #         else:
+    #             basis_vecs.append((v, v_0))
+    #     return basis_vecs
 
     def plot(self, show=True, plain=False):
         """ for now into 2 dimensional space """

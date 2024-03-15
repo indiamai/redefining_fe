@@ -1,7 +1,8 @@
 
 from cell_complex.cells import Point, Edge
-from FIAT.quadrature import GaussJacobiQuadratureLineRule
-from FIAT.reference_element import UFCInterval
+from FIAT.quadrature import GaussLegendreQuadratureLineRule
+
+from FIAT.reference_element import DefaultLine
 
 import numpy as np
 
@@ -36,8 +37,9 @@ class L2InnerProd(Pairing):
         # evaluates integral
         print("evaluating", kernel, v)
         assert self.entity.dim() == 1
-        quadrature = GaussJacobiQuadratureLineRule(UFCInterval(), 3)
-
+        quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
+        # print(kernel())
+        # print(np.dot(kernel(), v(-0.9061)))
         return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
 
     def __repr__(self, kernel, fn):
@@ -82,7 +84,7 @@ class DOF():
         if self.immersed:
             attached_fn = fn.attach(self.attachment)
             return self.pairing(self.kernel,
-                                self.target_space.pullback(attached_fn))
+                                self.target_space.pullback(attached_fn, self.trace_entity))
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
@@ -92,14 +94,14 @@ class DOF():
         else:
             fn = "v"
         return self.pairing.__repr__(self.kernel, fn)
-    
+
     def immerse(self, entity, attachment, target_space):
         if not self.immersed:
             self.trace_entity = entity
             self.attachment = attachment
             self.target_space = target_space
         else:
-            raise "Error immersing twice"
+            raise RuntimeError("Error immersing twice")
             # old_attach = self.attachment
             # old_pullback = self.pullback
             # self.trace_entity = entity
