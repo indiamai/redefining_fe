@@ -83,8 +83,8 @@ def immerse(g, target_cell, triple, target_space, node=0):
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
     for generated_dof in triple.generate():
-        generated_dof.immerse(target_cell.get_node(target_node),
-                              attachment,
-                              target_space)
-        new_dofs.append(generated_dof)
+        new_dof = generated_dof.immerse(target_cell.get_node(target_node),
+                                        attachment,
+                                        target_space)
+        new_dofs.append(new_dof)
     return new_dofs

@@ -152,8 +152,8 @@ ls = cg3.generate()
 print("num dofs ", cg3.num_dofs())
 for dof in ls:
     print(dof)
-    # print(dof(test_func2))
-    print(dof(phi_0))
+    print(dof(test_func2))
+    # print(dof(phi_0))
 # cg3.plot()
 
 

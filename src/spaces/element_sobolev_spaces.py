@@ -3,6 +3,11 @@ import numpy as np
 from ufl.sobolevspace import SobolevSpace
 from spaces.polynomial_spaces import PolynomialSpace
 
+def apply_pullback(*x):
+    result = np.dot(np.matmul(tangent, subEntityBasis), np.array(v(*x)))
+    if isinstance(result, np.float64):
+        return (result,)
+    return tuple(result)
 
 class ElementSpaceTriple():
 
@@ -49,10 +54,14 @@ class CellHDiv(ElementSobolevSpace):
         super(CellHDiv, self).__init__(HDiv, cell)
 
     def pullback(self, v, trace_entity):
-        assert self.domain.dim() <= 2
         v_array = np.array(v)
-        normal = np.array(self.domain.basis_vectors(return_coords=True)[1])
-        return tuple(v_array[0]*normal[1] - v_array[1]*normal[0])
+        entityBasis = np.array(trace_entity.basis_vectors())
+        cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+        
+        # if v_array.__len__ == 2:
+        #     return tuple(v_array[0]*normal[1] - v_array[1]*normal[0])
+        
+        return np.cross(v_array, np.matmul(entityBasis, cellEntityBasis))
 
     def __repr__(self):
         return "HDiv"
@@ -64,20 +73,15 @@ class CellHCurl(ElementSobolevSpace):
         super(CellHCurl, self).__init__(HCurl, cell)
 
     def pullback(self, v, trace_entity):
-        assert self.domain.dim() <= 2
-        # v_array = np.array(v)
-        tangent = np.array(trace_entity.basis_vectors(return_coords=True)[0])
-        trace_entity_basis = np.array(self.domain.basis_vectors(return_coords=True,
-                                                                entity=trace_entity))
+        tangent = np.array(trace_entity.basis_vectors())
+        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         
-# TODO : there has to be a better way to do this
-      
         def apply(*x):
-            result = np.dot(np.matmul(tangent, trace_entity_basis), np.array(v(*x)))
-            print(np.matmul(tangent, trace_entity_basis))
+            result = np.dot(np.matmul(tangent, subEntityBasis),
+                            np.array(v(*x)))
             if isinstance(result, np.float64):
                 return (result,)
-            return tuple(list(result))
+            return tuple(result)
         return apply
 
     def __repr__(self):

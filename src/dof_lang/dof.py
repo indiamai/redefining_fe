@@ -75,16 +75,21 @@ class GeneralKernel():
 
 class DOF():
 
-    def __init__(self, pairing, kernel):
+    def __init__(self, pairing, kernel, immersed=False,
+                 entity=None, attachment=None, target_space=None):
         self.pairing = pairing
         self.kernel = kernel
-        self.immersed = False
+        self.immersed = immersed
+        self.trace_entity = entity
+        self.attachment = attachment
+        self.target_space = target_space
 
     def __call__(self, fn):
         if self.immersed:
             attached_fn = fn.attach(self.attachment)
             return self.pairing(self.kernel,
-                                self.target_space.pullback(attached_fn, self.trace_entity))
+                                self.target_space.pullback(attached_fn,
+                                                           self.trace_entity))
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
@@ -100,15 +105,11 @@ class DOF():
             self.trace_entity = entity
             self.attachment = attachment
             self.target_space = target_space
+            return DOF(self.pairing, self.kernel,
+                       True, entity, attachment, target_space)
         else:
-            raise RuntimeError("Error immersing twice")
-            # old_attach = self.attachment
-            # old_pullback = self.pullback
-            # self.trace_entity = entity
-            # self.attachment = lambda x: attachment(old_attach(x))
-            # self.pullback = lambda v: pullback(old_pullback(v))
-
-        self.immersed = True
+            raise RuntimeError("Error: Immersing twice not supported")
+        # self.immersed = True
 
 
 class MyTestFunction():
