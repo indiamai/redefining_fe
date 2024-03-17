@@ -6,7 +6,7 @@ from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl
-from spaces.polynomial_spaces import P0, P1, P2, P3, Q2
+from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
 
 
 vertices = []
@@ -173,24 +173,22 @@ for dof in ls:
     print(dof)
     print(dof(phi_2))
 
-
-def test(x, y):
-    return ((1/2)*(1-y), (1/2)*x)
-
-
-phi_2 = MyTestFunction(test)
-phi_0 = MyTestFunction(lambda x, y: (-y,  x))
-phi_1 = MyTestFunction(lambda x, y: (y, 1 - x))
+phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6)*x))
+phi_0 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
+                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
+phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
 
 
 xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
 tri_dofs = DOFGenerator(xs, S3/S2, S3)
-vecP3 = P3*P3
-ned = ElementTriple(a4, (P3*P3, triHCurl, "C0"),
+vecP3 = VectorPolynomialSpace(P3, P3)
+ned = ElementTriple(a4, (vecP3, triHCurl, "C0"),
                     [tri_dofs])
 ls = ned.generate()
 for dof in ls:
     print(dof)
-    print("phi_0 ", dof(phi_2))
+    print("phi_0 ", dof(phi_0))
     print("phi_1 ", dof(phi_1))
     print("phi_2 ", dof(phi_2))

@@ -75,7 +75,7 @@ class CellHCurl(ElementSobolevSpace):
     def pullback(self, v, trace_entity):
         tangent = np.array(trace_entity.basis_vectors())
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-        
+
         def apply(*x):
             result = np.dot(np.matmul(tangent, subEntityBasis),
                             np.array(v(*x)))

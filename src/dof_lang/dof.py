@@ -35,7 +35,7 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # evaluates integral
-        print("evaluating", kernel, v)
+        # print("evaluating", kernel, v)
         assert self.entity.dim() == 1
         quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
         # print(kernel())
