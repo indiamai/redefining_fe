@@ -54,14 +54,16 @@ class CellHDiv(ElementSobolevSpace):
         super(CellHDiv, self).__init__(HDiv, cell)
 
     def pullback(self, v, trace_entity):
-        v_array = np.array(v)
         entityBasis = np.array(trace_entity.basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         
-        # if v_array.__len__ == 2:
-        #     return tuple(v_array[0]*normal[1] - v_array[1]*normal[0])
-        
-        return np.cross(v_array, np.matmul(entityBasis, cellEntityBasis))
+        def apply(*x):
+            result = np.cross(np.array(v(*x)),
+                              np.matmul(entityBasis, cellEntityBasis))
+            if isinstance(result, np.float64):
+                return (result,)
+            return tuple(result)
+        return apply
 
     def __repr__(self):
         return "HDiv"

@@ -35,11 +35,9 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # evaluates integral
-        # print("evaluating", kernel, v)
+        print("evaluating", kernel, v)
         assert self.entity.dim() == 1
         quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-        # print(kernel())
-        # print(np.dot(kernel(), v(-0.9061)))
         return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
 
     def __repr__(self, kernel, fn):
