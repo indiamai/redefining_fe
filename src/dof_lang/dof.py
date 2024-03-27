@@ -74,20 +74,22 @@ class GeneralKernel():
 class DOF():
 
     def __init__(self, pairing, kernel, immersed=False,
-                 entity=None, attachment=None, target_space=None):
+                 entity=None, attachment=None, target_space=None, g = None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
         self.trace_entity = entity
         self.attachment = attachment
         self.target_space = target_space
+        self.g = g
 
     def __call__(self, fn):
         if self.immersed:
             attached_fn = fn.attach(self.attachment)
             return self.pairing(self.kernel,
                                 self.target_space.pullback(attached_fn,
-                                                           self.trace_entity))
+                                                           self.trace_entity,
+                                                           self.g))
         return self.pairing(self.kernel, fn)
 
     def __repr__(self):
@@ -98,16 +100,12 @@ class DOF():
             fn = "v"
         return self.pairing.__repr__(self.kernel, fn)
 
-    def immerse(self, entity, attachment, target_space):
+    def immerse(self, entity, attachment, target_space, g):
         if not self.immersed:
-            self.trace_entity = entity
-            self.attachment = attachment
-            self.target_space = target_space
             return DOF(self.pairing, self.kernel,
-                       True, entity, attachment, target_space)
+                       True, entity, attachment, target_space, g)
         else:
             raise RuntimeError("Error: Immersing twice not supported")
-        # self.immersed = True
 
 
 class MyTestFunction():
@@ -116,8 +114,8 @@ class MyTestFunction():
         self.eq = eq
         self.attach_func = attach_func
 
-    def __call__(self, *x):
-        if self.attach_func:
+    def __call__(self, *x, sym=False):
+        if self.attach_func and not sym:
             return self.eq(*self.attach_func(*x))
         else:
             return self.eq(*x)

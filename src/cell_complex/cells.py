@@ -32,13 +32,6 @@ def normalise(v):
     norm = np.linalg.norm(v)
     return v / norm
 
-# def construct_attach_func(attachments, *x):
-
-#     res = fold_reduce(attachments[0], *x)
-#     if isinstance(res, int):
-#         return (res,)
-#     return tuple(res)
-
 
 def make_arrow(ax, mid, edge, direction=1):
     delta = 0.0001 if direction >= 0 else -0.0001
@@ -133,7 +126,7 @@ class Point():
             if return_coords:
                 v_coords = self.attachment(top_level_node, v)()
                 sub = normalise(np.subtract(v_coords, v_0_coords))
-                if isinstance(sub, np.int64):
+                if not hasattr(sub, "__iter__"):
                     basis_vecs.append((sub,))
                 else:
                     basis_vecs.append(tuple(sub))

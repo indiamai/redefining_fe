@@ -1,5 +1,6 @@
 from firedrake import *
 import numpy as np
+import sympy as sp
 from ufl.sobolevspace import SobolevSpace
 from spaces.polynomial_spaces import PolynomialSpace
 
@@ -31,7 +32,7 @@ class ElementSobolevSpace(SobolevSpace):
     def trace(self, v):
         raise NotImplementedError("Trace not implemented for", str(type(self)))
 
-    def pullback(self, v, trace_entity):
+    def pullback(self, v, trace_entity, g):
         raise NotImplementedError("Pullback not implemented for", str(type(self)))
 
 
@@ -40,8 +41,7 @@ class CellH1(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellH1, self).__init__(H1, cell)
 
-    def pullback(self, v, trace_entity):
-        # temporarily everything is reference space?
+    def pullback(self, v, trace_entity, g):
         return v
     
     def __repr__(self):
@@ -53,7 +53,7 @@ class CellHDiv(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellHDiv, self).__init__(HDiv, cell)
 
-    def pullback(self, v, trace_entity):
+    def pullback(self, v, trace_entity, g):
         entityBasis = np.array(trace_entity.basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         
@@ -74,7 +74,7 @@ class CellHCurl(ElementSobolevSpace):
     def __init__(self, cell):
         super(CellHCurl, self).__init__(HCurl, cell)
 
-    def pullback(self, v, trace_entity):
+    def pullback(self, v, trace_entity, g):
         tangent = np.array(trace_entity.basis_vectors())
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
 
@@ -82,6 +82,30 @@ class CellHCurl(ElementSobolevSpace):
             result = np.dot(np.matmul(tangent, subEntityBasis),
                             np.array(v(*x)))
             if isinstance(result, np.float64):
+                return (result,)
+            return tuple(result)
+        return apply
+
+    def __repr__(self):
+        return "HCurl"
+
+
+class CellH2(ElementSobolevSpace):
+
+    def __init__(self, cell):
+        super(CellH2 , self).__init__(H2, cell)
+
+    def pullback(self, v, trace_entity, g):
+        tangent = np.array(g(np.array(self.domain.basis_vectors())[0]))
+
+        def apply(*x):
+            X = sp.DeferredVector('x')
+            
+            dX = tuple([X[i] for i in range(self.domain.dim())])
+            grad_v = [sp.diff(v(*dX, sym=True), dX[i]) for i in range(len(dX))]
+            eval_grad_v = [comp.evalf(subs=dict(zip(dX, v.attach_func(*x)))) for comp in grad_v]
+            result = np.dot(tangent, np.array(eval_grad_v))
+            if not hasattr(result, "__iter__"):
                 return (result,)
             return tuple(result)
         return apply
