@@ -1,5 +1,5 @@
 from sympy.combinatorics import PermutationGroup, Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup
+from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 from cell_complex.cells import Point
 import matplotlib.pyplot as plt
@@ -153,7 +153,7 @@ def r(x):
 
 
 def rot(xs, rad=2*np.pi/3):
-    # rotation by rad radians, default is 60 deg
+    #  anticlockwise rotation by rad radians, default is 120 deg
     x, y = xs[0], xs[1]
     res = (x*np.cos(rad) - y*np.sin(rad), x*np.sin(rad) + y*np.cos(rad))
     return res
@@ -163,6 +163,15 @@ def sqrot(xs):
     # 90 degree rotation
     return rot(xs, np.pi / 2)
 
+
+def tetrot(xs):
+    raise NotImplementedError("Tetrahedron implementation incomplete")
+
+
+def ctetrot(xs):
+    # 120 degree rotation clockwise
+    raise NotImplementedError("Tetrahedron implementation incomplete")
+    return rot(xs, - 2*np.pi / 3)
 
 S1 = GroupRepresentation(SymmetricGroup(1), {})
 S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
@@ -175,34 +184,40 @@ D4 = GroupRepresentation(DihedralGroup(4), {Permutation(0, 1, 2, 3): sqrot,
 C3 = GroupRepresentation(CyclicGroup(3), {Permutation(0, 1, 2): rot})
 C4 = GroupRepresentation(CyclicGroup(4), {Permutation(0, 1, 2, 3): sqrot})
 
+A4 = GroupRepresentation(AlternatingGroup(4), {Permutation(1, 2, 3): tetrot,
+                                               Permutation([1, 2, 0, 3]): ctetrot})
+
 if __name__ == "__main__":
+
+    a4 = AlternatingGroup(4)
+    print(a4.generators)
     # print(C3.members)
     # print(C4.members)
     # print((D4/C4).members)
     # print((S3/S2).base_group._elements)
 
-    for m in S3.members:
-        print(m)
-        print(m((-1, -np.sqrt(3)/3)))
-        coord = m((-0.9, -np.sqrt(3)/3))
-        plt.scatter(coord[0], coord[1], marker="o")
-        plt.text(coord[0], coord[1], repr(m))
+    # for m in S3.members:
+    #     print(m)
+    #     print(m((-1, -np.sqrt(3)/3)))
+    #     coord = m((-0.9, -np.sqrt(3)/3))
+    #     plt.scatter(coord[0], coord[1], marker="o")
+    #     plt.text(coord[0], coord[1], repr(m))
 
-    plt.show()
+    # plt.show()
 
-    source = (-1, -0.9)
-    for m in D4.members:
-        print(m)
-        print(m(source))
-        coord = m(source)
-        plt.scatter(coord[0], coord[1], marker="o")
-        plt.text(coord[0], coord[1], repr(m))
-    plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
-    plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
-    plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
-    plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
+    # source = (-1, -0.9)
+    # for m in D4.members:
+    #     print(m)
+    #     print(m(source))
+    #     coord = m(source)
+    #     plt.scatter(coord[0], coord[1], marker="o")
+    #     plt.text(coord[0], coord[1], repr(m))
+    # plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
+    # plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
+    # plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
+    # plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
 
-    plt.show()
+    # plt.show()
 
     # gens = refD4.generators
     # d4rot = gens[1]
