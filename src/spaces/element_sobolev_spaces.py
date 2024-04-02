@@ -96,6 +96,7 @@ class CellH2(ElementSobolevSpace):
         super(CellH2 , self).__init__(H2, cell)
 
     def pullback(self, v, trace_entity, g):
+        # Compute grad v and then dot with tangent rotated according to the group member
         tangent = np.array(g(np.array(self.domain.basis_vectors())[0]))
 
         def apply(*x):
@@ -111,7 +112,36 @@ class CellH2(ElementSobolevSpace):
         return apply
 
     def __repr__(self):
-        return "HCurl"
+        return "H2"
+
+
+class CellH3(ElementSobolevSpace):
+
+    def __init__(self, cell):
+        super(CellH3 , self).__init__(H2, cell)
+
+    def pullback(self, v, trace_entity, g):
+        b0, b1 = self.domain.basis_vectors()
+        tangent0 = np.array(g(b0))
+        tangent1 = np.array(g(b1))
+
+        def apply(*x):
+            X = sp.DeferredVector('x')
+            
+            dX = tuple([X[i] for i in range(self.domain.dim())])
+            hess_v = [[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))]
+            print(hess_v)
+            eval_grad_v = [[hess_v[i][j].evalf(subs=dict(zip(dX, v.attach_func(*x)))) for i in range(len(dX))] for j in range(len(dX))]
+            print(tangent0)
+            print(tangent1)
+            result = np.dot(np.matmul(tangent0, np.array(eval_grad_v)), tangent1)
+            if not hasattr(result, "__iter__"):
+                return (result,)
+            return tuple(result)
+        return apply
+
+    def __repr__(self):
+        return "H3"
 
 
 class CellL2(ElementSobolevSpace):

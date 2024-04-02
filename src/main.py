@@ -5,7 +5,7 @@ from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
-from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2
+from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
 import matplotlib.pyplot as plt
 
@@ -224,32 +224,19 @@ v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 v_derv_xs = [lambda g: immerse(g, a4, dg0, triangleH2)]
 v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
 
+triangleH3 = CellH3(a4)
+v_derv2_xs = [lambda g: immerse(g, a4, dg0, triangleH3)]
+v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
+
 i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
 her = ElementTriple(a4, (P3, triangleH2, "C0"),
-                    [v_dofs, v_derv_dofs, i_dofs])
+                    [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
 
-phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y)
+phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
 ls = her.generate()
 print("num dofs ", her.num_dofs())
 for dof in ls:
     print(dof)
     print(dof(phi_0))
-# cg3.plot()
-    
-# for m in S3.members:
-#     print(m)
-#     vec = m((1, 0))
-#     coord = m((-1, -np.sqrt(3)/3))
-#     print(coord)
-#     print(vec)
-#     plt.scatter(coord[0], coord[1], marker="o")
-#     # plt.text(coord[0], coord[1], repr(m))
-#     x, y = coord
-#     dir_x, dir_y = vec
-#     print(x+(1/3)*dir_x, y+(1/3)*dir_y)
-#     plt.arrow(x, y, (1/3)*dir_x, (1/3)*dir_y, head_width=0.05, head_length=0.1)
-#     plt.text(x+(1/3)*dir_x, y+(1/3)*dir_y, repr(m))
-
-# plt.show()
