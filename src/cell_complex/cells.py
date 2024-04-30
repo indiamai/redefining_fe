@@ -4,7 +4,6 @@ import itertools
 import networkx as nx
 from groups.groups import e, r, rot
 import copy
-from inspect import signature
 
 
 def topo_pos(G):
@@ -20,9 +19,8 @@ def topo_pos(G):
     return pos_dict
 
 
-def fold_reduce(func_list, *x):
+def fold_reduce(func_list, *prev):
     """ nested function composition helper function, right to left """
-    prev = x
     for func in reversed(func_list):
         prev = func(*prev)
     return prev
@@ -117,6 +115,8 @@ class Point():
         if not entity:
             entity = self
         vertices = entity.vertices()
+        if self.dim == 0:
+            raise ValueError("Dimension 0 entities cannot have Basis Vectors")
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
         if return_coords:
@@ -179,6 +179,21 @@ class Point():
         if show:
             plt.show()
 
+    def plot3d(self):
+        # only plots vertices
+        assert self.dimension == 3
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+
+        top_level_node = self.d_entities(self.graph_dim())[0]
+        nodes = self.d_entities(0)
+        for node in nodes:
+            attach = self.attachment(top_level_node, node)
+            plotted = attach()
+            print(plotted)
+            ax.scatter(plotted[0], plotted[1], plotted[2])
+        plt.show()
+
     def attachment(self, source, dst):
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
@@ -187,15 +202,19 @@ class Point():
         if len(attachments) == 0:
             raise ValueError("No paths from node {} to node {}"
                              .format(source, dst))
-
+        
         # check all attachments resolve to the same function
         if len(attachments) > 1:
             dst_dim = self.dim_of_node(dst)
             basis = np.eye(dst_dim)
-            for i in range(dst_dim):
-                vals = [fold_reduce(attachment, basis[i])
-                        for attachment in attachments]
-                assert all(val == vals[0] for val in vals)
+            if dst_dim == 0:
+                vals = [fold_reduce(attachment) for attachment in attachments]
+                assert all(np.isclose(val, vals[0]).all() for val in vals)
+            else:
+                for i in range(dst_dim):
+                    vals = [fold_reduce(attachment, *tuple(basis[i].tolist()))
+                            for attachment in attachments]
+                    assert all(np.isclose(val, vals[0]).all() for val in vals)
 
         return lambda *x: fold_reduce(attachments[0], *x)
 
@@ -215,8 +234,12 @@ class Point():
         return oriented_point
     
     def __repr__(self):
-        entity_name = ["v", "e", "f", "v"]
+        entity_name = ["v", "e", "f", "c"]
         return entity_name[self.dimension] + str(self.id)
+
+    def copy(self):
+        return copy.deepcopy(self)
+
 
 
 class Edge():
@@ -231,3 +254,6 @@ class Edge():
 
     def lower_dim(self):
         return self.point.dim()
+    
+    def __repr__(self):
+        return str(self.point)

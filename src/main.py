@@ -1,7 +1,7 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.new_groups import r, rot, S1, S2, S3, D4, C4
+from groups.new_groups import r, rot, S1, S2, S3, D4, C4, A4
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
@@ -217,26 +217,49 @@ for dof in ls:
 #     print("phi_2 ", dof(phi_2))
 
 
-print("Hermite")
-v_xs = [lambda g: immerse(g, a4, dg0, triangleH1)]
-v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+# print("Hermite")
+# v_xs = [lambda g: immerse(g, a4, dg0, triangleH1)]
+# v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-v_derv_xs = [lambda g: immerse(g, a4, dg0, triangleH2)]
-v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
+# v_derv_xs = [lambda g: immerse(g, a4, dg0, triangleH2)]
+# v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
 
-triangleH3 = CellH3(a4)
-v_derv2_xs = [lambda g: immerse(g, a4, dg0, triangleH3)]
-v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
+# triangleH3 = CellH3(a4)
+# v_derv2_xs = [lambda g: immerse(g, a4, dg0, triangleH3)]
+# v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
 
-i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
-i_dofs = DOFGenerator(i_xs, S1, S1)
+# i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
+# i_dofs = DOFGenerator(i_xs, S1, S1)
 
-her = ElementTriple(a4, (P3, triangleH2, "C0"),
-                    [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
+# her = ElementTriple(a4, (P3, triangleH2, "C0"),
+#                     [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
 
-phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
-ls = her.generate()
-print("num dofs ", her.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof(phi_0))
+# phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
+# ls = her.generate()
+# print("num dofs ", her.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof(phi_0))
+    
+
+from sympy.combinatorics import PermutationGroup, Permutation
+from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
+a4 = AlternatingGroup(4)
+print(a4.generators)
+print(a4.order())
+
+g0 = a4.generators[0]
+g1 = a4.generators[1]
+
+print(PermutationGroup(g0).elements)
+
+print(A4.generators)
+print(A4.members)
+
+g0 = A4.generators[0]
+
+print((g0*g0*g0).perm)
+C3 = S3 / S2
+group = A4 / C3
+
+print(group.members)
