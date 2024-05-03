@@ -1,6 +1,8 @@
 # Examples of Elements in 3 dimensions
 from firedrake import *
 import numpy as np
+from sympy.combinatorics import PermutationGroup, Permutation
+from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, C4, A4
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
@@ -38,7 +40,8 @@ print(edges)
 face1 = Point(2, [Edge(edges[3], lambda x: [x, -np.sqrt(3) / 3]),
                   Edge(edges[2], lambda x: [(1 - x) / 2,
                                             np.sqrt(3) * (3 * x + 1) / 6], o=r),
-                  Edge(edges[5], lambda x: [(- x - 1) / 2,np.sqrt(3) * (3 * -x + 1) / 6])])
+                  Edge(edges[5], lambda x: [(- x - 1) / 2,
+                                            np.sqrt(3) * (3 * -x + 1) / 6])])
 
 face2 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
                   Edge(edges[4], lambda x: [(1 - x) / 2,
@@ -53,7 +56,7 @@ face3 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 
 face4 = Point(2, [Edge(edges[4], lambda x: [x, -np.sqrt(3) / 3]),
                   Edge(edges[5], lambda x: [(1 - x) / 2,
-                                           np.sqrt(3) * (3 * x + 1) / 6], o=r),
+                                            np.sqrt(3) * (3 * x + 1) / 6], o=r),
                   Edge(edges[1], lambda x: [(- x - 1) / 2,
                                             np.sqrt(3) * (3 * -x + 1) / 6], o=r)])
 print(face1.cell_attachment(3))
@@ -72,10 +75,10 @@ print(face4.cell_attachment(1))
 print(face4.cell_attachment(3))
 print(face4.cell_attachment(2))
 
-lst3 = [Edge(face1, lambda x, y: [-0.5*x + 0.288675134594813*y - 1/3, 0.5*x + 0.866025403784439*y, -0.707106781186547*x + 0.408248290463863*y + 0.235702260395516]),
-        Edge(face2, lambda x, y: [x, -0.577350269189626*y - 1/3, 0.816496580927726*y - 0.235702260395516]),
-        Edge(face3, lambda x, y: [x, 0.577350269189626*y + 1/3, 0.816496580927726*y - 0.235702260395516]),
-        Edge(face4, lambda x, y: [-0.5*x - 0.288675134594813*y + 1/3, -0.5*x + 0.866025403784439*y, 0.707106781186547*x + 0.408248290463863*y + 0.235702260395516])]
+lst3 = [Edge(face1, lambda x, y: [-0.5*x + (np.sqrt(3)/6)*y - 1/3, 0.5*x + (np.sqrt(3)/2)*y, -(np.sqrt(2)/2)*x + (np.sqrt(6)/6)*y + (np.sqrt(2) / 6)]),
+        Edge(face2, lambda x, y: [x, -(np.sqrt(3)/3)*y - 1/3, (np.sqrt(6)/3)*y - (np.sqrt(2)/6)]),
+        Edge(face3, lambda x, y: [x, (np.sqrt(3)/3)*y + 1/3,  (np.sqrt(6)/3)*y - (np.sqrt(2)/6)]),
+        Edge(face4, lambda x, y: [-0.5*x - (np.sqrt(3)/6)*y + 1/3, -0.5*x + (np.sqrt(3)/2)*y, (np.sqrt(2)/2)*x + (np.sqrt(6)/6)*y + (np.sqrt(2) / 6)])]
 
 tetrahedron = Point(3, lst3)
 twod = np.array([[1, -1, -np.sqrt(3)/3],
@@ -105,5 +108,9 @@ print(tetrahedron.cell_attachment(8)(-1))
 print(tetrahedron.cell_attachment(8)(1))
 # print(tetrahedron.dimension)
 # tetrahedron.hasse_diagram()
-tetrahedron.plot3d()
+# tetrahedron.plot3d()
 # breakpoint()
+
+s4 = SymmetricGroup(4)
+print(s4.elements)
+print(s4.generators)
