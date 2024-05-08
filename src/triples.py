@@ -17,7 +17,15 @@ class ElementTriple():
             assert isinstance(d, DOFGenerator)
 
         self.cell = cell
-        self.spaces = spaces
+        cell_spaces = []
+        for space in spaces:
+            # TODO: Fix this to a more sensible condition when all spaces
+            # implemented
+            if hasattr(space, "domain"):
+                cell_spaces.append(space(cell))
+            else:
+                cell_spaces.append(space)
+        self.spaces = tuple(cell_spaces)
         self.DOFGenerator = dof_gen
 
         # assert self.num_dofs() > self.spaces[0].subdegree
@@ -25,7 +33,7 @@ class ElementTriple():
     def generate(self):
         res = []
         for dof_gen in self.DOFGenerator:
-            res.extend(dof_gen.generate())
+            res.extend(dof_gen.generate(self.cell))
         return res
 
     def __iter__(self):
@@ -63,13 +71,15 @@ class DOFGenerator():
     def num_dofs(self):
         return len(self.x) * self.g1.size()
 
-    def generate(self):
+    def generate(self, cell):
         ls = []
         for g in self.g1.members:
             for l_g in self.x:
                 generated = l_g(g)
                 if not isinstance(generated, list):
                     generated = [generated]
+                for dof in generated:
+                    dof.add_entity(cell)
                 ls.extend(generated)
         return ls
 
@@ -78,11 +88,13 @@ def immerse(g, target_cell, triple, target_space, node=0):
     assert isinstance(triple, ElementTriple)
 
     C, V, E = triple
+    target_space = target_space(target_cell)
     print("Attaching node", g.perm(target_cell.d_entities(C.dim()))[node])
     target_node = g.permute(target_cell.d_entities(C.dim()))[node]
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
     for generated_dof in triple.generate():
+        print(generated_dof.trace_entity)
         new_dof = generated_dof.immerse(target_cell.get_node(target_node),
                                         attachment,
                                         target_space, g)

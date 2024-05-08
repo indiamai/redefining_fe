@@ -8,15 +8,18 @@ import numpy as np
 
 class Pairing():
 
-    def __init__(self, entity, space):
+    def __init__(self):
+        self.entity = None
+        self.space = None
+
+    def add_entity(self, entity):
         self.entity = entity
-        self.space = space
 
 
 class DeltaPairing(Pairing):
 
-    def __init__(self, entity, space):
-        super(DeltaPairing, self).__init__(entity, space)
+    def __init__(self):
+        super(DeltaPairing, self).__init__()
 
     def __call__(self, kernel, v):
         assert isinstance(kernel, PointKernel)
@@ -30,8 +33,8 @@ class L2InnerProd(Pairing):
     """ need to think about the abstraction level here - 
     are we wanting to define them as quadrature now? or defer this?
     """
-    def __init__(self, entity, space):
-        super(L2InnerProd, self).__init__(entity, space)
+    def __init__(self):
+        super(L2InnerProd, self).__init__()
 
     def __call__(self, kernel, v):
         # evaluates integral
@@ -91,6 +94,12 @@ class DOF():
                                                            self.trace_entity,
                                                            self.g))
         return self.pairing(self.kernel, fn)
+
+    def add_entity(self, cell):
+        if self.trace_entity is None:
+            print("setting entity", cell)
+            self.trace_entity = cell
+            self.pairing.add_entity(cell)
 
     def __repr__(self):
         if self.immersed:

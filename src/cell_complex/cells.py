@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
 from groups.groups import e, r, rot
@@ -154,12 +155,14 @@ class Point():
 
         for i in range(self.dimension - 1, -1, -1):
             nodes = self.d_entities(i)
+            vert_coords = []
             for node in nodes:
                 attach = self.attachment(top_level_node, node)
                 if i == 0:
                     plotted = attach()
                     if len(plotted) < 2:
                         plotted = (plotted[0], 0)
+                    vert_coords += [plotted]
                     if not plain:
                         plt.plot(plotted[0], plotted[1], 'bo')
                         plt.annotate(node, (plotted[0], plotted[1]))
@@ -171,11 +174,12 @@ class Point():
                         plt.plot(edgevals[:, 0], edgevals[:, 1], color="black")
                     if not plain:
                         make_arrow(ax, 0, attach)
-                elif i == 2:
-                    # write surface plot here
-                    continue
                 else:
                     raise "Error not implemented general plotting"
+            # if i == 2:
+            #     if len(vert_coords) > 2:
+            #         hull = ConvexHull(vert_coords)
+            #         plt.fill(vert_coords[hull.vertices, 0], vert_coords[hull.vertices, 1], alpha=0.5)
         if show:
             plt.show()
 
@@ -184,6 +188,7 @@ class Point():
         assert self.dimension == 3
         fig = plt.figure()
         ax = fig.add_subplot(projection='3d')
+        xs = np.linspace(-1, 1, 20)
 
         top_level_node = self.d_entities(self.graph_dim())[0]
         nodes = self.d_entities(0)
@@ -192,6 +197,12 @@ class Point():
             plotted = attach()
             print(plotted)
             ax.scatter(plotted[0], plotted[1], plotted[2])
+
+        nodes = self.d_entities(1)
+        for node in nodes:
+            attach = self.attachment(top_level_node, node)
+            edgevals = np.array([attach(x) for x in xs])
+            ax.plot3D(edgevals[:, 0], edgevals[:, 1], edgevals[:, 2], color="black")
         plt.show()
 
     def attachment(self, source, dst):

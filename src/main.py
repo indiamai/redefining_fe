@@ -1,7 +1,7 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.new_groups import r, rot, S1, S2, S3, D4, C4, A4
+from groups.new_groups import r, rot, S1, S2, S3, D4, C4
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
@@ -78,188 +78,183 @@ print(intervalH1 < intervalHDiv)
 # #     return 2*x + 3
 
 
-# test_func = MyTestFunction(lambda x: 2*x + 3)
+test_func = MyTestFunction(lambda x: 2*x + 3)
 # test_func2 = MyTestFunction(lambda x, y: (10*x, y))
 # print(test_func)
 # # dg0 on point
 print("DG0 on point")
-xs = [lambda g: DOF(DeltaPairing(vertices[0], pointL2),
-                    PointKernel(g(())))]
-dg0 = ElementTriple(vertices[0], (P0, pointL2, "C0"),
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g(())))]
+dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
 print("num dofs ", dg0.num_dofs())
 for dof in ls:
     print(dof)
 
-# # cg1 on interval
-# print("CG1 on interval")
-# xs = [lambda g: immerse(g, edges[0], dg0, intervalH1)]
-# cg1 = ElementTriple(edges[0], (P1, intervalH1, "C0"),
-#                     DOFGenerator(xs, S2, S1))
-# ls = cg1.generate()
-# print("num dofs ", cg1.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof(test_func))
+# cg1 on interval
+print("CG1 on interval")
+xs = [lambda g: immerse(g, edges[0], dg0, CellH1)]
+cg1 = ElementTriple(edges[0], (P1, CellH1, "C0"),
+                    DOFGenerator(xs, S2, S1))
+ls = cg1.generate()
+print("num dofs ", cg1.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof(test_func))
 
 # # # dg1 on interval
 # print("DG1 on interval")
-# xs = [lambda g:  DOF(DeltaPairing(edges[0], intervalL2),
-#                      PointKernel(g((-1,))))]
-# dg1 = ElementTriple(edges[0], (P1, intervalL2, "C0"),
-#                     DOFGenerator(xs, S2, S1))
-# ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof(test_func))
+xs = [lambda g:  DOF(DeltaPairing(), PointKernel(g((-1,))))]
+dg1 = ElementTriple(edges[0], (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S2, S1))
+ls = dg1.generate()
+print("num dofs ", dg1.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof(test_func))
 
 # # dg1 on triangle
-# print("DG1 on triangle")
-# xs = [lambda g: DOF(DeltaPairing(a4, triangleL2),
-#                     PointKernel(g((-1, -np.sqrt(3)/3))))]
-# dg1 = ElementTriple(a4, (P1, triangleL2, "C0"),
-#                     DOFGenerator(xs, S3/S2, S1))
-# ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
-# for dof in ls:
-#     print(dof)
+print("DG1 on triangle")
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, -np.sqrt(3)/3))))]
+dg1 = ElementTriple(a4, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S3/S2, S1))
+ls = dg1.generate()
+print("num dofs ", dg1.num_dofs())
+for dof in ls:
+    print(dof)
 
 # print("DG0 on interval")
-# xs = [lambda g: DOF(DeltaPairing(edges[0], intervalL2), PointKernel(g((0,))))]
-# dg0_int = ElementTriple(edges[0], (P0, intervalL2, "C0"),
-#                         DOFGenerator(xs, S1, S1))
-# ls = dg0_int.generate()
-# print("num dofs ", dg0_int.num_dofs())
-# for dof in ls:
-#     print(dof)
-# # dg0_int.plot()
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0,))))]
+dg0_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+                        DOFGenerator(xs, S1, S1))
+ls = dg0_int.generate()
+print("num dofs ", dg0_int.num_dofs())
+for dof in ls:
+    print(dof)
+# dg0_int.plot()
 
 # # cg3 on triangle
-# print("CG3")
-# v_xs = [lambda g: immerse(g, a4, dg0, triangleH1)]
-# v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+print("CG3")
+v_xs = [lambda g: immerse(g, a4, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-# e_xs = [lambda g: immerse(g, a4, dg0_int, triangleH1)]
-# e_dofs = DOFGenerator(e_xs, S3/S2, S1)
+e_xs = [lambda g: immerse(g, a4, dg0_int, CellH1)]
+e_dofs = DOFGenerator(e_xs, S3/S2, S1)
 
-# i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
-# i_dofs = DOFGenerator(i_xs, S1, S1)
+i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
 
-# cg3 = ElementTriple(a4, (P3, triangleH1, "C0"),
-#                     [v_dofs, e_dofs, i_dofs])
+cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
+                    [v_dofs, e_dofs, i_dofs])
 
-# phi_0 = MyTestFunction(lambda x, y: (x, y))
-# ls = cg3.generate()
-# print("num dofs ", cg3.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof(phi_0))
-# # cg3.plot()
+phi_0 = MyTestFunction(lambda x, y: (x, y))
+ls = cg3.generate()
+print("num dofs ", cg3.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof(phi_0))
+# cg3.plot()
 
-# print("Integral Moment")
-# xs = [lambda g: DOF(L2InnerProd(g(edges[0]), intervalHCurl), PointKernel((1,)))]
-# dofs = DOFGenerator(xs, S1, S2)
+print("Integral Moment")
+xs = [lambda g: DOF(L2InnerProd(), PointKernel((1,)))]
+dofs = DOFGenerator(xs, S1, S2)
 
-# int_ned = ElementTriple(edges[0], (P1, intervalHCurl, "C0"), dofs)
-# ls = int_ned.generate()
-# for dof in ls:
-#     print(dof)
+int_ned = ElementTriple(edges[0], (P1, CellHCurl, "C0"), dofs)
+ls = int_ned.generate()
+for dof in ls:
+    print(dof)
 
-# phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
-#                                      (np.sqrt(3)/6)*x))
-# phi_0 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
-#                                      (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
-# phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
-#                                      (np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
+phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6)*x))
+phi_0 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
+                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
+phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
 
-# print("Nedelec")
-# xs = [lambda g: immerse(g, a4, int_ned, triHCurl)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
-# vecP3 = VectorPolynomialSpace(P3, P3)
-# ned = ElementTriple(a4, (vecP3, triHCurl, "C0"),
-#                     [tri_dofs])
-# ls = ned.generate()
-# for dof in ls:
-#     print(dof)
-#     print("phi_0 ", dof(phi_0))
-#     print("phi_1 ", dof(phi_1))
-#     print("phi_2 ", dof(phi_2))
+print("Nedelec")
+xs = [lambda g: immerse(g, a4, int_ned, CellHCurl)]
+tri_dofs = DOFGenerator(xs, S3/S2, S3)
+vecP3 = VectorPolynomialSpace(P3, P3)
+ned = ElementTriple(a4, (vecP3, CellHCurl, "C0"), [tri_dofs])
+ls = ned.generate()
+for dof in ls:
+    print(dof)
+    print("phi_0 ", dof(phi_0))
+    print("phi_1 ", dof(phi_1))
+    print("phi_2 ", dof(phi_2))
 
-# print("Edge of RT")
-# xs = [lambda g: DOF(L2InnerProd(g(edges[0]), intervalHDiv), PointKernel((1,)))]
-# dofs = DOFGenerator(xs, S1, S2)
-# int_rt = ElementTriple(edges[0], (P1, intervalHDiv, "C0"), dofs)
-# ls = int_rt.generate()
-# for dof in ls:
-#     print(dof)
+print("Edge of RT")
+xs = [lambda g: DOF(L2InnerProd(), PointKernel((1,)))]
+dofs = DOFGenerator(xs, S1, S2)
+int_rt = ElementTriple(edges[0], (P1, CellHDiv, "C0"), dofs)
+ls = int_rt.generate()
+for dof in ls:
+    print(dof)
 
-# print("RT")
+print("RT")
 
-# phi_2 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6)*x,
-#                                      -1/3 + (np.sqrt(3)/6)*y))
-# phi_0 = MyTestFunction(lambda x, y: ((-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
-#                                      1/6 + (np.sqrt(3)/6)*y))
-# phi_1 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
-#                                      1/6 + (np.sqrt(3)/6)*y))
+phi_2 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6)*x,
+                                     -1/3 + (np.sqrt(3)/6)*y))
+phi_0 = MyTestFunction(lambda x, y: ((-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                     1/6 + (np.sqrt(3)/6)*y))
+phi_1 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                     1/6 + (np.sqrt(3)/6)*y))
 
-# xs = [lambda g: immerse(g, a4, int_rt, triHDiv)]
-# tri_dofs = DOFGenerator(xs, S3/S2, S3)
-# vecP3 = VectorPolynomialSpace(P3, P3)
-# rt = ElementTriple(a4, (vecP3, triHDiv, "C0"),
-#                    [tri_dofs])
-# ls = rt.generate()
-# for dof in ls:
-#     print(dof)
-#     print("phi_0 ", dof(phi_0))
-#     print("phi_1 ", dof(phi_1))
-#     print("phi_2 ", dof(phi_2))
+xs = [lambda g: immerse(g, a4, int_rt, CellHDiv)]
+tri_dofs = DOFGenerator(xs, S3/S2, S3)
+vecP3 = VectorPolynomialSpace(P3, P3)
+rt = ElementTriple(a4, (vecP3, CellHDiv, "C0"), [tri_dofs])
+ls = rt.generate()
+for dof in ls:
+    print(dof)
+    print("phi_0 ", dof(phi_0))
+    print("phi_1 ", dof(phi_1))
+    print("phi_2 ", dof(phi_2))
 
 
-# print("Hermite")
-# v_xs = [lambda g: immerse(g, a4, dg0, triangleH1)]
-# v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+print("Hermite")
+v_xs = [lambda g: immerse(g, a4, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-# v_derv_xs = [lambda g: immerse(g, a4, dg0, triangleH2)]
-# v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
+v_derv_xs = [lambda g: immerse(g, a4, dg0, CellH2)]
+v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
 
-# triangleH3 = CellH3(a4)
-# v_derv2_xs = [lambda g: immerse(g, a4, dg0, triangleH3)]
-# v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
+triangleH3 = CellH3(a4)
+v_derv2_xs = [lambda g: immerse(g, a4, dg0, CellH3)]
+v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
 
-# i_xs = [lambda g: DOF(DeltaPairing(a4, triangleH1), PointKernel(g((0, 0))))]
-# i_dofs = DOFGenerator(i_xs, S1, S1)
+i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
 
-# her = ElementTriple(a4, (P3, triangleH2, "C0"),
-#                     [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
+her = ElementTriple(a4, (P3, CellH2, "C0"),
+                    [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
 
-# phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
-# ls = her.generate()
-# print("num dofs ", her.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof(phi_0))
+phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
+ls = her.generate()
+print("num dofs ", her.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof(phi_0))
     
 
-from sympy.combinatorics import PermutationGroup, Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
-a4 = AlternatingGroup(4)
-print(a4.generators)
-print(a4.order())
+# from sympy.combinatorics import PermutationGroup, Permutation
+# from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
+# a4 = AlternatingGroup(4)
+# print(a4.generators)
+# print(a4.order())
 
-g0 = a4.generators[0]
-g1 = a4.generators[1]
+# g0 = a4.generators[0]
+# g1 = a4.generators[1]
 
-print(PermutationGroup(g0).elements)
+# print(PermutationGroup(g0).elements)
 
-print(A4.generators)
-print(A4.members)
+# print(A4.generators)
+# print(A4.members)
 
-g0 = A4.generators[0]
+# g0 = A4.generators[0]
 
-print((g0*g0*g0).perm)
-C3 = S3 / S2
-group = A4 / C3
+# print((g0*g0*g0).perm)
+# C3 = S3 / S2
+# group = A4 / C3
 
-print(group.members)
+# print(group.members)
