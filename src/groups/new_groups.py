@@ -13,6 +13,8 @@ def fold_reduce(func_list, x):
         prev = func(prev)
     return prev
 
+def construct_rep_func(M):
+    return lambda *x: tuple(np.matmul(M, np.array([*x, 1])))
 
 class GroupMemberRep(object):
 
@@ -50,31 +52,52 @@ class GroupMemberRep(object):
 
 class GroupRepresentation(object):
 
-    def __init__(self, base_group, reps_dict):
+    def __init__(self, base_group, reps_dict=None):
         assert isinstance(base_group, PermutationGroup)
         self.base_group = base_group
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
+        self.cell = None
 
-        for perm in reps_dict.keys():
-            if perm in base_group.generators:
-                self.generators.append(GroupMemberRep(perm,
-                                                      reps_dict[perm], self))
-            else:
-                raise ValueError("Generator key does not match any generator in the base group")
+        # for perm in reps_dict.keys():
+        #     if perm in base_group.generators:
+        #         self.generators.append(GroupMemberRep(perm,
+        #                                               reps_dict[perm], self))
+        #     else:
+        #         raise ValueError("Generator key does not match any generator in the base group")
 
         # this order produces simpler generator lists
+        
+    
+    def add_cell(self, cell):
+        self.cell = cell
+        vertices = cell.vertices(return_coords=True)
+        for g in self.base_group.generators:
+            if len(vertices) > g.size:
+                temp_perm = Permutation(g, size=len(vertices))
+                reordered = temp_perm(vertices)
+            else:
+                reordered = g(vertices)
+            M = np.linalg.solve(np.c_[np.array(vertices),
+                                         np.ones(len(vertices))], np.array(reordered))
+            rep = construct_rep_func(M)
+            self.generators.append(GroupMemberRep(g, rep, self))
         self.generators.reverse()
-        self.members = [self.identity]
+        self._members = [self.identity]
 
-        temp_group_elems = base_group._elements
-        temp_group_elems.remove(base_group.identity)
-        remaining_members = self.compute_reps(base_group.identity,
+        temp_group_elems = self.base_group._elements
+        temp_group_elems.remove(self.base_group.identity)
+        remaining_members = self.compute_reps(self.base_group.identity,
                                               None, temp_group_elems)
         assert (len(remaining_members) == 0)
 
+    def members(self):
+        if self.cell is None:
+            raise ValueError("Group does not have a domain - members have not been calculated")
+        return self._members
+
     def size(self):
-        assert len(self.members) == self.base_group.order()
+        assert len(self._members) == self.base_group.order()
         return self.base_group.order()
 
     def compute_reps(self, g, path, remaining_members):
@@ -89,11 +112,11 @@ class GroupRepresentation(object):
                 if not path:
                     new_path = generator.rep
                     assert (new_perm == generator.perm)
-                    self.members.append(generator)
+                    self._members.append(generator)
                 else:
                     new_path = path.copy()
                     new_path.extend(generator.rep)
-                    self.members.append(GroupMemberRep(new_perm,
+                    self._members.append(GroupMemberRep(new_perm,
                                                        new_path,
                                                        self))
                 remaining_members.remove(new_perm)
@@ -151,6 +174,13 @@ def r(x):
     x_list[0] = -x_list[0]
     return tuple(x_list)
 
+def r_y(x):
+    # reflection in the second component
+    if isinstance(x, int) or len(x) < 2:
+        raise ValueError("Input array too short")
+    x_list = list(x)
+    x_list[1] = -x_list[1]
+    return tuple(x_list)
 
 def rot(xs, rad=2*np.pi/3):
     #  anticlockwise rotation by rad radians, default is 120 deg
@@ -164,33 +194,42 @@ def sqrot(xs):
     return rot(xs, np.pi / 2)
 
 
-def tetrot(xs):
+def g1(xs):
     raise NotImplementedError("Tetrahedron implementation incomplete")
 
 
-def ctetrot(xs):
+def g2(xs):
     # 120 degree rotation clockwise
     raise NotImplementedError("Tetrahedron implementation incomplete")
     return rot(xs, - 2*np.pi / 3)
 
-S1 = GroupRepresentation(SymmetricGroup(1), {})
-S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
-S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,
-                                             Permutation([1, 0, 2]): r})
 
-D4 = GroupRepresentation(DihedralGroup(4), {Permutation(0, 1, 2, 3): sqrot,
-                                            Permutation([3, 2, 1, 0]): r})
+S1 = GroupRepresentation(SymmetricGroup(1))
+S2 = GroupRepresentation(SymmetricGroup(2))
+S3 = GroupRepresentation(SymmetricGroup(3))
 
-C3 = GroupRepresentation(CyclicGroup(3), {Permutation(0, 1, 2): rot})
-C4 = GroupRepresentation(CyclicGroup(4), {Permutation(0, 1, 2, 3): sqrot})
+D4 = GroupRepresentation(DihedralGroup(4))
 
-A4 = GroupRepresentation(AlternatingGroup(4), {Permutation(1, 2, 3): tetrot,
-                                               Permutation([1, 2, 0, 3]): ctetrot})
+C3 = GroupRepresentation(CyclicGroup(3))
+C4 = GroupRepresentation(CyclicGroup(4))
 
-if __name__ == "__main__":
+S4 = GroupRepresentation(SymmetricGroup(4))
+# S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
+# S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,
+#                                              Permutation([1, 0, 2]): r})
 
-    a4 = AlternatingGroup(4)
-    print(a4.generators)
+# D4 = GroupRepresentation(DihedralGroup(4), {Permutation(0, 1, 2, 3): sqrot,
+#                                             Permutation([3, 2, 1, 0]): r})
+
+# C3 = GroupRepresentation(CyclicGroup(3), {Permutation(0, 1, 2): rot})
+# C4 = GroupRepresentation(CyclicGroup(4), {Permutation(0, 1, 2, 3): sqrot})
+
+# S4 = GroupRepresentation(SymmetricGroup(4), {Permutation(0, 1, 2, 3): g1,
+#                                              Permutation([1, 0, 2, 3]): g2})
+
+# if __name__ == "__main__":
+
+    
     # print(C3.members)
     # print(C4.members)
     # print((D4/C4).members)

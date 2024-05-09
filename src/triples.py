@@ -15,6 +15,7 @@ class ElementTriple():
             dof_gen = [dof_gen]
         for d in dof_gen:
             assert isinstance(d, DOFGenerator)
+            d.add_cell(cell)
 
         self.cell = cell
         cell_spaces = []
@@ -68,12 +69,17 @@ class DOFGenerator():
         yield self.g1
         yield self.g2
 
+    def add_cell(self, cell):
+        print("Adding cell")
+        self.g1.add_cell(cell)
+        self.g2.add_cell(cell)
+
     def num_dofs(self):
         return len(self.x) * self.g1.size()
 
     def generate(self, cell):
         ls = []
-        for g in self.g1.members:
+        for g in self.g1.members():
             for l_g in self.x:
                 generated = l_g(g)
                 if not isinstance(generated, list):

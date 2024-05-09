@@ -102,15 +102,22 @@ class Point():
                 return self.graph_dim() - i
         raise "Error: Node not found in graph"
     
-    def vertices(self, get_class=False):
+    def vertices(self, get_class=False, return_coords=False):
         if self.oriented:
-            return self.oriented.permute(self.d_entities(0, get_class))
-        return self.d_entities(0, get_class)
+            verts = self.oriented.permute(self.d_entities(0, get_class))
+        else:
+            verts = self.d_entities(0, get_class)
+        if return_coords:
+            top_level_node = self.d_entities(self.graph_dim())[0]
+            if self.dimension == 0:
+                return [()]
+            return [self.attachment(top_level_node, v)() for v in verts]
+        return verts
     
-    def edges(self, get_class=False):
+    def edges(self, get_class=False, coords = False):
         if self.oriented:
-            return self.oriented.permute(self.d_entities(1, get_class))
-        return self.d_entities(1, get_class)
+            return self.oriented.permute(self.d_entities(1, get_class, coords))
+        return self.d_entities(1, get_class, coords)
 
     def basis_vectors(self, return_coords=True, entity=None):
         if not entity:
