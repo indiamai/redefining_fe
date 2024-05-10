@@ -66,9 +66,6 @@ lst3 = [Edge(face1, lambda x, y: [-0.5*x + (np.sqrt(3)/6)*y - 1/3, 0.5*x + (np.s
         Edge(face4, lambda x, y: [-0.5*x - (np.sqrt(3)/6)*y + 1/3, -0.5*x + (np.sqrt(3)/2)*y, (np.sqrt(2)/2)*x + (np.sqrt(6)/6)*y + (np.sqrt(2) / 6)])]
 
 tetrahedron = Point(3, lst3)
-twod = np.array([[1, -1, -np.sqrt(3)/3],
-                 [1, 1, -np.sqrt(3)/3],
-                 [1, 0, 2*np.sqrt(3)/3],])
 
 # print(tetrahedron.vertices())
 # print(face1.cell_attachment(3))
@@ -108,14 +105,36 @@ twod = np.array([[1, -1, -np.sqrt(3)/3],
 # print(tetrahedron.cell_attachment(8)(1))
 # print(tetrahedron.dimension)
 # tetrahedron.hasse_diagram()
-# tetrahedron.plot3d()
+
 # breakpoint()
+# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0.3, 0.3, 0.3))))]
+# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+#                     DOFGenerator(xs, S4, S1))
+# ls = dg1.generate()
+# print("num dofs ", dg1.num_dofs())
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+# tetrahedron.plot3d(show=False, ax=ax)
+# for dof in ls:
+#     print(dof)
+#     plotted = dof(lambda x, y, z: (x, y, z))
+#     ax.scatter(plotted[0], plotted[1], plotted[2])
+# plt.show()
 
-s4 = SymmetricGroup(4)
-print(s4.elements)
-print(s4.generators)
+print(S4.add_cell(tetrahedron).members())
+print((S4/S2).add_cell(tetrahedron).members())
+# print((S4/S3).add_cell(tetrahedron).members())
 
-
-print(S4.generators)
-print(S4.members)
-breakpoint()
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, 0, -1/np.sqrt(2)))))]
+dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S4/S2, S1))
+ls = dg1.generate()
+print("num dofs ", dg1.num_dofs())
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+tetrahedron.plot3d(show=False, ax=ax)
+for dof in ls:
+    print(dof)
+    plotted = dof(lambda x, y, z: (x, y, z))
+    ax.scatter(plotted[0], plotted[1], plotted[2], color="b")
+plt.show()

@@ -102,7 +102,7 @@ for dof in ls:
     print(dof)
     print(dof(test_func))
 
-# # # # dg1 on interval
+# # # # # dg1 on interval
 # print("DG1 on interval")
 xs = [lambda g:  DOF(DeltaPairing(), PointKernel(g((-1,))))]
 dg1 = ElementTriple(edges[0], (P1, CellL2, "C0"),
@@ -123,37 +123,37 @@ print("num dofs ", dg1.num_dofs())
 for dof in ls:
     print(dof)
 
-# # print("DG0 on interval")
-# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0,))))]
-# dg0_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
-#                         DOFGenerator(xs, S1, S1))
-# ls = dg0_int.generate()
-# print("num dofs ", dg0_int.num_dofs())
-# for dof in ls:
-#     print(dof)
-# # dg0_int.plot()
+# print("DG0 on interval")
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0,))))]
+dg0_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+                        DOFGenerator(xs, S1, S1))
+ls = dg0_int.generate()
+print("num dofs ", dg0_int.num_dofs())
+for dof in ls:
+    print(dof)
+# dg0_int.plot()
 
 # # # cg3 on triangle
-# print("CG3")
-# v_xs = [lambda g: immerse(g, a4, dg0, CellH1)]
-# v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+print("CG3")
+v_xs = [lambda g: immerse(g, a4, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-# e_xs = [lambda g: immerse(g, a4, dg0_int, CellH1)]
-# e_dofs = DOFGenerator(e_xs, S3/S2, S1)
+e_xs = [lambda g: immerse(g, a4, dg0_int, CellH1)]
+e_dofs = DOFGenerator(e_xs, S3/S2, S1)
 
-# i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
-# i_dofs = DOFGenerator(i_xs, S1, S1)
+i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
 
-# cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
-#                     [v_dofs, e_dofs, i_dofs])
+cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
+                    [v_dofs, e_dofs, i_dofs])
 
-# phi_0 = MyTestFunction(lambda x, y: (x, y))
-# ls = cg3.generate()
-# print("num dofs ", cg3.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof(phi_0))
-# # cg3.plot()
+phi_0 = MyTestFunction(lambda x, y: (x, y))
+ls = cg3.generate()
+print("num dofs ", cg3.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof(phi_0))
+# cg3.plot()
 
 # print("Integral Moment")
 # xs = [lambda g: DOF(L2InnerProd(), PointKernel((1,)))]

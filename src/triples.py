@@ -70,9 +70,8 @@ class DOFGenerator():
         yield self.g2
 
     def add_cell(self, cell):
-        print("Adding cell")
-        self.g1.add_cell(cell)
-        self.g2.add_cell(cell)
+        self.g1 = self.g1.add_cell(cell)
+        self.g2 = self.g2.add_cell(cell)
 
     def num_dofs(self):
         return len(self.x) * self.g1.size()

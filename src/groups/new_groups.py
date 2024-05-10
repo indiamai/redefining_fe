@@ -14,7 +14,13 @@ def fold_reduce(func_list, x):
     return prev
 
 def construct_rep_func(M):
-    return lambda *x: tuple(np.matmul(M, np.array([*x, 1])))
+    def rep(*x):
+        x_ones_col = np.r_[np.array(*x), np.ones(1)]
+        sum = np.matmul(x_ones_col, M)
+        if len(sum.shape) > 1:
+            return tuple(map(tuple, sum))
+        return tuple(sum)
+    return rep
 
 class GroupMemberRep(object):
 
@@ -52,45 +58,43 @@ class GroupMemberRep(object):
 
 class GroupRepresentation(object):
 
-    def __init__(self, base_group, reps_dict=None):
+    def __init__(self, base_group, cell=None):
         assert isinstance(base_group, PermutationGroup)
         self.base_group = base_group
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
-        self.cell = None
+        if cell is not None:
+            self.cell = cell
+            vertices = cell.vertices(return_coords=True)
+            counter = 0
+            for g in self.base_group.generators:
+                if len(vertices) > g.size:
+                    temp_perm = Permutation(g, size=len(vertices))
+                    reordered = temp_perm(vertices)
+                else:
+                    reordered = g(vertices)
+                M = np.linalg.solve(np.c_[np.array(vertices),
+                                            np.ones(len(vertices))], np.array(reordered))
+                rep = construct_rep_func(M)
+                rep.__name__ = "g" + str(counter)
+                self.generators.append(GroupMemberRep(g, rep, self))
+                counter += 1
 
-        # for perm in reps_dict.keys():
-        #     if perm in base_group.generators:
-        #         self.generators.append(GroupMemberRep(perm,
-        #                                               reps_dict[perm], self))
-        #     else:
-        #         raise ValueError("Generator key does not match any generator in the base group")
+            # this order produces simpler generator lists
+            self.generators.reverse()
+            self._members = [self.identity]
 
-        # this order produces simpler generator lists
-        
+            temp_group_elems = self.base_group._elements
+            temp_group_elems.remove(self.base_group.identity)
+            remaining_members = self.compute_reps(self.base_group.identity,
+                                                None, temp_group_elems)
+            assert (len(remaining_members) == 0)
+        else:
+            self.cell = None
     
     def add_cell(self, cell):
-        self.cell = cell
-        vertices = cell.vertices(return_coords=True)
-        for g in self.base_group.generators:
-            if len(vertices) > g.size:
-                temp_perm = Permutation(g, size=len(vertices))
-                reordered = temp_perm(vertices)
-            else:
-                reordered = g(vertices)
-            M = np.linalg.solve(np.c_[np.array(vertices),
-                                         np.ones(len(vertices))], np.array(reordered))
-            rep = construct_rep_func(M)
-            self.generators.append(GroupMemberRep(g, rep, self))
-        self.generators.reverse()
-        self._members = [self.identity]
-
-        temp_group_elems = self.base_group._elements
-        temp_group_elems.remove(self.base_group.identity)
-        remaining_members = self.compute_reps(self.base_group.identity,
-                                              None, temp_group_elems)
-        assert (len(remaining_members) == 0)
-
+        return GroupRepresentation(self.base_group, cell=cell)
+        
     def members(self):
         if self.cell is None:
             raise ValueError("Group does not have a domain - members have not been calculated")
@@ -141,23 +145,19 @@ class GroupRepresentation(object):
             the same number of elements
             Doesn't work on D4/S2 but does on D4/C4 """
         assert isinstance(other_frac, GroupRepresentation)
-        self_cyclic_gens = [gen.perm.cyclic_form
-                            for gen in self.generators]
-        other_cyclic_gens = [gen.perm.cyclic_form
-                             for gen in other_frac.generators]
-
+        self_cyclic_gens = [gen.cyclic_form
+                            for gen in self.base_group.generators]
+        other_cyclic_gens = [gen.cyclic_form
+                             for gen in other_frac.base_group.generators]
         if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
             raise ValueError("Invalid Quotient - mismatched cycles")
-        remaining_perms = [gen.perm for gen in self.generators
-                           if gen.perm.cyclic_form not in other_cyclic_gens]
-        rep_dict = {gen.perm: gen.rep for gen in self.generators
-                    if gen.perm.cyclic_form not in other_cyclic_gens}
+        remaining_perms = [gen for gen in self.base_group.generators
+                           if gen.cyclic_form not in other_cyclic_gens]
 
         if len(remaining_perms) == 0:
             raise ValueError("Invalid Quotient - no group formed")
 
-        return GroupRepresentation(PermutationGroup(remaining_perms),
-                                   rep_dict)
+        return GroupRepresentation(PermutationGroup(remaining_perms))
 
 # Function Representation of the coordinate transforms that make up the groups.
 

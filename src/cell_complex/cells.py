@@ -190,11 +190,12 @@ class Point():
         if show:
             plt.show()
 
-    def plot3d(self):
+    def plot3d(self, show=True, ax = None):
         # only plots vertices
         assert self.dimension == 3
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
+        if ax is None:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
         xs = np.linspace(-1, 1, 20)
 
         top_level_node = self.d_entities(self.graph_dim())[0]
@@ -210,7 +211,8 @@ class Point():
             attach = self.attachment(top_level_node, node)
             edgevals = np.array([attach(x) for x in xs])
             ax.plot3D(edgevals[:, 0], edgevals[:, 1], edgevals[:, 2], color="black")
-        plt.show()
+        if show:
+            plt.show()
 
     def attachment(self, source, dst):
         paths = nx.all_simple_edge_paths(self.G, source, dst)
