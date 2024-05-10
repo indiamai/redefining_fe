@@ -85,6 +85,8 @@ class DOF():
         self.attachment = attachment
         self.target_space = target_space
         self.g = g
+        if entity is not None:
+            self.pairing.add_entity(entity)
 
     def __call__(self, fn):
         if self.immersed:
@@ -97,7 +99,6 @@ class DOF():
 
     def add_entity(self, cell):
         if self.trace_entity is None:
-            print("setting entity", cell)
             self.trace_entity = cell
             self.pairing.add_entity(cell)
 

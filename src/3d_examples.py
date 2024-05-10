@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
-from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, C4, S4
+from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, C3, C4, S4, GroupRepresentation
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
@@ -122,12 +122,43 @@ tetrahedron = Point(3, lst3)
 # plt.show()
 
 print(S4.add_cell(tetrahedron).members())
-print((S4/S2).add_cell(tetrahedron).members())
+# print((S4/S2).add_cell(tetrahedron).members())
 # print((S4/S3).add_cell(tetrahedron).members())
 
-xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, 0, -1/np.sqrt(2)))))]
+# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, 0, -1/np.sqrt(2)))))]
+# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+#                     DOFGenerator(xs, S4/S2, S1))
+# ls = dg1.generate()
+# print("num dofs ", dg1.num_dofs())
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+# tetrahedron.plot3d(show=False, ax=ax)
+# for dof in ls:
+#     print(dof)
+#     plotted = dof(lambda x, y, z: (x, y, z))
+#     ax.scatter(plotted[0], plotted[1], plotted[2], color="b")
+# plt.show()
+
+# print((S4/S3).add_cell(tetrahedron).members())
+Z4 = GroupRepresentation(CyclicGroup(4))
+print(Z4.base_group.generators)
+
+Z2 = GroupRepresentation(CyclicGroup(2))
+print(Z2.base_group.generators)
+
+D2 = GroupRepresentation(DihedralGroup(2))
+print(D2.base_group.generators)
+
+A4 = GroupRepresentation(AlternatingGroup(4))
+print(A4.base_group.generators)
+
+print((D2 * C3).base_group.generators)
+
+identity  = MyTestFunction(lambda *x: x)
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.6, 0, -1/np.sqrt(2)))))]
+
 dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-                    DOFGenerator(xs, S4/S2, S1))
+                    DOFGenerator(xs, S4 / S2, S1))
 ls = dg1.generate()
 print("num dofs ", dg1.num_dofs())
 fig = plt.figure()
@@ -135,6 +166,24 @@ ax = fig.add_subplot(projection='3d')
 tetrahedron.plot3d(show=False, ax=ax)
 for dof in ls:
     print(dof)
-    plotted = dof(lambda x, y, z: (x, y, z))
+    plotted = dof(identity)
     ax.scatter(plotted[0], plotted[1], plotted[2], color="b")
 plt.show()
+
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g(())))]
+dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
+                    DOFGenerator(xs, S1, S1))
+
+print("CG1 on interval")
+xs = [lambda g: immerse(g, tetrahedron, dg0, CellH1)]
+cg1 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
+                    DOFGenerator(xs, S4 / S2, S1))
+ls = cg1.generate()
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+print("num dofs ", cg1.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.trace_entity)
+    plotted = dof(identity)
+    ax.scatter(plotted[0], plotted[1], plotted[2], color="b")

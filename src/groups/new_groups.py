@@ -133,10 +133,13 @@ class GroupRepresentation(object):
         return remaining_members
 
     def get_member(self, perm):
-        for m in self.members:
+        for m in self.members():
             if m.perm == perm:
                 return m
         raise ValueError("Permutation not a member of group")
+    
+    def __mul__(self, other_group):
+        return GroupRepresentation(PermutationGroup(self.base_group.generators + other_group.base_group.generators))
 
     def __truediv__(self, other_frac):
         """ This isn't a mathematically accurate representation of
@@ -149,6 +152,8 @@ class GroupRepresentation(object):
                             for gen in self.base_group.generators]
         other_cyclic_gens = [gen.cyclic_form
                              for gen in other_frac.base_group.generators]
+        # breakpoint()
+        print(all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]))
         if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
             raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen for gen in self.base_group.generators
