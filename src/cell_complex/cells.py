@@ -203,8 +203,7 @@ class Point():
         for node in nodes:
             attach = self.attachment(top_level_node, node)
             plotted = attach()
-            print(plotted)
-            ax.scatter(plotted[0], plotted[1], plotted[2])
+            ax.scatter(plotted[0], plotted[1], plotted[2],color="black")
 
         nodes = self.d_entities(1)
         for node in nodes:
