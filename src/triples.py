@@ -74,6 +74,7 @@ class DOFGenerator():
         self.g2 = self.g2.add_cell(cell)
 
     def num_dofs(self):
+        print(self.g1.size())
         return len(self.x) * self.g1.size()
 
     def generate(self, cell):
@@ -94,8 +95,18 @@ def immerse(g, target_cell, triple, target_space, node=0):
 
     C, V, E = triple
     target_space = target_space(target_cell)
-    print("Attaching node", g.perm(target_cell.d_entities(C.dim()))[node])
-    target_node = g.permute(target_cell.d_entities(C.dim()))[node]
+    print("IMMERSING")
+
+    if C.dim() >= 1:
+        target_node = target_cell.permute_entities(g, C.dim())[node]
+    else:
+        target_node = g.permute(target_cell.d_entities(C.dim()))[node]
+    print("Attaching node", g.permute(target_cell.d_entities(C.dim()))[node])
+    print(g.perm)
+    print(g.permute(target_cell.d_entities(C.dim())))
+    # if len(g.permute(target_cell.d_entities(C.dim()))) > 4:
+    #     breakpoint()
+    
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
     for generated_dof in triple.generate():

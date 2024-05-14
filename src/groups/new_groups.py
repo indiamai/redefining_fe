@@ -15,8 +15,9 @@ def fold_reduce(func_list, x):
 
 def construct_rep_func(M):
     def rep(*x):
-        x_ones_col = np.r_[np.array(*x), np.ones(1)]
-        sum = np.matmul(x_ones_col, M)
+        x_ones = np.r_[np.array(*x), np.ones(1)]
+        # breakpoint()
+        sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
         return tuple(sum)

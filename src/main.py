@@ -39,7 +39,7 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # print(a4.basis_vectors(entity=edges[1]))
 # print(a4.basis_vectors(entity=edges[2]))
 # a4rot = a4.orient(rot)
-# a4.hasse_diagram()
+a4.hasse_diagram()
 # a4.plot()
 # a4rot.plot()
 # edges[0].plot()

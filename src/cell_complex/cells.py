@@ -113,11 +113,45 @@ class Point():
                 return [()]
             return [self.attachment(top_level_node, v)() for v in verts]
         return verts
+
     
     def edges(self, get_class=False, coords = False):
         if self.oriented:
-            return self.oriented.permute(self.d_entities(1, get_class, coords))
-        return self.d_entities(1, get_class, coords)
+            return self.oriented.permute(self.d_entities(1, get_class))
+        return self.d_entities(1, get_class)
+    
+    def permute_entities(self, g, d):
+        # d = 1
+        verts = self.vertices()
+        entities = self.d_entities(d)
+        reordered = g.permute(verts)
+        entity_dict = {}
+        reordered_entity_dict = {}
+        for e in entities:
+            print(e)
+            entity_verts = []
+            for v in verts:
+                connected = list(nx.all_simple_edge_paths(self.G, e, v))
+                if len(connected) > 0:
+                    entity_verts.append(v)
+            print(entity_verts)
+            entity_dict[e] = tuple(entity_verts)
+            reordered_entity_dict[e] = tuple([reordered[i] for i in entity_verts])
+            # breakpoint()
+            # connected_verts = list(self.G[e].keys())
+            
+            # 
+            # print(e)
+            # print(self.G[e])
+            # paths = nx.all_simple_edge_paths(self.G, source, dst)
+        reordered_edges = np.zeros_like(np.array(entities))
+        min_id = min(entities)
+        for e in self.d_entities(d):
+            for e1 in entities:
+                if set(entity_dict[e]) == set(reordered_entity_dict[e1]):
+                    reordered_edges[e1 - min_id] = e
+        return reordered_edges
+
 
     def basis_vectors(self, return_coords=True, entity=None):
         if not entity:
