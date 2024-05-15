@@ -217,7 +217,6 @@ tetrahedron.plot3d(show=False, ax=ax)
 count = 0
 for dof in ls:
     print(dof)
-    print(dof.trace_entity)
     count += 1
     plotted = dof(identity)
     if dof.trace_entity.dimension == 1:

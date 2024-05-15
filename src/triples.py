@@ -95,22 +95,11 @@ def immerse(g, target_cell, triple, target_space, node=0):
 
     C, V, E = triple
     target_space = target_space(target_cell)
-    print("IMMERSING")
-
-    if C.dim() >= 1:
-        target_node = target_cell.permute_entities(g, C.dim())[node]
-    else:
-        target_node = g.permute(target_cell.d_entities(C.dim()))[node]
+    target_node = target_cell.permute_entities(g, C.dim())[node]
     print("Attaching node", g.permute(target_cell.d_entities(C.dim()))[node])
-    print(g.perm)
-    print(g.permute(target_cell.d_entities(C.dim())))
-    # if len(g.permute(target_cell.d_entities(C.dim()))) > 4:
-    #     breakpoint()
-    
     attachment = target_cell.cell_attachment(target_node)
     new_dofs = []
     for generated_dof in triple.generate():
-        print(generated_dof.trace_entity)
         new_dof = generated_dof.immerse(target_cell.get_node(target_node),
                                         attachment,
                                         target_space, g)

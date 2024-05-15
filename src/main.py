@@ -39,7 +39,7 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # print(a4.basis_vectors(entity=edges[1]))
 # print(a4.basis_vectors(entity=edges[2]))
 # a4rot = a4.orient(rot)
-a4.hasse_diagram()
+# a4.hasse_diagram()
 # a4.plot()
 # a4rot.plot()
 # edges[0].plot()
@@ -153,7 +153,7 @@ print("num dofs ", cg3.num_dofs())
 for dof in ls:
     print(dof)
     print(dof(phi_0))
-# cg3.plot()
+cg3.plot()
 
 # print("Integral Moment")
 # xs = [lambda g: DOF(L2InnerProd(), PointKernel((1,)))]
