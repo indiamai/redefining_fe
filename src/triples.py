@@ -63,6 +63,7 @@ class DOFGenerator():
         self.x = generator_funcs
         self.g1 = gen_group
         self.g2 = trans_group
+        self.dof_numbers = None
 
     def __iter__(self):
         yield self.x
@@ -75,6 +76,10 @@ class DOFGenerator():
 
     def num_dofs(self):
         print(self.g1.size())
+        print(self.x)
+        if not self.dof_numbers is None:
+            return self.dof_numbers
+
         return len(self.x) * self.g1.size()
 
     def generate(self, cell):
@@ -87,6 +92,7 @@ class DOFGenerator():
                 for dof in generated:
                     dof.add_entity(cell)
                 ls.extend(generated)
+        self.dof_numbers = len(ls)
         return ls
 
 

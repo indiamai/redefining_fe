@@ -141,27 +141,65 @@ tetrahedron = Point(3, lst3)
 # plt.show()
 
 Z4 = GroupRepresentation(CyclicGroup(4))
+print("Z4")
 print(Z4.base_group.generators)
+print(Z4.base_group.order())
 
 Z3 = GroupRepresentation(CyclicGroup(3))
+print("Z3")
 print(Z3.base_group.generators)
+print(Z3.base_group.order())
 
 Z2 = GroupRepresentation(CyclicGroup(2))
+print("Z2")
 print(Z2.base_group.generators)
+print(Z2.base_group.order())
 
 D2 = GroupRepresentation(DihedralGroup(2))
+print("D2")
 print(D2.base_group.generators)
+print(D2.base_group.order())
 
-# # C6 = GroupRepresentation(CyclicGroup(6))
+A4 = GroupRepresentation(AlternatingGroup(4))
+print("A4")
+print(A4.base_group.generators)
+print(A4.base_group.order())
 
-# A4 = GroupRepresentation(AlternatingGroup(4))
-# print(A4.base_group.generators)
+A3 = GroupRepresentation(AlternatingGroup(3))
+print("A3")
+print(A3.base_group.generators)
+print(A3.base_group.order())
 
-# a = Permutation(0, 1)(2, 3)
-# b = Permutation(0, 2)(1, 3)
-# c = Permutation(0, 3)(1, 2)
-# K4 = GroupRepresentation(PermutationGroup(a, b, c))
 
+
+
+a = Permutation(0, 1)(2, 3)
+b = Permutation(0, 2)(1, 3)
+c = Permutation(0, 3)(1, 2)
+K4 = GroupRepresentation(PermutationGroup(a, b, c))
+print("K4")
+print(K4.base_group.generators)
+print(K4.base_group.order())
+
+print("S3")
+print((S3/S2).base_group.generators)
+print((S3/S2).base_group.order())
+c3_2_tet = (S3/S2).add_cell(tetrahedron)
+mems = c3_2_tet.members()
+for m in mems:
+    print(m.perm.array_form)
+# # breakpoint()
+
+a = Permutation(1)(0, 2, 3)
+b = Permutation(2, 3)
+C3_2 = GroupRepresentation(PermutationGroup(a))
+print("Weird group")
+print(C3_2.base_group.generators)
+print(C3_2.base_group.order())
+c3_2_tet = C3_2.add_cell(tetrahedron)
+mems = c3_2_tet.members()
+for m in mems:
+    print(m.perm.array_form)
 # # breakpoint()
 # print((D2 * C3).base_group.generators)
 
@@ -201,14 +239,16 @@ v_xs = [lambda g: immerse(g, tetrahedron, dg0, CellH1)]
 verts = DOFGenerator(v_xs, S4 / S2, S1)
 
 e_xs = [lambda g: immerse(g, tetrahedron, dg1_int, CellH1)]
-edges = DOFGenerator(e_xs, Z3 * D2, S1)
+edges1 = DOFGenerator(e_xs, S3 / S2, S1)
+e_xs = [lambda g: immerse(g, tetrahedron, dg1_int, CellH1, node=3)]
+edges2 = DOFGenerator(e_xs, S3 / S2, S1)
 
 f_xs = [lambda g: immerse(g, tetrahedron, dg0_face, CellH1)]
 faces = DOFGenerator(f_xs, S4 / S2, S1)
 
 
 cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
-                    [verts, edges, faces])
+                    [verts, edges1, edges2, faces])
 ls = cg3.generate()
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
