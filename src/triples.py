@@ -50,7 +50,7 @@ class ElementTriple():
         dofs = self.generate()
         self.cell.plot(show=False, plain=True)
         for dof in dofs:
-            coord = dof(MyTestFunction(lambda *x: x))
+            coord = dof.eval(MyTestFunction(lambda *x: x))
             plt.scatter(coord[0], coord[1], marker="o", color="blue")
         plt.show()
 
@@ -94,20 +94,43 @@ class DOFGenerator():
                 ls.extend(generated)
         self.dof_numbers = len(ls)
         return ls
+    
+    def __repr__(self):
+        repr_str = ""
+        for x_elem in self.x:
+            repr_str += "g(" + str(x_elem) + ")"
+        return repr_str
 
 
-def immerse(g, target_cell, triple, target_space, node=0):
-    assert isinstance(triple, ElementTriple)
+class ImmersedDOF():
 
-    C, V, E = triple
-    target_space = target_space(target_cell)
-    target_node = target_cell.permute_entities(g, C.dim())[node]
-    print("Attaching node", g.permute(target_cell.d_entities(C.dim()))[node])
-    attachment = target_cell.cell_attachment(target_node)
-    new_dofs = []
-    for generated_dof in triple.generate():
-        new_dof = generated_dof.immerse(target_cell.get_node(target_node),
-                                        attachment,
-                                        target_space, g)
-        new_dofs.append(new_dof)
-    return new_dofs
+    def __init__(self, target_cell, triple, target_space, start_node=0):
+        self.target_cell = target_cell
+        self.triple = triple
+        self.C, self.V, self.E = triple
+        self.target_space = target_space(target_cell)
+        self.start_node = start_node
+
+    def __call__(self, g):
+        target_node = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
+
+        print("Attaching node", target_node)
+
+        attachment = self.target_cell.cell_attachment(target_node)
+        new_dofs = []
+        for generated_dof in self.triple.generate():
+            new_dof = generated_dof.immerse(self.target_cell.get_node(target_node),
+                                            attachment,
+                                            self.target_space, g)
+            new_dofs.append(new_dof)
+        return new_dofs
+    
+    def __repr__(self):
+        repr_str = ""
+        for dof_gen in self.E:
+            repr_str += "Im_" + str(self.target_space) + "_" + str(self.target_cell) + "(" + str(dof_gen) + ")"
+        return repr_str
+
+
+def immerse(target_cell, triple, target_space, node=0):
+    return ImmersedDOF(target_cell, triple, target_space, node)

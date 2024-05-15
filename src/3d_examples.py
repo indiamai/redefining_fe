@@ -225,25 +225,28 @@ xs = [lambda g: DOF(DeltaPairing(), PointKernel(g(())))]
 dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 
-xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.3,)))),
-      lambda g: DOF(DeltaPairing(), PointKernel(g((0.5,))))]
+# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.3,)))),
+#       lambda g: DOF(DeltaPairing(), PointKernel(g((0.5,))))]
+# dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+#                         DOFGenerator(xs, S1, S1))
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.3,))))]
 dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
-                        DOFGenerator(xs, S1, S1))
+                        DOFGenerator(xs, S2, S1))
 
 xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
 dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 
 
-v_xs = [lambda g: immerse(g, tetrahedron, dg0, CellH1)]
+v_xs = [immerse(tetrahedron, dg0, CellH1)]
 verts = DOFGenerator(v_xs, S4 / S2, S1)
 
-e_xs = [lambda g: immerse(g, tetrahedron, dg1_int, CellH1)]
+e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
 edges1 = DOFGenerator(e_xs, S3 / S2, S1)
-e_xs = [lambda g: immerse(g, tetrahedron, dg1_int, CellH1, node=3)]
+e_xs = [immerse(tetrahedron, dg1_int, CellH1, node=3)]
 edges2 = DOFGenerator(e_xs, S3 / S2, S1)
 
-f_xs = [lambda g: immerse(g, tetrahedron, dg0_face, CellH1)]
+f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
 faces = DOFGenerator(f_xs, S4 / S2, S1)
 
 
@@ -258,7 +261,7 @@ count = 0
 for dof in ls:
     print(dof)
     count += 1
-    plotted = dof(identity)
+    plotted = dof.eval(identity)
     if dof.trace_entity.dimension == 1:
         color = "r"
     elif dof.trace_entity.dimension == 2:

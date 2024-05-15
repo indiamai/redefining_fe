@@ -88,7 +88,10 @@ class DOF():
         if entity is not None:
             self.pairing.add_entity(entity)
 
-    def __call__(self, fn):
+    def __call__(self, g):
+        self.g = g
+
+    def eval(self, fn):
         if self.immersed:
             attached_fn = fn.attach(self.attachment)
             return self.pairing(self.kernel,
