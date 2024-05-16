@@ -48,11 +48,37 @@ class ElementTriple():
     def plot(self):
         # point evaluation nodes only
         dofs = self.generate()
-        self.cell.plot(show=False, plain=True)
-        for dof in dofs:
-            coord = dof.eval(MyTestFunction(lambda *x: x))
-            plt.scatter(coord[0], coord[1], marker="o", color="blue")
-        plt.show()
+        identity = MyTestFunction(lambda *x: x)
+        if self.cell.dimension < 3:
+            self.cell.plot(show=False, plain=True)
+            for dof in dofs:
+                print(dof)
+                print(dof.trace_entity)
+                coord = dof.eval(identity)
+                if dof.trace_entity.dimension == 1:
+                    color = "r"
+                elif dof.trace_entity.dimension == 2:
+                    color = "g"
+                else:
+                    color = "b"
+                plt.scatter(coord[0], coord[1], marker="o", color=color)
+            plt.show()
+        elif self.cell.dimension == 3:
+            fig = plt.figure()
+            ax = fig.add_subplot(projection='3d')
+            self.cell.plot3d(show=False, ax=ax)
+            for dof in dofs:
+                coord = dof.eval(identity)
+                if dof.trace_entity.dimension == 1:
+                    color = "r"
+                elif dof.trace_entity.dimension == 2:
+                    color = "g"
+                else:
+                    color = "b"
+                ax.scatter(coord[0], coord[1], coord[2], color=color)
+            plt.show()
+        else:
+            raise ValueError("Plotting not supported in this dimension")
 
 
 class DOFGenerator():
@@ -64,6 +90,7 @@ class DOFGenerator():
         self.g1 = gen_group
         self.g2 = trans_group
         self.dof_numbers = None
+        self.ls = None
 
     def __iter__(self):
         yield self.x
@@ -75,25 +102,24 @@ class DOFGenerator():
         self.g2 = self.g2.add_cell(cell)
 
     def num_dofs(self):
-        print(self.g1.size())
-        print(self.x)
-        if not self.dof_numbers is None:
-            return self.dof_numbers
-
-        return len(self.x) * self.g1.size()
-
+        if self.dof_numbers is None:
+            raise ValueError("DOFs not generated yet")
+        return self.dof_numbers
+        
     def generate(self, cell):
-        ls = []
-        for g in self.g1.members():
-            for l_g in self.x:
-                generated = l_g(g)
-                if not isinstance(generated, list):
-                    generated = [generated]
-                for dof in generated:
-                    dof.add_entity(cell)
-                ls.extend(generated)
-        self.dof_numbers = len(ls)
-        return ls
+        if self.ls is None:
+            self.ls = []
+            for g in self.g1.members():
+                for l_g in self.x:
+                    generated = l_g(g)
+                    if not isinstance(generated, list):
+                        generated = [generated]
+                    for dof in generated:
+                        dof.add_entity(cell)
+                    self.ls.extend(generated)
+            self.dof_numbers = len(self.ls)
+            return self.ls
+        return self.ls
     
     def __repr__(self):
         repr_str = ""

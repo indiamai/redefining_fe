@@ -153,8 +153,8 @@ class GroupRepresentation(object):
                             for gen in self.base_group.generators]
         other_cyclic_gens = [gen.cyclic_form
                              for gen in other_frac.base_group.generators]
-        # breakpoint()
-        print(all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]))
+        # # breakpoint()
+        # print(all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]))
         if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
             raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen for gen in self.base_group.generators
@@ -213,13 +213,23 @@ def g2(xs):
 S1 = GroupRepresentation(SymmetricGroup(1))
 S2 = GroupRepresentation(SymmetricGroup(2))
 S3 = GroupRepresentation(SymmetricGroup(3))
+S4 = GroupRepresentation(SymmetricGroup(4))
 
 D4 = GroupRepresentation(DihedralGroup(4))
 
 C3 = GroupRepresentation(CyclicGroup(3))
 C4 = GroupRepresentation(CyclicGroup(4))
 
-S4 = GroupRepresentation(SymmetricGroup(4))
+Z2 = GroupRepresentation(CyclicGroup(2))
+Z3 = GroupRepresentation(CyclicGroup(3))
+Z4 = GroupRepresentation(CyclicGroup(4))
+
+
+D2 = GroupRepresentation(DihedralGroup(2))
+A4 = GroupRepresentation(AlternatingGroup(4))
+A3 = GroupRepresentation(AlternatingGroup(3))
+
+
 # S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
 # S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,
 #                                              Permutation([1, 0, 2]): r})
@@ -271,3 +281,34 @@ S4 = GroupRepresentation(SymmetricGroup(4))
     # point = d4rot * d4rot * d4rot * d4rot
     # print(point)
     # print(point(coord))
+
+# a = Permutation(0, 1)(2, 3)
+# b = Permutation(0, 2)(1, 3)
+# c = Permutation(0, 3)(1, 2)
+# K4 = GroupRepresentation(PermutationGroup(a, b, c))
+# print("K4")
+# print(K4.base_group.generators)
+# print(K4.base_group.order())
+
+# print("S4/S2")
+# print((S4/S2).base_group.generators)
+# print((S4/S2).base_group.order())
+# c3_2_tet = (S4/S2).add_cell(tetrahedron)
+# mems = c3_2_tet.members()
+# for m in mems:
+#     print(m.perm.array_form)
+# # # breakpoint()
+
+# a = Permutation(1)(0, 2, 3)
+# b = Permutation(2, 3)
+# C3_2 = GroupRepresentation(PermutationGroup(a))
+# print("Weird group")
+# print(C3_2.base_group.generators)
+# print(C3_2.base_group.order())
+# c3_2_tet = C3_2.add_cell(tetrahedron)
+# mems = c3_2_tet.members()
+# for m in mems:
+#     print(m.perm.array_form)
+# # # breakpoint()
+# # print((D2 * C3).base_group.generators)
+

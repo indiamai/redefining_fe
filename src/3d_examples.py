@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
-from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, C3, C4, S4, GroupRepresentation
+from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
@@ -105,130 +105,41 @@ tetrahedron = Point(3, lst3)
 # print(tetrahedron.cell_attachment(8)(1))
 # print(tetrahedron.dimension)
 # tetrahedron.hasse_diagram()
-# A4 = GroupRepresentation(AlternatingGroup(4))
-# s2tet = (S4/S2).add_cell(tetrahedron)
-# for m in s2tet.members():
-#     print(tetrahedron.permute_entities(m, 1))
-#     print(tetrahedron.permute_entities(m, 2))
-
-# breakpoint()
-# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0.3, 0.3, 0.3))))]
-# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-#                     DOFGenerator(xs, S4, S1))
-# ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
-# fig = plt.figure()
-# ax = fig.add_subplot(projection='3d')
-# tetrahedron.plot3d(show=False, ax=ax)
-# for dof in ls:
-#     print(dof)
-#     plotted = dof(lambda x, y, z: (x, y, z))
-#     ax.scatter(plotted[0], plotted[1], plotted[2])
-# plt.show()
-
-# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, 0, -1/np.sqrt(2)))))]
-# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-#                     DOFGenerator(xs, S4/S2, S1))
-# ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
-# fig = plt.figure()
-# ax = fig.add_subplot(projection='3d')
-# tetrahedron.plot3d(show=False, ax=ax)
-# for dof in ls:
-#     print(dof)
-#     plotted = dof(lambda x, y, z: (x, y, z))
-#     ax.scatter(plotted[0], plotted[1], plotted[2], color="b")
-# plt.show()
-
-Z4 = GroupRepresentation(CyclicGroup(4))
-print("Z4")
-print(Z4.base_group.generators)
-print(Z4.base_group.order())
-
-Z3 = GroupRepresentation(CyclicGroup(3))
-print("Z3")
-print(Z3.base_group.generators)
-print(Z3.base_group.order())
-
-Z2 = GroupRepresentation(CyclicGroup(2))
-print("Z2")
-print(Z2.base_group.generators)
-print(Z2.base_group.order())
-
-D2 = GroupRepresentation(DihedralGroup(2))
-print("D2")
-print(D2.base_group.generators)
-print(D2.base_group.order())
-
-A4 = GroupRepresentation(AlternatingGroup(4))
-print("A4")
-print(A4.base_group.generators)
-print(A4.base_group.order())
-
-A3 = GroupRepresentation(AlternatingGroup(3))
-print("A3")
-print(A3.base_group.generators)
-print(A3.base_group.order())
 
 
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0.3, 0.3, 0.3))))]
+dg0 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S4, S1))
+ls = dg0.generate()
+dg0.plot()
+print("num dofs ", dg0.num_dofs())
+for dof in ls:
+    print(dof)
 
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-1, 0, -1/np.sqrt(2)))))]
+dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S4/S2, S1))
+ls = dg1.generate()
+dg1.plot()
+print("num dofs ", dg1.num_dofs())
+for dof in ls:
+    print(dof)
 
-a = Permutation(0, 1)(2, 3)
-b = Permutation(0, 2)(1, 3)
-c = Permutation(0, 3)(1, 2)
-K4 = GroupRepresentation(PermutationGroup(a, b, c))
-print("K4")
-print(K4.base_group.generators)
-print(K4.base_group.order())
+xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.6, 0, -1/np.sqrt(2)))))]
 
-print("S3")
-print((S3/S2).base_group.generators)
-print((S3/S2).base_group.order())
-c3_2_tet = (S3/S2).add_cell(tetrahedron)
-mems = c3_2_tet.members()
-for m in mems:
-    print(m.perm.array_form)
-# # breakpoint()
-
-a = Permutation(1)(0, 2, 3)
-b = Permutation(2, 3)
-C3_2 = GroupRepresentation(PermutationGroup(a))
-print("Weird group")
-print(C3_2.base_group.generators)
-print(C3_2.base_group.order())
-c3_2_tet = C3_2.add_cell(tetrahedron)
-mems = c3_2_tet.members()
-for m in mems:
-    print(m.perm.array_form)
-# # breakpoint()
-# print((D2 * C3).base_group.generators)
-
-identity = MyTestFunction(lambda *x: x)
-# # xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.6, 0, -1/np.sqrt(2)))))]
-
-# # dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-# #                     DOFGenerator(xs, A4, S1))
-# # ls = dg1.generate()
-# # print("num dofs ", dg1.num_dofs())
-# # fig = plt.figure()
-# # ax = fig.add_subplot(projection='3d')
-# # tetrahedron.plot3d(show=False, ax=ax)
-# # for dof in ls:
-# #     print(dof)
-# #     plotted = dof(identity)
-# #     ax.scatter(plotted[0], plotted[1], plotted[2], color="b")
-# # plt.show()
-
+dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, A4, S1))
+ls = dg1.generate()
+dg1.plot()
+for dof in ls:
+    print(dof)
+print("num dofs ", dg1.num_dofs())
 print("CG3 on tetrahedron")
 
 xs = [lambda g: DOF(DeltaPairing(), PointKernel(g(())))]
 dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 
-# xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.3,)))),
-#       lambda g: DOF(DeltaPairing(), PointKernel(g((0.5,))))]
-# dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
-#                         DOFGenerator(xs, S1, S1))
 xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((-0.3,))))]
 dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
                         DOFGenerator(xs, S2, S1))
@@ -239,37 +150,20 @@ dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
 
 
 v_xs = [immerse(tetrahedron, dg0, CellH1)]
-verts = DOFGenerator(v_xs, S4 / S2, S1)
+verts = DOFGenerator(v_xs, Z4, S1)
 
-e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
-edges1 = DOFGenerator(e_xs, S3 / S2, S1)
-e_xs = [immerse(tetrahedron, dg1_int, CellH1, node=3)]
-edges2 = DOFGenerator(e_xs, S3 / S2, S1)
+e_xs = [immerse(tetrahedron, dg1_int, CellH1),
+        immerse(tetrahedron, dg1_int, CellH1, node=3)]
+edges = DOFGenerator(e_xs, S3 / S2, S1)
 
 f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
-faces = DOFGenerator(f_xs, S4 / S2, S1)
+faces = DOFGenerator(f_xs, Z4, S1)
 
 
 cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
-                    [verts, edges1, edges2, faces])
+                    [verts, edges, faces])
 ls = cg3.generate()
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-
-tetrahedron.plot3d(show=False, ax=ax)
-count = 0
+cg3.plot()
 for dof in ls:
     print(dof)
-    count += 1
-    plotted = dof.eval(identity)
-    if dof.trace_entity.dimension == 1:
-        color = "r"
-    elif dof.trace_entity.dimension == 2:
-        color = "g"
-    else:
-        color = "b"
-    
-    ax.scatter(plotted[0], plotted[1], plotted[2], color=color)
 print("num dofs ", cg3.num_dofs())
-print("actual num dofs ", count)
-plt.show()
