@@ -58,6 +58,9 @@ class PointKernel():
         x = list(map(str, list(self.pt)))
         return ','.join(x)
     
+    def permute(self, g):
+        return PointKernel(g(self.pt))
+
     def __call__(self):
         return self.pt
 
@@ -69,6 +72,9 @@ class GeneralKernel():
 
     def __repr__(self):
         return str(self.fn)
+
+    def permute(self, g):
+        return self
 
     def __call__(self):
         return self.fn
@@ -89,7 +95,8 @@ class DOF():
             self.pairing.add_entity(entity)
 
     def __call__(self, g):
-        self.g = g
+        return DOF(self.pairing, self.kernel.permute(g), self.immersed,
+                   self.trace_entity, self.attachment, self.target_space, g)
 
     def eval(self, fn):
         if self.immersed:
