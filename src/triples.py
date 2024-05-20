@@ -138,7 +138,9 @@ class ImmersedDOF():
         self.start_node = start_node
 
     def __call__(self, g):
-        target_node = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
+        target_node_pair = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
+        print(target_node_pair)
+        target_node, o = target_node_pair
 
         print("Attaching node", target_node)
 
@@ -146,7 +148,7 @@ class ImmersedDOF():
         new_dofs = []
         for generated_dof in self.triple.generate():
             new_dof = generated_dof.immerse(self.target_cell.get_node(target_node),
-                                            attachment,
+                                            lambda x: attachment(o(x)),
                                             self.target_space, g)
             new_dofs.append(new_dof)
         return new_dofs

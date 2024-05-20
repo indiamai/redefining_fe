@@ -1,7 +1,7 @@
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
-from cell_complex.cells import Point
+import cell_complex.cells
 import matplotlib.pyplot as plt
 
 
@@ -34,7 +34,7 @@ class GroupMemberRep(object):
         self.group = group
 
     def __call__(self, x):
-        if isinstance(x, Point):
+        if isinstance(x, cell_complex.cells.Point):
             return x.orient(self)
         return fold_reduce(self.rep, x)
 
@@ -96,14 +96,26 @@ class GroupRepresentation(object):
     def add_cell(self, cell):
         return GroupRepresentation(self.base_group, cell=cell)
         
-    def members(self):
+    def members(self, perm=False):
         if self.cell is None:
             raise ValueError("Group does not have a domain - members have not been calculated")
+        if perm:
+            return [m.perm for m in self._members]
         return self._members
 
     def size(self):
         assert len(self._members) == self.base_group.order()
         return self.base_group.order()
+    
+    def transform_between_perms(self, perm1, perm2):
+        member_perms = self.members(perm=True)
+        # breakpoint()
+        perm1 = Permutation.from_sequence(perm1)
+        perm2 = Permutation.from_sequence(perm2)
+        assert perm1 in member_perms
+        assert perm2 in member_perms
+        # assert list(perm2) in [m.array_form for m in member_perms]
+        return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
 
     def compute_reps(self, g, path, remaining_members):
         # breadth first search to find generator representations of all members
@@ -229,6 +241,7 @@ D2 = GroupRepresentation(DihedralGroup(2))
 A4 = GroupRepresentation(AlternatingGroup(4))
 A3 = GroupRepresentation(AlternatingGroup(3))
 
+ 
 
 # S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
 # S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,

@@ -107,33 +107,33 @@ tetrahedron = Point(3, lst3)
 # tetrahedron.hasse_diagram()
 
 
-xs = [DOF(DeltaPairing(), PointKernel((0.3, 0.3, 0.3)))]
-dg0 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-                    DOFGenerator(xs, S4, S1))
-ls = dg0.generate()
-dg0.plot()
-print("num dofs ", dg0.num_dofs())
-for dof in ls:
-    print(dof)
+# xs = [DOF(DeltaPairing(), PointKernel((0.3, 0.3, 0.3)))]
+# dg0 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+#                     DOFGenerator(xs, S4, S1))
+# ls = dg0.generate()
+# dg0.plot()
+# print("num dofs ", dg0.num_dofs())
+# for dof in ls:
+#     print(dof)
 
-xs = [DOF(DeltaPairing(), PointKernel((-1, 0, -1/np.sqrt(2))))]
-dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-                    DOFGenerator(xs, S4/S2, S1))
-ls = dg1.generate()
-dg1.plot()
-print("num dofs ", dg1.num_dofs())
-for dof in ls:
-    print(dof)
+# xs = [DOF(DeltaPairing(), PointKernel((-1, 0, -1/np.sqrt(2))))]
+# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+#                     DOFGenerator(xs, S4/S2, S1))
+# ls = dg1.generate()
+# dg1.plot()
+# print("num dofs ", dg1.num_dofs())
+# for dof in ls:
+#     print(dof)
 
-xs = [DOF(DeltaPairing(), PointKernel((-0.6, 0, -1/np.sqrt(2))))]
+# xs = [DOF(DeltaPairing(), PointKernel((-0.6, 0, -1/np.sqrt(2))))]
 
-dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-                    DOFGenerator(xs, A4, S1))
-ls = dg1.generate()
-dg1.plot()
-for dof in ls:
-    print(dof)
-print("num dofs ", dg1.num_dofs())
+# dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+#                     DOFGenerator(xs, A4, S1))
+# ls = dg1.generate()
+# dg1.plot()
+# for dof in ls:
+#     print(dof)
+# print("num dofs ", dg1.num_dofs())
 
 
 print("CG3 on tetrahedron")

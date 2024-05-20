@@ -3,8 +3,19 @@ import numpy as np
 from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
-from groups.groups import e, r, rot
+import groups.new_groups
 import copy
+
+
+def symmetric_group_rep(d):
+    if d == 1:
+        return groups.new_groups.S1
+    if d == 2:
+        return groups.new_groups.S2
+    if d == 3: 
+        return groups.new_groups.S3
+    if d == 4:
+        return groups.new_groups.S4
 
 
 def topo_pos(G):
@@ -43,14 +54,14 @@ class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], oriented=False):
+    def __init__(self, d, edges=[], oriented=False, group=None):
         self.id = next(self.id_iter)
         self.dimension = d
         if d == 0:
             assert (edges == [])
 
         self.oriented = oriented
-
+        self.group = None
         self.G = nx.DiGraph()
         self.G.add_node(self.id, point_class=self)
         for edge in edges:
@@ -59,6 +70,9 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
+        if group:
+            self.group = group.add_cell(self)
+
 
     def dim(self):
         return self.dimension
@@ -126,7 +140,7 @@ class Point():
         reordered = g.permute(verts)
 
         if d == 0:
-            return reordered
+            return list(zip(reordered, [lambda: x for r in reordered]))
 
         entity_dict = {}
         reordered_entity_dict = {}
@@ -140,12 +154,25 @@ class Point():
             entity_dict[ent] = tuple(entity_verts)
             reordered_entity_dict[ent] = tuple([reordered[i] for i in entity_verts])
 
-        reordered_entities = np.zeros_like(np.array(entities))
+        reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
+        entity_vert_num = len(entity_dict[min_id])
+        entity_group = symmetric_group_rep(entity_vert_num).add_cell(self.get_node(min_id))
         for ent in entities:
             for ent1 in entities:
                 if set(entity_dict[ent]) == set(reordered_entity_dict[ent1]):
-                    reordered_entities[ent1 - min_id] = ent
+                    
+                    if entity_dict[ent] != reordered_entity_dict[ent1]:
+                        print(entity_dict[ent])
+                        print(reordered_entity_dict[ent1])
+                        o = entity_group.transform_between_perms(entity_dict[ent], reordered_entity_dict[ent1])
+                        if entity_vert_num == 3:
+                            print(o((-1, -np.sqrt(3)/3)))
+                        reordered_entities[ent1 - min_id] = (ent, o)
+                    else:
+                        reordered_entities[ent1 - min_id] = (ent, lambda *x: x)
+        print(reordered_entities)
+        # breakpoint()
         return reordered_entities
 
 
@@ -293,7 +320,7 @@ class Point():
 
 class Edge():
 
-    def __init__(self, point, attachment=e, o=e):
+    def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
         self.attachment = attachment
         self.point = point
         self.o = o
