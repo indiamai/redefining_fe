@@ -140,7 +140,7 @@ class Point():
         reordered = g.permute(verts)
 
         if d == 0:
-            return list(zip(reordered, [lambda: x for r in reordered]))
+            return list(zip(reordered, [lambda *x: () for r in reordered]))
 
         entity_dict = {}
         reordered_entity_dict = {}
@@ -167,10 +167,11 @@ class Point():
                         print(reordered_entity_dict[ent1])
                         o = entity_group.transform_between_perms(entity_dict[ent], reordered_entity_dict[ent1])
                         if entity_vert_num == 3:
-                            print(o((-1, -np.sqrt(3)/3)))
+                            print("test o", o((-1, -np.sqrt(3)/3)))
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
-                        reordered_entities[ent1 - min_id] = (ent, lambda *x: x)
+                        reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
+                        # reordered_entities[ent1 - min_id] = (ent, lambda x: x) 
         print(reordered_entities)
         # breakpoint()
         return reordered_entities
