@@ -141,12 +141,16 @@ class ImmersedDOF():
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
 
         print("Attaching node", target_node)
-
+        print("Orientation", o)
+        if self.C.dim() > 0 and o != o.group.identity:
+            print("orientation doesn't match")
+            return []
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []
-        
+
         def oriented_attachment(*x):
             return attachment(*o(x))
+        
         for generated_dof in self.triple.generate():
             new_dof = generated_dof.immerse(self.target_cell.get_node(target_node),
                                             oriented_attachment,

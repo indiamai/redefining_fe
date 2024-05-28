@@ -5,6 +5,22 @@ import itertools
 import networkx as nx
 import groups.new_groups
 import copy
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.patches import FancyArrowPatch
+from mpl_toolkits.mplot3d import proj3d
+
+
+class Arrow3D(FancyArrowPatch):
+    def __init__(self, xs, ys, zs, *args, **kwargs):
+        super().__init__((0, 0), (0, 0), *args, **kwargs)
+        self._verts3d = xs, ys, zs
+
+    def do_3d_projection(self, renderer=None):
+        xs3d, ys3d, zs3d = self._verts3d
+        xs, ys, zs = proj3d.proj_transform(xs3d, ys3d, zs3d, self.axes.M)
+        self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
+
+        return np.min(zs)
 
 
 def symmetric_group_rep(d):
@@ -48,6 +64,14 @@ def make_arrow(ax, mid, edge, direction=1):
     x, y = edge(mid)
     dir_x, dir_y = edge(mid + delta)
     ax.arrow(x, y, dir_x-x, dir_y-y, head_width=0.05, head_length=0.1)
+
+
+def make_arrow_3d(ax, mid, edge, direction=1):
+    delta = 0.0001 if direction >= 0 else -0.0001
+    x, y, z = edge(mid)
+    dir_x, dir_y, dir_z = edge(mid + delta)
+    a = Arrow3D([x, dir_x], [y, dir_y], [z, dir_z], mutation_scale=10, arrowstyle="-|>", color="black")
+    ax.add_artist(a)
 
 
 class Point():
@@ -161,18 +185,11 @@ class Point():
         for ent in entities:
             for ent1 in entities:
                 if set(entity_dict[ent]) == set(reordered_entity_dict[ent1]):
-                    
                     if entity_dict[ent] != reordered_entity_dict[ent1]:
-                        print(entity_dict[ent])
-                        print(reordered_entity_dict[ent1])
                         o = entity_group.transform_between_perms(entity_dict[ent], reordered_entity_dict[ent1])
-                        if entity_vert_num == 3:
-                            print("test o", o((-1, -np.sqrt(3)/3)))
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
-                        # reordered_entities[ent1 - min_id] = (ent, lambda x: x) 
-        print(reordered_entities)
         # breakpoint()
         return reordered_entities
 
@@ -268,6 +285,7 @@ class Point():
             attach = self.attachment(top_level_node, node)
             edgevals = np.array([attach(x) for x in xs])
             ax.plot3D(edgevals[:, 0], edgevals[:, 1], edgevals[:, 2], color="black")
+            make_arrow_3d(ax, 0, attach)
         if show:
             plt.show()
 

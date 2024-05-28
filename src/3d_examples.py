@@ -66,7 +66,7 @@ lst3 = [Edge(face1, lambda x, y: [-0.5*x + (np.sqrt(3)/6)*y - 1/3, 0.5*x + (np.s
         Edge(face4, lambda x, y: [-0.5*x - (np.sqrt(3)/6)*y + 1/3, -0.5*x + (np.sqrt(3)/2)*y, (np.sqrt(2)/2)*x + (np.sqrt(6)/6)*y + (np.sqrt(2) / 6)])]
 
 tetrahedron = Point(3, lst3)
-
+tetrahedron.plot3d()
 # print(tetrahedron.vertices())
 # print(face1.cell_attachment(3))
 # print(face1.cell_attachment(0))
@@ -142,7 +142,7 @@ xs = [DOF(DeltaPairing(), PointKernel(()))]
 dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 
-xs = [DOF(DeltaPairing(), PointKernel((-0.3,)))]
+xs = [DOF(DeltaPairing(), PointKernel((-0.4,)))]
 dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
                         DOFGenerator(xs, S2, S1))
 
@@ -150,16 +150,16 @@ xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 
-
 v_xs = [immerse(tetrahedron, dg0, CellH1)]
 verts = DOFGenerator(v_xs, Z4, S1)
 
-e_xs = [immerse(tetrahedron, dg1_int, CellH1),
-        immerse(tetrahedron, dg1_int, CellH1, node=3)]
-edges = DOFGenerator(e_xs, S3 / S2, S1)
+# e_xs = [immerse(tetrahedron, dg1_int, CellH1),
+#         immerse(tetrahedron, dg1_int, CellH1, node=3)]
+e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
+edges = DOFGenerator(e_xs, A4, S1)
 
 f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
-faces = DOFGenerator(f_xs, Z4, S1)
+faces = DOFGenerator(f_xs, S4, S1)
 
 
 cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
@@ -169,3 +169,24 @@ cg3.plot()
 for dof in ls:
     print(dof)
 print("num dofs ", cg3.num_dofs())
+
+
+# print("Edge of RT")
+# xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+# dofs = DOFGenerator(xs, S1, S2)
+# int_rt = ElementTriple(edges[0], (P1, CellHDiv, "C0"), dofs)
+# ls = int_rt.generate()
+# for dof in ls:
+#     print(dof)
+
+# im_xs = [immerse(tetrahedron, int_rt, CellHDiv)]
+# edges = DOFGenerator(im_xs, Z4, Z4)
+
+
+# rt1 = ElementTriple(tetrahedron, (P1, CellHDiv, "C0"),
+#                     [edges])
+# ls = rt1.generate()
+# # rt1.plot()
+# for dof in ls:
+#     print(dof)
+# print("num dofs ", rt1.num_dofs())
