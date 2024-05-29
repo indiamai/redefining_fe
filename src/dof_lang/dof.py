@@ -1,7 +1,6 @@
 
 from cell_complex.cells import Point, Edge
 from FIAT.quadrature import GaussLegendreQuadratureLineRule
-
 from FIAT.reference_element import DefaultLine
 
 import numpy as np
@@ -38,10 +37,15 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # evaluates integral on generic edge only
-        print("evaluating", kernel, v)
-        assert self.entity.dim() == 1
-        quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-        return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
+        print("evaluating", kernel, v, "on", self.entity)
+        if self.entity.dim() == 1:
+            quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
+            return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
+        elif self.entity.dim() == 2:
+            print("evaluating at origin")
+            return np.dot(kernel(), v(0, 0))
+        else:
+            raise NotImplementedError("L2 Inner product evaluation not implemented for this dimension")
 
     def __repr__(self, kernel, fn):
         return "integral_{1}({0} * {2}) dx)".format(str(kernel),
@@ -106,6 +110,13 @@ class DOF():
                                                            self.trace_entity,
                                                            self.g))
         return self.pairing(self.kernel, fn)
+    
+    def fn_eval(self, fn):
+        if self.immersed:
+            attached_fn = fn.attach(self.attachment)
+            return self.target_space.pullback(attached_fn, self.trace_entity,
+                                                           self.g)
+        return fn
 
     def add_entity(self, cell):
         if self.trace_entity is None:

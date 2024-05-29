@@ -44,6 +44,10 @@ class CellH1(ElementSobolevSpace):
     def pullback(self, v, trace_entity, g):
         return v
     
+    def plot(self, ax, coord, trace_entity, color, g):
+        # plot dofs of the type associated with this space
+        ax.scatter(*coord, color=color)
+    
     def __repr__(self):
         return "H1"
 
@@ -56,14 +60,40 @@ class CellHDiv(ElementSobolevSpace):
     def pullback(self, v, trace_entity, g):
         entityBasis = np.array(trace_entity.basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-        
+        basis = np.matmul(entityBasis, cellEntityBasis)
+
+        print(trace_entity)
+        print(entityBasis)
+        print(cellEntityBasis)
         def apply(*x):
-            result = np.cross(np.array(v(*x)),
-                              np.matmul(entityBasis, cellEntityBasis))
+            print(np.matmul(entityBasis, cellEntityBasis).shape)
+            print(np.array(v(*x)).shape)
+            if len(v(*x)) == 2:
+                result = np.cross(np.array(v(*x)), basis)
+                print(basis.T)
+                vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
+                print("a", result)
+                print("b", np.dot(np.array(v(*x)), vec))
+            elif trace_entity.dimension == 2:
+                result = np.dot(np.array(v(*x)), np.cross(basis[0], basis[1]))
+            else:
+                raise ValueError("Immersion of HDiv edges not supported")
+            print(result)
             if isinstance(result, np.float64):
                 return (result,)
             return tuple(result)
         return apply
+    
+    def plot(self, ax, coord, trace_entity, color, g):
+        # plot dofs of the type associated with this space
+        entityBasis = np.array(trace_entity.basis_vectors())
+        cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+        basis = np.matmul(entityBasis, cellEntityBasis)
+        if len(coord) == 2:
+            vec = vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
+        else:
+            vec = np.cross(basis[0], basis[1])
+        ax.quiver(*coord, *vec, length=0.3, normalize=True, color=color)
 
     def __repr__(self):
         return "HDiv"
@@ -85,6 +115,13 @@ class CellHCurl(ElementSobolevSpace):
                 return (result,)
             return tuple(result)
         return apply
+    
+    def plot(self, ax, coord, trace_entity, color, g):
+        # plot dofs of the type associated with this space
+        tangent = np.array(trace_entity.basis_vectors())
+        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+        vec = np.matmul(tangent, subEntityBasis)
+        ax.quiver(coord, vec, color=color)
 
     def __repr__(self):
         return "HCurl"

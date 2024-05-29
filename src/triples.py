@@ -2,6 +2,7 @@
 from groups.groups import Group, S1, S2, S3
 from cell_complex.cells import Point, Edge
 import sympy as sp
+import numpy as np
 from spaces.element_sobolev_spaces import ElementSobolevSpace
 from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction
 import matplotlib.pyplot as plt
@@ -49,6 +50,7 @@ class ElementTriple():
         # point evaluation nodes only
         dofs = self.generate()
         identity = MyTestFunction(lambda *x: x)
+        one = MyTestFunction(lambda *x: np.ones_like(x))
         if self.cell.dimension < 3:
             self.cell.plot(show=False, plain=True)
             for dof in dofs:
@@ -57,11 +59,26 @@ class ElementTriple():
                 coord = dof.eval(identity)
                 if dof.trace_entity.dimension == 1:
                     color = "r"
+                    center = self.cell.cell_attachment(dof.trace_entity.id)(0)
+                    print(center)
                 elif dof.trace_entity.dimension == 2:
                     color = "g"
+                    center = self.cell.cell_attachment(dof.trace_entity.id)(0, 0)
                 else:
                     color = "b"
-                plt.scatter(coord[0], coord[1], marker="o", color=color)
+                if isinstance(dof.pairing, DeltaPairing):
+                    coord = dof.eval(identity)
+                    plt.scatter(coord[0], coord[1], marker="o", color=color)
+                elif isinstance(dof.pairing, L2InnerProd):
+                    # if isinstance(dof.target_space, CellHDiv): 
+                    print(coord)
+                    print(center)
+                    coord = dof.eval(one)
+                    print("space plot")
+                    dof.target_space.plot(plt, center, dof.trace_entity, color, dof.g)
+                    new_fun = dof.fn_eval(one)
+                    print(new_fun(0))
+                    # plt.quiver([[center[0]], [center[1]]], coord, color=color)
             plt.show()
         elif self.cell.dimension == 3:
             fig = plt.figure()
@@ -69,13 +86,25 @@ class ElementTriple():
             self.cell.plot3d(show=False, ax=ax)
             for dof in dofs:
                 coord = dof.eval(identity)
+                print(dof.trace_entity)
+                print(dof)
+                print(coord)
+                # print(self.cell.cell_attachment(dof.trace_entity.id))
                 if dof.trace_entity.dimension == 1:
                     color = "r"
+                    center = self.cell.cell_attachment(dof.trace_entity.id)(0)
                 elif dof.trace_entity.dimension == 2:
                     color = "g"
+                    center = self.cell.cell_attachment(dof.trace_entity.id)(0, 0)
                 else:
                     color = "b"
-                ax.scatter(coord[0], coord[1], coord[2], color=color)
+                # if isinstance(dof.pairing, DeltaPairing):
+                #     ax.scatter(coord[0], coord[1], coord[2], color=color)
+                # else:
+                dof.target_space.plot(plt, center, dof.trace_entity, color, dof.g)
+                    # ax.quiver(center[0], center[1], center[2],
+                    #           coord[0], coord[1], coord[2],
+                    #           length=0.3, normalize=True, color=color)
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")

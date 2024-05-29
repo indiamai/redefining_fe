@@ -66,7 +66,7 @@ lst3 = [Edge(face1, lambda x, y: [-0.5*x + (np.sqrt(3)/6)*y - 1/3, 0.5*x + (np.s
         Edge(face4, lambda x, y: [-0.5*x - (np.sqrt(3)/6)*y + 1/3, -0.5*x + (np.sqrt(3)/2)*y, (np.sqrt(2)/2)*x + (np.sqrt(6)/6)*y + (np.sqrt(2) / 6)])]
 
 tetrahedron = Point(3, lst3)
-tetrahedron.plot3d()
+# tetrahedron.plot3d()
 # print(tetrahedron.vertices())
 # print(face1.cell_attachment(3))
 # print(face1.cell_attachment(0))
@@ -107,14 +107,14 @@ tetrahedron.plot3d()
 # tetrahedron.hasse_diagram()
 
 
-# xs = [DOF(DeltaPairing(), PointKernel((0.3, 0.3, 0.3)))]
-# dg0 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
-#                     DOFGenerator(xs, S4, S1))
-# ls = dg0.generate()
-# dg0.plot()
-# print("num dofs ", dg0.num_dofs())
-# for dof in ls:
-#     print(dof)
+xs = [DOF(DeltaPairing(), PointKernel((0.3, 0.3, 0.3)))]
+dg0 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, S4, S1))
+ls = dg0.generate()
+dg0.plot()
+print("num dofs ", dg0.num_dofs())
+for dof in ls:
+    print(dof)
 
 # xs = [DOF(DeltaPairing(), PointKernel((-1, 0, -1/np.sqrt(2))))]
 # dg1 = ElementTriple(tetrahedron, (P1, CellL2, "C0"),
@@ -136,57 +136,76 @@ tetrahedron.plot3d()
 # print("num dofs ", dg1.num_dofs())
 
 
-print("CG3 on tetrahedron")
+# print("CG3 on tetrahedron")
 
-xs = [DOF(DeltaPairing(), PointKernel(()))]
-dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
-                    DOFGenerator(xs, S1, S1))
+# xs = [DOF(DeltaPairing(), PointKernel(()))]
+# dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
+#                     DOFGenerator(xs, S1, S1))
 
-xs = [DOF(DeltaPairing(), PointKernel((-0.4,)))]
-dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
-                        DOFGenerator(xs, S2, S1))
+# xs = [DOF(DeltaPairing(), PointKernel((-0.4,)))]
+# dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+#                         DOFGenerator(xs, S2, S1))
 
-xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
-dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
-                        DOFGenerator(xs, S1, S1))
+# xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+# dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
+#                         DOFGenerator(xs, S1, S1))
 
-v_xs = [immerse(tetrahedron, dg0, CellH1)]
-verts = DOFGenerator(v_xs, Z4, S1)
+# v_xs = [immerse(tetrahedron, dg0, CellH1)]
+# verts = DOFGenerator(v_xs, Z4, S1)
 
-# e_xs = [immerse(tetrahedron, dg1_int, CellH1),
-#         immerse(tetrahedron, dg1_int, CellH1, node=3)]
-e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
-edges = DOFGenerator(e_xs, A4, S1)
+# # e_xs = [immerse(tetrahedron, dg1_int, CellH1),
+# #         immerse(tetrahedron, dg1_int, CellH1, node=3)]
+# e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
+# edges = DOFGenerator(e_xs, A4, S1)
 
-f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
-faces = DOFGenerator(f_xs, S4, S1)
+# f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
+# faces = DOFGenerator(f_xs, S4, S1)
 
 
-cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
-                    [verts, edges, faces])
-ls = cg3.generate()
-cg3.plot()
+# cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
+#                     [verts, edges, faces])
+# ls = cg3.generate()
+# cg3.plot()
+# for dof in ls:
+#     print(dof)
+# print("num dofs ", cg3.num_dofs())
+
+
+
+print("face vector func")
+xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+dofs = DOFGenerator(xs, S1, S2)
+face_vec = ElementTriple(face1, (P1, CellHDiv, "C0"), dofs)
+ls = face_vec.generate()
 for dof in ls:
     print(dof)
-print("num dofs ", cg3.num_dofs())
+im_xs = [immerse(tetrahedron, face_vec, CellHDiv)]
+face = DOFGenerator(im_xs, S4, S4)
 
+rt1 = ElementTriple(tetrahedron, (P1, CellHDiv, "C0"),
+                    [face])
+ls = rt1.generate()
+rt1.plot()
+for dof in ls:
+    print(dof)
+    print(dof.eval(MyTestFunction(lambda *x: x)))
+print("num dofs ", rt1.num_dofs())
 
-# print("Edge of RT")
+# print("Edge of Ned")
 # xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 # dofs = DOFGenerator(xs, S1, S2)
-# int_rt = ElementTriple(edges[0], (P1, CellHDiv, "C0"), dofs)
-# ls = int_rt.generate()
+# int_ned = ElementTriple(edges[0], (P1, CellHCurl, "C0"), dofs)
+# ls = int_ned.generate()
 # for dof in ls:
 #     print(dof)
 
-# im_xs = [immerse(tetrahedron, int_rt, CellHDiv)]
-# edges = DOFGenerator(im_xs, Z4, Z4)
+# im_xs = [immerse(tetrahedron, int_ned, CellHCurl)]
+# edge = DOFGenerator(im_xs, A4, Z4)
 
-
-# rt1 = ElementTriple(tetrahedron, (P1, CellHDiv, "C0"),
-#                     [edges])
-# ls = rt1.generate()
-# # rt1.plot()
+# ned = ElementTriple(tetrahedron, (P1, CellHCurl, "C0"),
+#                     [edge])
+# ls = ned.generate()
+# # ned.plot()
 # for dof in ls:
 #     print(dof)
-# print("num dofs ", rt1.num_dofs())
+# print("num dofs ", ned.num_dofs())

@@ -190,7 +190,6 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
-        # breakpoint()
         return reordered_entities
 
 
@@ -266,7 +265,6 @@ class Point():
             plt.show()
 
     def plot3d(self, show=True, ax = None):
-        # only plots vertices
         assert self.dimension == 3
         if ax is None:
             fig = plt.figure()
@@ -290,6 +288,9 @@ class Point():
             plt.show()
 
     def attachment(self, source, dst):
+        if source == dst:
+            return lambda *x: x
+        
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
