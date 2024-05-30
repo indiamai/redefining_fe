@@ -101,6 +101,7 @@ print("num dofs ", cg1.num_dofs())
 for dof in ls:
     print(dof)
     print(dof.eval(test_func))
+cg1.plot()
 
 # # # # # dg1 on interval
 print("DG1 on interval")
@@ -112,7 +113,7 @@ print("num dofs ", dg1.num_dofs())
 for dof in ls:
     print(dof)
     print(dof.eval(test_func))
-
+dg1.plot()
 # # dg1 on triangle
 print("DG1 on triangle")
 xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
@@ -173,9 +174,10 @@ phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
 
 print("Nedelec")
 xs = [immerse(a4, int_ned, CellHCurl)]
-tri_dofs = DOFGenerator(xs, S3/S2, S3)
+tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
 ned = ElementTriple(a4, (vecP3, CellHCurl, "C0"), [tri_dofs])
+ned.plot()
 # ls = ned.generate()
 # for dof in ls:
 #     print(dof)
@@ -208,8 +210,8 @@ ls = rt.generate()
 for dof in ls:
     print(dof)
     print("phi_0 ", dof.eval(phi_0))
-    # print("phi_1 ", dof.eval(phi_1))
-    # print("phi_2 ", dof.eval(phi_2))
+    print("phi_1 ", dof.eval(phi_1))
+    print("phi_2 ", dof.eval(phi_2))
 rt.plot()
 
 # print("Hermite")

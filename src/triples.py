@@ -6,6 +6,7 @@ import numpy as np
 from spaces.element_sobolev_spaces import ElementSobolevSpace
 from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction
 import matplotlib.pyplot as plt
+import inspect
 
 
 class ElementTriple():
@@ -23,7 +24,7 @@ class ElementTriple():
         for space in spaces:
             # TODO: Fix this to a more sensible condition when all spaces
             # implemented
-            if hasattr(space, "domain"):
+            if inspect.isclass(space) and issubclass(space, ElementSobolevSpace):
                 cell_spaces.append(space(cell))
             else:
                 cell_spaces.append(space)
@@ -35,7 +36,8 @@ class ElementTriple():
     def generate(self):
         res = []
         for dof_gen in self.DOFGenerator:
-            res.extend(dof_gen.generate(self.cell))
+            print(self.spaces[1].domain)
+            res.extend(dof_gen.generate(self.cell, self.spaces[1]))
         return res
 
     def __iter__(self):
@@ -45,66 +47,57 @@ class ElementTriple():
 
     def num_dofs(self):
         return sum([dof_gen.num_dofs() for dof_gen in self.DOFGenerator])
+    
+    def get_dof_info(self, dof):
+        if dof.trace_entity.dimension == 0:
+            center = self.cell.cell_attachment(dof.trace_entity.id)()
+            color = "b"
+        elif dof.trace_entity.dimension == 1:
+            color = "r"
+            center = self.cell.cell_attachment(dof.trace_entity.id)(0)
+        elif dof.trace_entity.dimension == 2:
+            color = "g"
+            center = self.cell.cell_attachment(dof.trace_entity.id)(0, 0)
+        else:
+            color = "b"
+            center = None
+
+        return center, color
 
     def plot(self):
         # point evaluation nodes only
         dofs = self.generate()
         identity = MyTestFunction(lambda *x: x)
-        one = MyTestFunction(lambda *x: np.ones_like(x))
+        
         if self.cell.dimension < 3:
             self.cell.plot(show=False, plain=True)
             for dof in dofs:
-                print(dof)
-                print(dof.trace_entity)
-                coord = dof.eval(identity)
-                if dof.trace_entity.dimension == 1:
-                    color = "r"
-                    center = self.cell.cell_attachment(dof.trace_entity.id)(0)
-                    print(center)
-                elif dof.trace_entity.dimension == 2:
-                    color = "g"
-                    center = self.cell.cell_attachment(dof.trace_entity.id)(0, 0)
-                else:
-                    color = "b"
+                center, color = self.get_dof_info(dof)
                 if isinstance(dof.pairing, DeltaPairing):
                     coord = dof.eval(identity)
-                    plt.scatter(coord[0], coord[1], marker="o", color=color)
                 elif isinstance(dof.pairing, L2InnerProd):
-                    # if isinstance(dof.target_space, CellHDiv): 
-                    print(coord)
-                    print(center)
-                    coord = dof.eval(one)
-                    print("space plot")
-                    dof.target_space.plot(plt, center, dof.trace_entity, color, dof.g)
-                    new_fun = dof.fn_eval(one)
-                    print(new_fun(0))
-                    # plt.quiver([[center[0]], [center[1]]], coord, color=color)
+                    coord = center
+
+                if len(coord) == 1:
+                    coord = (coord[0], 0)
+
+                dof.target_space.plot(plt, coord, dof.trace_entity, dof.g, color=color)
+
             plt.show()
         elif self.cell.dimension == 3:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
             self.cell.plot3d(show=False, ax=ax)
             for dof in dofs:
-                coord = dof.eval(identity)
-                print(dof.trace_entity)
-                print(dof)
-                print(coord)
-                # print(self.cell.cell_attachment(dof.trace_entity.id))
-                if dof.trace_entity.dimension == 1:
-                    color = "r"
-                    center = self.cell.cell_attachment(dof.trace_entity.id)(0)
-                elif dof.trace_entity.dimension == 2:
-                    color = "g"
-                    center = self.cell.cell_attachment(dof.trace_entity.id)(0, 0)
-                else:
-                    color = "b"
-                # if isinstance(dof.pairing, DeltaPairing):
-                #     ax.scatter(coord[0], coord[1], coord[2], color=color)
-                # else:
-                dof.target_space.plot(plt, center, dof.trace_entity, color, dof.g)
-                    # ax.quiver(center[0], center[1], center[2],
-                    #           coord[0], coord[1], coord[2],
-                    #           length=0.3, normalize=True, color=color)
+                center, color = self.get_dof_info(dof)
+                if center is None:
+                    center = [0, 0, 0]
+
+                if isinstance(dof.pairing, DeltaPairing):
+                    coord = dof.eval(identity)
+                    dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
+                elif isinstance(dof.pairing, L2InnerProd):
+                    dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")
@@ -135,7 +128,7 @@ class DOFGenerator():
             raise ValueError("DOFs not generated yet")
         return self.dof_numbers
         
-    def generate(self, cell):
+    def generate(self, cell, space):
         if self.ls is None:
             self.ls = []
             for g in self.g1.members():
@@ -144,7 +137,7 @@ class DOFGenerator():
                     if not isinstance(generated, list):
                         generated = [generated]
                     for dof in generated:
-                        dof.add_entity(cell)
+                        dof.add_context(cell, space)
                     self.ls.extend(generated)
             self.dof_numbers = len(self.ls)
             return self.ls
@@ -170,9 +163,9 @@ class ImmersedDOF():
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
 
         print("Attaching node", target_node)
-        print("Orientation", o)
+        # print("Orientation", o)
         if self.C.dim() > 0 and o != o.group.identity:
-            print("orientation doesn't match")
+            # print("orientation doesn't match")
             return []
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []

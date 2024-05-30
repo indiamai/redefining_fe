@@ -118,10 +118,13 @@ class DOF():
                                                            self.g)
         return fn
 
-    def add_entity(self, cell):
+    def add_context(self, cell, space):
+        # We only want to store the first instance of each
         if self.trace_entity is None:
             self.trace_entity = cell
             self.pairing.add_entity(cell)
+        if self.target_space is None:
+            self.target_space = space
 
     def __repr__(self):
         if self.immersed:

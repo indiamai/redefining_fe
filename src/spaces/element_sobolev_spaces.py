@@ -44,9 +44,9 @@ class CellH1(ElementSobolevSpace):
     def pullback(self, v, trace_entity, g):
         return v
     
-    def plot(self, ax, coord, trace_entity, color, g):
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
-        ax.scatter(*coord, color=color)
+        ax.scatter(*coord, **kwargs)
     
     def __repr__(self):
         return "H1"
@@ -62,29 +62,20 @@ class CellHDiv(ElementSobolevSpace):
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
 
-        print(trace_entity)
-        print(entityBasis)
-        print(cellEntityBasis)
         def apply(*x):
-            print(np.matmul(entityBasis, cellEntityBasis).shape)
-            print(np.array(v(*x)).shape)
             if len(v(*x)) == 2:
                 result = np.cross(np.array(v(*x)), basis)
-                print(basis.T)
-                vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
-                print("a", result)
-                print("b", np.dot(np.array(v(*x)), vec))
+                # vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
             elif trace_entity.dimension == 2:
                 result = np.dot(np.array(v(*x)), np.cross(basis[0], basis[1]))
             else:
-                raise ValueError("Immersion of HDiv edges not supported")
-            print(result)
+                raise ValueError("Immersion of HDiv edges not supported in 3D")
             if isinstance(result, np.float64):
                 return (result,)
             return tuple(result)
         return apply
     
-    def plot(self, ax, coord, trace_entity, color, g):
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         entityBasis = np.array(trace_entity.basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
@@ -93,7 +84,7 @@ class CellHDiv(ElementSobolevSpace):
             vec = vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
         else:
             vec = np.cross(basis[0], basis[1])
-        ax.quiver(*coord, *vec, length=0.3, normalize=True, color=color)
+        ax.quiver(*coord, *vec, **kwargs)
 
     def __repr__(self):
         return "HDiv"
@@ -116,12 +107,12 @@ class CellHCurl(ElementSobolevSpace):
             return tuple(result)
         return apply
     
-    def plot(self, ax, coord, trace_entity, color, g):
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         tangent = np.array(trace_entity.basis_vectors())
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-        vec = np.matmul(tangent, subEntityBasis)
-        ax.quiver(coord, vec, color=color)
+        vec = np.matmul(tangent, subEntityBasis)[0]
+        ax.quiver(*coord, *vec, **kwargs)
 
     def __repr__(self):
         return "HCurl"
@@ -169,8 +160,8 @@ class CellH3(ElementSobolevSpace):
             hess_v = [[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))]
             print(hess_v)
             eval_grad_v = [[hess_v[i][j].evalf(subs=dict(zip(dX, v.attach_func(*x)))) for i in range(len(dX))] for j in range(len(dX))]
-            print(tangent0)
-            print(tangent1)
+            # print(tangent0)
+            # print(tangent1)
             result = np.dot(np.matmul(tangent0, np.array(eval_grad_v)), tangent1)
             if not hasattr(result, "__iter__"):
                 return (result,)
@@ -188,6 +179,10 @@ class CellL2(ElementSobolevSpace):
 
     def pullback(self, v, trace_entity):
         return 0
+    
+    def plot(self, ax, coord, trace_entity, color, g, **kwargs):
+        # plot dofs of the type associated with this space
+        ax.scatter(*coord, **kwargs)
     
     def __repr__(self):
         return "L2"
