@@ -3,6 +3,7 @@ import numpy as np
 import sympy as sp
 from ufl.sobolevspace import SobolevSpace
 from spaces.polynomial_spaces import PolynomialSpace
+import matplotlib.pyplot as plt
 
 def apply_pullback(*x):
     result = np.dot(np.matmul(tangent, subEntityBasis), np.array(v(*x)))
@@ -129,15 +130,20 @@ class CellH2(ElementSobolevSpace):
 
         def apply(*x):
             X = sp.DeferredVector('x')
-            
             dX = tuple([X[i] for i in range(self.domain.dim())])
-            grad_v = [sp.diff(v(*dX, sym=True), dX[i]) for i in range(len(dX))]
+            compute_v = v(*dX, sym=True)
+            grad_v = [sp.diff(compute_v, dX[i]) for i in range(len(dX))]
             eval_grad_v = [comp.evalf(subs=dict(zip(dX, v.attach_func(*x)))) for comp in grad_v]
             result = np.dot(tangent, np.array(eval_grad_v))
+
             if not hasattr(result, "__iter__"):
                 return (result,)
             return tuple(result)
         return apply
+    
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
+        circle1 = plt.Circle(coord, 0.075, fill=False, **kwargs)
+        ax.add_patch(circle1)
 
     def __repr__(self):
         return "H2"
@@ -160,13 +166,15 @@ class CellH3(ElementSobolevSpace):
             hess_v = [[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))]
             print(hess_v)
             eval_grad_v = [[hess_v[i][j].evalf(subs=dict(zip(dX, v.attach_func(*x)))) for i in range(len(dX))] for j in range(len(dX))]
-            # print(tangent0)
-            # print(tangent1)
             result = np.dot(np.matmul(tangent0, np.array(eval_grad_v)), tangent1)
             if not hasattr(result, "__iter__"):
                 return (result,)
             return tuple(result)
         return apply
+    
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
+        circle1 = plt.Circle(coord, 0.15, fill=False, **kwargs)
+        ax.add_patch(circle1)
 
     def __repr__(self):
         return "H3"

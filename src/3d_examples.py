@@ -136,39 +136,38 @@ ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
 
 
-# print("CG3 on tetrahedron")
+print("CG3 on tetrahedron")
 
-# xs = [DOF(DeltaPairing(), PointKernel(()))]
-# dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
-#                     DOFGenerator(xs, S1, S1))
+xs = [DOF(DeltaPairing(), PointKernel(()))]
+dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
+                    DOFGenerator(xs, S1, S1))
 
-# xs = [DOF(DeltaPairing(), PointKernel((-0.4,)))]
-# dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
-#                         DOFGenerator(xs, S2, S1))
+xs = [DOF(DeltaPairing(), PointKernel((-1/3,)))]
+dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+                        DOFGenerator(xs, S2, S1))
 
-# xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
-# dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
-#                         DOFGenerator(xs, S1, S1))
+xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
+                        DOFGenerator(xs, S1, S1))
 
-# v_xs = [immerse(tetrahedron, dg0, CellH1)]
-# verts = DOFGenerator(v_xs, Z4, S1)
+v_xs = [immerse(tetrahedron, dg0, CellH1)]
+cgverts = DOFGenerator(v_xs, Z4, S1)
 
-# # e_xs = [immerse(tetrahedron, dg1_int, CellH1),
-# #         immerse(tetrahedron, dg1_int, CellH1, node=3)]
-# e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
-# edges = DOFGenerator(e_xs, A4, S1)
+e_xs = [immerse(tetrahedron, dg1_int, CellH1)]
+cgedges = DOFGenerator(e_xs, A4, S1)
 
-# f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
-# faces = DOFGenerator(f_xs, S4, S1)
+f_xs = [immerse(tetrahedron, dg0_face, CellH1)]
+cgfaces = DOFGenerator(f_xs, S4, S1)
 
 
-# cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
-#                     [verts, edges, faces])
-# ls = cg3.generate()
-# cg3.plot()
-# for dof in ls:
-#     print(dof)
-# print("num dofs ", cg3.num_dofs())
+cg3 = ElementTriple(tetrahedron, (P1, CellH1, "C0"),
+                    [cgverts, cgedges, cgfaces])
+
+ls = cg3.generate()
+cg3.plot()
+for dof in ls:
+    print(dof)
+print("num dofs ", cg3.num_dofs())
 
 
 

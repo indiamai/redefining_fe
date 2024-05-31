@@ -97,11 +97,11 @@ xs = [immerse(edges[0], dg0, CellH1)]
 cg1 = ElementTriple(edges[0], (P1, CellH1, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
-print("num dofs ", cg1.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof.eval(test_func))
-cg1.plot()
+# print("num dofs ", cg1.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof.eval(test_func))
+# cg1.plot()
 
 # # # # # dg1 on interval
 print("DG1 on interval")
@@ -109,29 +109,29 @@ xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
 dg1 = ElementTriple(edges[0], (P1, CellL2, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
-print("num dofs ", dg1.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof.eval(test_func))
-dg1.plot()
+# print("num dofs ", dg1.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof.eval(test_func))
+# dg1.plot()
 # # dg1 on triangle
 print("DG1 on triangle")
 xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
 dg1 = ElementTriple(a4, (P1, CellL2, "C0"),
                     DOFGenerator(xs, S3/S2, S1))
 ls = dg1.generate()
-print("num dofs ", dg1.num_dofs())
-for dof in ls:
-    print(dof)
+# print("num dofs ", dg1.num_dofs())
+# for dof in ls:
+#     print(dof)
 
 # print("DG0 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
 dg0_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 ls = dg0_int.generate()
-print("num dofs ", dg0_int.num_dofs())
-for dof in ls:
-    print(dof)
+# print("num dofs ", dg0_int.num_dofs())
+# for dof in ls:
+#     print(dof)
 # dg0_int.plot()
 
 # # # cg3 on triangle
@@ -177,7 +177,7 @@ xs = [immerse(a4, int_ned, CellHCurl)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
 ned = ElementTriple(a4, (vecP3, CellHCurl, "C0"), [tri_dofs])
-ned.plot()
+# ned.plot()
 # ls = ned.generate()
 # for dof in ls:
 #     print(dof)
@@ -206,34 +206,35 @@ xs = [immerse(a4, int_rt, CellHDiv)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
 rt = ElementTriple(a4, (vecP3, CellHDiv, "C0"), [tri_dofs])
-ls = rt.generate()
-for dof in ls:
-    print(dof)
-    print("phi_0 ", dof.eval(phi_0))
-    print("phi_1 ", dof.eval(phi_1))
-    print("phi_2 ", dof.eval(phi_2))
-rt.plot()
-
-# print("Hermite")
-# v_xs = [immerse(a4, dg0, CellH1)]
-# v_dofs = DOFGenerator(v_xs, S3/S2, S1)
-
-# v_derv_xs = [immerse(a4, dg0, CellH2)]
-# v_derv_dofs = DOFGenerator(v_derv_xs, S3, S1)
-
-# v_derv2_xs = [immerse(a4, dg0, CellH3)]
-# v_derv2_dofs = DOFGenerator(v_derv2_xs, S3, S1)
-
-# i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
-# i_dofs = DOFGenerator(i_xs, S1, S1)
-
-# her = ElementTriple(a4, (P3, CellH2, "C0"),
-#                     [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
-
-# phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
-# ls = her.generate()
-# print("num dofs ", her.num_dofs())
+# ls = rt.generate()
 # for dof in ls:
 #     print(dof)
-#     print(dof.eval(phi_0))
+#     print("phi_0 ", dof.eval(phi_0))
+#     print("phi_1 ", dof.eval(phi_1))
+#     print("phi_2 ", dof.eval(phi_2))
+# rt.plot()
+
+print("Hermite")
+v_xs = [immerse(a4, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+
+v_derv_xs = [immerse(a4, dg0, CellH2)]
+v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
+
+v_derv2_xs = [immerse(a4, dg0, CellH3)]
+v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
+
+i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
+
+her = ElementTriple(a4, (P3, CellH2, "C0"),
+                    [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
+
+phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
+ls = her.generate()
+print("num dofs ", her.num_dofs())
+for dof in ls:
+    print(dof)
+    # print("dof eval", dof.eval(phi_0))
     
+her.plot()

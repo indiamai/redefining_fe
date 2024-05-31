@@ -4,7 +4,7 @@ from cell_complex.cells import Point, Edge
 import sympy as sp
 import numpy as np
 from spaces.element_sobolev_spaces import ElementSobolevSpace
-from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction
+from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction, PointKernel
 import matplotlib.pyplot as plt
 import inspect
 
@@ -36,7 +36,6 @@ class ElementTriple():
     def generate(self):
         res = []
         for dof_gen in self.DOFGenerator:
-            print(self.spaces[1].domain)
             res.extend(dof_gen.generate(self.cell, self.spaces[1]))
         return res
 
@@ -70,18 +69,18 @@ class ElementTriple():
         identity = MyTestFunction(lambda *x: x)
         
         if self.cell.dimension < 3:
-            self.cell.plot(show=False, plain=True)
+            fig = plt.figure()
+            ax = plt.gca()
+            self.cell.plot(show=False, plain=True, ax=ax)
             for dof in dofs:
                 center, color = self.get_dof_info(dof)
-                if isinstance(dof.pairing, DeltaPairing):
-                    coord = dof.eval(identity)
+                if isinstance(dof.pairing, DeltaPairing) and isinstance(dof.kernel, PointKernel):
+                    coord = dof.eval(identity, pullback=False)
                 elif isinstance(dof.pairing, L2InnerProd):
                     coord = center
-
                 if len(coord) == 1:
                     coord = (coord[0], 0)
-
-                dof.target_space.plot(plt, coord, dof.trace_entity, dof.g, color=color)
+                dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
 
             plt.show()
         elif self.cell.dimension == 3:
@@ -92,9 +91,8 @@ class ElementTriple():
                 center, color = self.get_dof_info(dof)
                 if center is None:
                     center = [0, 0, 0]
-
                 if isinstance(dof.pairing, DeltaPairing):
-                    coord = dof.eval(identity)
+                    coord = dof.eval(identity, pullback=False)
                     dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
                 elif isinstance(dof.pairing, L2InnerProd):
                     dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
@@ -162,7 +160,7 @@ class ImmersedDOF():
     def __call__(self, g):
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
 
-        print("Attaching node", target_node)
+        # print("Attaching node", target_node)
         # print("Orientation", o)
         if self.C.dim() > 0 and o != o.group.identity:
             # print("orientation doesn't match")

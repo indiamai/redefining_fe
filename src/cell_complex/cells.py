@@ -217,12 +217,13 @@ class Point():
         return basis_vecs
 
 
-    def plot(self, show=True, plain=False):
+    def plot(self, show=True, plain=False, ax=None):
         """ for now into 2 dimensional space """
 
         top_level_node = self.d_entities(self.graph_dim())[0]
         xs = np.linspace(-1, 1, 20)
-        ax = plt.gca()
+        if ax is None:
+            ax = plt.gca()
 
         if self.dimension == 1:
             # line plot in 1D case
