@@ -171,13 +171,12 @@ print("num dofs ", cg3.num_dofs())
 
 
 
-print("face vector func")
+print("Raviart Thomas")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 face_vec = ElementTriple(face1, (P1, CellHDiv, "C0"), dofs)
 ls = face_vec.generate()
-for dof in ls:
-    print(dof)
+
 im_xs = [immerse(tetrahedron, face_vec, CellHDiv)]
 face = DOFGenerator(im_xs, S4, S4)
 
@@ -187,16 +186,13 @@ ls = rt1.generate()
 rt1.plot()
 for dof in ls:
     print(dof)
-    print(dof.eval(MyTestFunction(lambda *x: x)))
 print("num dofs ", rt1.num_dofs())
 
-print("Edge of Ned")
+print("Nedelec")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 int_ned = ElementTriple(edges[0], (P1, CellHCurl, "C0"), dofs)
 ls = int_ned.generate()
-for dof in ls:
-    print(dof)
 
 im_xs = [immerse(tetrahedron, int_ned, CellHCurl)]
 edge = DOFGenerator(im_xs, A4, Z4)
@@ -205,6 +201,6 @@ ned = ElementTriple(tetrahedron, (P1, CellHCurl, "C0"),
                     [edge])
 ls = ned.generate()
 ned.plot()
-# for dof in ls:
-#     print(dof)
-# print("num dofs ", ned.num_dofs())
+for dof in ls:
+    print(dof)
+print("num dofs ", ned.num_dofs())

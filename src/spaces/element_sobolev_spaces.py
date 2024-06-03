@@ -70,7 +70,7 @@ class CellHDiv(ElementSobolevSpace):
             elif trace_entity.dimension == 2:
                 result = np.dot(np.array(v(*x)), np.cross(basis[0], basis[1]))
             else:
-                raise ValueError("Immersion of HDiv edges not supported in 3D")
+                raise ValueError("Immersion of HDiv edges not defined in 3D")
             if isinstance(result, np.float64):
                 return (result,)
             return tuple(result)

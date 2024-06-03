@@ -8,6 +8,8 @@ from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
 import matplotlib.pyplot as plt
+import json
+import jsonpickle
 
 
 vertices = []
@@ -90,6 +92,10 @@ ls = dg0.generate()
 print("num dofs ", dg0.num_dofs())
 for dof in ls:
     print(dof)
+# print(dg0.__dict__)
+# json.dumps(dg0.__dict__)
+# json_string = jsonpickle.encode(dg0)
+# print(json_string)
 
 # # cg1 on interval
 print("CG1 on interval")
@@ -97,9 +103,9 @@ xs = [immerse(edges[0], dg0, CellH1)]
 cg1 = ElementTriple(edges[0], (P1, CellH1, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
-# print("num dofs ", cg1.num_dofs())
-# for dof in ls:
-#     print(dof)
+print("num dofs ", cg1.num_dofs())
+for dof in ls:
+    print(dof)
 #     print(dof.eval(test_func))
 # cg1.plot()
 
@@ -149,21 +155,21 @@ cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
                     [v_dofs, e_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: (x, y))
-# ls = cg3.generate()
-# print("num dofs ", cg3.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof.eval(phi_0))
-# cg3.plot()
+ls = cg3.generate()
+print("num dofs ", cg3.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.eval(phi_0))
+cg3.plot()
 
 print("Integral Moment")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 
 int_ned = ElementTriple(edges[0], (P1, CellHCurl, "C0"), dofs)
-# ls = int_ned.generate()
-# for dof in ls:
-#     print(dof)
+ls = int_ned.generate()
+for dof in ls:
+    print(dof)
 
 phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
                                      (np.sqrt(3)/6)*x))
@@ -232,9 +238,9 @@ her = ElementTriple(a4, (P3, CellH2, "C0"),
 
 phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
 ls = her.generate()
-print("num dofs ", her.num_dofs())
-for dof in ls:
-    print(dof)
-    # print("dof eval", dof.eval(phi_0))
+# print("num dofs ", her.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     # print("dof eval", dof.eval(phi_0))
     
-her.plot()
+# her.plot()

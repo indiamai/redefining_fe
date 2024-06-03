@@ -24,8 +24,8 @@ class DeltaPairing(Pairing):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
-    def __repr__(self, kernel, fn):
-        return "{0}({1})".format(fn, str(kernel))
+    def __repr__(self):
+        return "{fn}({kernel})"
 
 
 class L2InnerProd(Pairing):
@@ -47,10 +47,8 @@ class L2InnerProd(Pairing):
         else:
             raise NotImplementedError("L2 Inner product evaluation not implemented for this dimension")
 
-    def __repr__(self, kernel, fn):
-        return "integral_{1}({0} * {2}) dx)".format(str(kernel),
-                                                    str(self.entity),
-                                                    fn)
+    def __repr__(self):
+        return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
 
 
 class PointKernel():
@@ -139,7 +137,7 @@ class DOF():
                                         str(self.target_space))
         else:
             fn = "v"
-        return self.pairing.__repr__(self.kernel, fn)
+        return str(self.pairing).format(fn=fn, kernel=self.kernel)
 
     def immerse(self, entity, attachment, target_space, g):
         if not self.immersed:
