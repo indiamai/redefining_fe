@@ -1,8 +1,8 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.new_groups import r, rot, S1, S2, S3, D4, C4
-from cell_complex.cells import Point, Edge
+from groups.new_groups import r, rot, S1, S2, S3, D4, C4, S4
+from cell_complex.cells import Point, Edge, n_sided_polygon
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
@@ -10,27 +10,27 @@ from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
 import matplotlib.pyplot as plt
 import json
 import jsonpickle
+# from scratch import n_sided_polygon
 
+# vertices = []
+# for i in range(3):
+#     vertices.append(Point(0))
+# edges = []
+# edges.append(
+#     Point(1, [Edge(vertices[0], lambda: (-1,)),
+#               Edge(vertices[1], lambda: (1,))]))
+# edges.append(
+#     Point(1, [Edge(vertices[0], lambda: (1,)),
+#               Edge(vertices[2], lambda: (-1,))]))
+# edges.append(
+#     Point(1, [Edge(vertices[1], lambda: (-1,)),
+#               Edge(vertices[2], lambda: (1,))]))
 
-vertices = []
-for i in range(3):
-    vertices.append(Point(0))
-edges = []
-edges.append(
-    Point(1, [Edge(vertices[0], lambda: (-1,)),
-              Edge(vertices[1], lambda: (1,))]))
-edges.append(
-    Point(1, [Edge(vertices[0], lambda: (1,)),
-              Edge(vertices[2], lambda: (-1,))]))
-edges.append(
-    Point(1, [Edge(vertices[1], lambda: (-1,)),
-              Edge(vertices[2], lambda: (1,))]))
-
-a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
-               Edge(edges[1], lambda x: [(- x - 1) / 2,
-                                         np.sqrt(3) * (3 * -x + 1) / 6]),
-               Edge(edges[2], lambda x: [(1 - x) / 2,
-                                         np.sqrt(3) * (3 * x + 1) / 6])])
+# a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
+#                Edge(edges[1], lambda x: [(- x - 1) / 2,
+#                                          np.sqrt(3) * (3 * -x + 1) / 6]),
+#                Edge(edges[2], lambda x: [(1 - x) / 2,
+#                                          np.sqrt(3) * (3 * x + 1) / 6])])
 # print(a4.vertices())
 # print(a4.basis_vectors())
 # print(a4.basis_vectors(return_coords=True))
@@ -41,11 +41,11 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # print(a4.basis_vectors(entity=edges[1]))
 # print(a4.basis_vectors(entity=edges[2]))
 # a4rot = a4.orient(rot)
-# a4.hasse_diagram()
-# a4.plot()
-# a4rot.plot()
-# edges[0].plot()
-# e2 = edges[0].orient(r)
+# # a4.hasse_diagram()
+# # a4.plot()
+# # a4rot.plot()
+# # edges[0].plot()
+# # e2 = edges[0].orient(r)
 # print("original")
 # print(edges[0].G)
 # print(edges[0].graph().edges)
@@ -79,6 +79,10 @@ a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
 # # def test_p1_v(x):
 # #     return 2*x + 3
 
+tri = n_sided_polygon(3)
+vert = tri.d_entities(0, get_class=True)[0]
+edge = tri.d_entities(1, get_class=True)[0]
+
 
 test_func = MyTestFunction(lambda x: 2*x + 3)
 # # test_func2 = MyTestFunction(lambda x, y: (10*x, y))
@@ -86,12 +90,12 @@ test_func = MyTestFunction(lambda x: 2*x + 3)
 # # # dg0 on point
 print("DG0 on point")
 xs = [DOF(DeltaPairing(), PointKernel(()))]
-dg0 = ElementTriple(vertices[0], (P0, CellL2, "C0"),
+dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
                     DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
-print("num dofs ", dg0.num_dofs())
-for dof in ls:
-    print(dof)
+# print("num dofs ", dg0.num_dofs())
+# for dof in ls:
+#     print(dof)
 # print(dg0.__dict__)
 # json.dumps(dg0.__dict__)
 # json_string = jsonpickle.encode(dg0)
@@ -99,23 +103,23 @@ for dof in ls:
 
 # # cg1 on interval
 print("CG1 on interval")
-xs = [immerse(edges[0], dg0, CellH1)]
-cg1 = ElementTriple(edges[0], (P1, CellH1, "C0"),
+xs = [immerse(edge, dg0, CellH1)]
+cg1 = ElementTriple(edge, (P1, CellH1, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
-print("num dofs ", cg1.num_dofs())
-for dof in ls:
-    print(dof)
+# print("num dofs ", cg1.num_dofs())
+# for dof in ls:
+#     print(dof)
 #     print(dof.eval(test_func))
 # cg1.plot()
 
 # # # # # dg1 on interval
 print("DG1 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
-dg1 = ElementTriple(edges[0], (P1, CellL2, "C0"),
+dg1 = ElementTriple(edge, (P1, CellL2, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
+print("num dofs ", dg1.num_dofs())
 # for dof in ls:
 #     print(dof)
 #     print(dof.eval(test_func))
@@ -123,7 +127,7 @@ ls = dg1.generate()
 # # dg1 on triangle
 print("DG1 on triangle")
 xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
-dg1 = ElementTriple(a4, (P1, CellL2, "C0"),
+dg1 = ElementTriple(tri, (P1, CellL2, "C0"),
                     DOFGenerator(xs, S3/S2, S1))
 ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
@@ -132,7 +136,7 @@ ls = dg1.generate()
 
 # print("DG0 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
-dg0_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
+dg0_int = ElementTriple(edge, (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
 ls = dg0_int.generate()
 # print("num dofs ", dg0_int.num_dofs())
@@ -142,34 +146,34 @@ ls = dg0_int.generate()
 
 # # # cg3 on triangle
 print("CG3")
-v_xs = [immerse(a4, dg0, CellH1)]
+v_xs = [immerse(tri, dg0, CellH1)]
 v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-e_xs = [immerse(a4, dg0_int, CellH1)]
+e_xs = [immerse(tri, dg0_int, CellH1)]
 e_dofs = DOFGenerator(e_xs, S3, S1)
 
 i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
-cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
+cg3 = ElementTriple(tri, (P3, CellH1, "C0"),
                     [v_dofs, e_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: (x, y))
 ls = cg3.generate()
-print("num dofs ", cg3.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof.eval(phi_0))
-cg3.plot()
+# print("num dofs ", cg3.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof.eval(phi_0))
+# cg3.plot()
 
 print("Integral Moment")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 
-int_ned = ElementTriple(edges[0], (P1, CellHCurl, "C0"), dofs)
+int_ned = ElementTriple(edge, (P1, CellHCurl, "C0"), dofs)
 ls = int_ned.generate()
-for dof in ls:
-    print(dof)
+# for dof in ls:
+#     print(dof)
 
 phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
                                      (np.sqrt(3)/6)*x))
@@ -179,12 +183,12 @@ phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
                                      (np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
 
 print("Nedelec")
-xs = [immerse(a4, int_ned, CellHCurl)]
+xs = [immerse(tri, int_ned, CellHCurl)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
-ned = ElementTriple(a4, (vecP3, CellHCurl, "C0"), [tri_dofs])
+ned = ElementTriple(tri, (vecP3, CellHCurl, "C0"), [tri_dofs])
 # ned.plot()
-# ls = ned.generate()
+ls = ned.generate()
 # for dof in ls:
 #     print(dof)
 #     print("phi_0 ", dof.eval(phi_0))
@@ -194,8 +198,8 @@ ned = ElementTriple(a4, (vecP3, CellHCurl, "C0"), [tri_dofs])
 print("Edge of RT")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
-int_rt = ElementTriple(edges[0], (P1, CellHDiv, "C0"), dofs)
-# ls = int_rt.generate()
+int_rt = ElementTriple(edge, (P1, CellHDiv, "C0"), dofs)
+ls = int_rt.generate()
 # for dof in ls:
 #     print(dof)
 
@@ -208,10 +212,10 @@ phi_0 = MyTestFunction(lambda x, y: ((-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
 phi_1 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
                                      1/6 + (np.sqrt(3)/6)*y))
 
-xs = [immerse(a4, int_rt, CellHDiv)]
+xs = [immerse(tri, int_rt, CellHDiv)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
-rt = ElementTriple(a4, (vecP3, CellHDiv, "C0"), [tri_dofs])
+rt = ElementTriple(tri, (vecP3, CellHDiv, "C0"), [tri_dofs])
 # ls = rt.generate()
 # for dof in ls:
 #     print(dof)
@@ -221,26 +225,64 @@ rt = ElementTriple(a4, (vecP3, CellHDiv, "C0"), [tri_dofs])
 # rt.plot()
 
 print("Hermite")
-v_xs = [immerse(a4, dg0, CellH1)]
+v_xs = [immerse(tri, dg0, CellH1)]
 v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-v_derv_xs = [immerse(a4, dg0, CellH2)]
+v_derv_xs = [immerse(tri, dg0, CellH2)]
 v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
 
-v_derv2_xs = [immerse(a4, dg0, CellH3)]
+v_derv2_xs = [immerse(tri, dg0, CellH3)]
 v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
 
 i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
-her = ElementTriple(a4, (P3, CellH2, "C0"),
+her = ElementTriple(tri, (P3, CellH2, "C0"),
                     [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
 ls = her.generate()
-# print("num dofs ", her.num_dofs())
+print("num dofs ", her.num_dofs())
 # for dof in ls:
 #     print(dof)
-#     # print("dof eval", dof.eval(phi_0))
+# #     # print("dof eval", dof.eval(phi_0))
     
 # her.plot()
+
+
+print("CG1 on Square")
+square = n_sided_polygon(4)
+# tri2.plot()
+print(square.vertices(return_coords=True))
+print(square.group.size())
+vert = square.d_entities(0, get_class=True)[0]
+edge = square.d_entities(1, get_class=True)[0]
+
+xs = [DOF(DeltaPairing(), PointKernel(()))]
+dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
+                    DOFGenerator(xs, S1, S1))
+
+xs = [DOF(DeltaPairing(), PointKernel((0,)))]
+dg0_int = ElementTriple(edge, (P0, CellL2, "C0"),
+                        DOFGenerator(xs, S1, S1))
+
+print("CG3")
+v_xs = [immerse(square, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, C4, S1)
+
+e_xs = [immerse(square, dg0_int, CellH1)]
+e_dofs = DOFGenerator(e_xs, D4, S1)
+
+i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
+
+cg3 = ElementTriple(square, (P3, CellH1, "C0"),
+                    [v_dofs, e_dofs, i_dofs])
+
+phi_0 = MyTestFunction(lambda x, y: (x, y))
+ls = cg3.generate()
+print("num dofs ", cg3.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.eval(phi_0))
+cg3.plot()

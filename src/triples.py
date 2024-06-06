@@ -158,6 +158,9 @@ class ImmersedDOF():
         self.start_node = start_node
 
     def __call__(self, g):
+        print(self.start_node)
+        print(g)
+        print(self.target_cell.permute_entities(g, self.C.dim()))
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
 
         # print("Attaching node", target_node)

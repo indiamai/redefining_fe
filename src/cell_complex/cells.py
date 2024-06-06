@@ -5,10 +5,12 @@ import itertools
 import networkx as nx
 import groups.new_groups
 import copy
+import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, Permutation, PermutationGroup
+
 
 
 class Arrow3D(FancyArrowPatch):
@@ -22,18 +24,6 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
 
         return np.min(zs)
-
-
-def symmetric_group_rep(d):
-    return groups.new_groups.GroupRepresentation(SymmetricGroup(d))
-    if d == 1:
-        return groups.new_groups.S1
-    if d == 2:
-        return groups.new_groups.S2
-    if d == 3: 
-        return groups.new_groups.S3
-    if d == 4:
-        return groups.new_groups.S4
 
 
 def topo_pos(G):
@@ -78,15 +68,99 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     ax.add_artist(a)
 
 
+def construct_attach_2d(a, b, c, d):
+    return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
+
+
+def construct_attach_3d(res):
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    xy = sp.Matrix([1, x, y])
+    print(res.T*xy)
+    return lambda x, y: list(np.array((res*xy).subs({"x": x, "y": y}), dtype=float))
+
+
+def compute_scaled_verts(d, n):
+    if d == 2:
+        source = np.array([0, 1])
+        rot_coords = [source for i in range(0, n)]
+
+        rot_mat = np.array([[np.cos((2*np.pi)/n), -np.sin((2*np.pi)/n)],[np.sin((2*np.pi)/n), np.cos((2*np.pi)/n)]])
+        for i in range(1, n):
+            rot_coords[i] = np.matmul(rot_mat, rot_coords[i-1])
+        xdiff, ydiff = (rot_coords[0][0] - rot_coords[1][0],
+                        rot_coords[0][1] - rot_coords[1][1])
+        scale = 2 / np.sqrt(xdiff**2 + ydiff**2)
+        scaled_coords = np.array([[scale*x, scale*y] for (x, y) in rot_coords])
+        return scaled_coords
+    elif d == 3:
+        if n == 4:
+            A = [-1, 1, -1]
+            B = [1, -1, -1]
+            C = [1, 1, 1]
+            D = [-1, -1, 1]
+            coords = [A, B, C, D]
+            face1 = np.array([D, A, C])
+            face2 = np.array([A, B, D])
+            face3 = np.array([A, B, C])
+            face4 = np.array([B, D, C])
+            faces = [face1, face2, face3, face4]
+        elif n == 8:
+            coords = []
+            faces = [[] for i in range(6)]
+            for i in [-1, 1]:
+                for j in [-1, 1]:
+                    for k in [-1, 1]:
+                        coords.append([i, j, k])
+            
+            for j in [-1, 1]:
+                for k in [-1, 1]:
+                    faces[0].append([1, j, k])
+                    faces[1].append([-1, j, k])
+                    faces[2].append([j, 1, k])
+                    faces[3].append([j, -1, k])
+                    faces[4].append([j, k, 1])
+                    faces[5].append([j, k, -1])
+
+        else:
+            raise ValueError("Polyhedron with {} vertices not supported".format(n))
+
+        xdiff, ydiff, zdiff = (coords[0][0] - coords[1][0],
+                               coords[0][1] - coords[1][1],
+                               coords[0][2] - coords[1][2])
+        scale = 2 / np.sqrt(xdiff**2 + ydiff**2 + zdiff**2)
+        scaled_coords = np.array([[scale*x, scale*y, scale*z] for (x, y, z) in coords])
+        scaled_faces = np.array([[[scale*x, scale*y, scale*z] for (x, y, z) in face] for face in faces])
+
+        return scaled_coords, scaled_faces
+    else:
+        raise ValueError("Dimension {} not supported".format(d))
+
+
+def n_sided_polygon(n):
+    vertices = []
+    for i in range(n):
+        vertices.append(Point(0))
+    edges = []
+    for i in range(n):
+        edges.append(
+            Point(1, [vertices[(i+1) % n], vertices[(i+2) % n]], vertex_num=2))
+
+    return Point(2, edges, vertex_num=n)
+
+
 class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], oriented=False, group=None):
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}):
         self.id = next(self.id_iter)
         self.dimension = d
         if d == 0:
             assert (edges == [])
+        
+        if vertex_num:
+            edges = self.compute_attachments(vertex_num, edges, edge_orientations)
 
         self.oriented = oriented
         self.group = None
@@ -102,17 +176,46 @@ class Point():
         if group:
             self.group = group.add_cell(self)
 
+    def compute_attachments(self, n, points, orientations={}):
+        if self.dimension == 1:
+            edges = [Edge(points[0], lambda: (-1,)),
+                        Edge(points[1], lambda: (1,))]
+        if self.dimension == 2:
+            coords = compute_scaled_verts(2, n)
+            edges = []
+
+            for i in range(n):
+                a, b = coords[i]
+                c, d = coords[(i + 1) % n]
+
+                if i in orientations.keys():
+                    edges.append(Edge(points[i], construct_attach_2d(a, b, c, d), o=orientations[i]))
+                else:
+                    edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
+        if self.dimension == 3:
+            coords, faces = compute_scaled_verts(3, n)
+            coords_2d = np.c_[np.ones(len(faces[0])), compute_scaled_verts(2, len(faces[0]))]
+            
+            res = []
+            edges = []
+
+            for i in range(len(faces)):
+                res = np.linalg.solve(coords_2d.T, faces[i])
+                if i in orientations.keys():
+                    edges.append(Edge(points[i], construct_attach_3d(res), o=orientations[i]))
+                else:
+                    edges.append(Edge(points[i], construct_attach_3d(res)))
+        return edges
+
+
     def compute_cell_group(self):
         verts = self.vertices()
         v_coords = self.vertices(return_coords=True)
-        coords_dict = {v: coord for v, coord in zip(verts, v_coords)}
-        print(verts)
         n = len(verts)
         max_group = SymmetricGroup(n)
         edges = [edge.vertices() for edge in self.edges(get_class=True)]
 
         accepted_perms = max_group.elements
-        print("max num", len(accepted_perms))
         if n > 2:
             for element in max_group.elements:
                 reordered = element(verts)
@@ -122,12 +225,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-        print("Accepted", len(accepted_perms))
-        print(accepted_perms)
         return groups.new_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
-
-
-
 
     def dim(self):
         return self.dimension
@@ -207,12 +305,15 @@ class Point():
                 if len(connected) > 0:
                     entity_verts.append(v)
             entity_dict[ent] = tuple(entity_verts)
-            reordered_entity_dict[ent] = tuple([reordered[i] for i in entity_verts])
-
+            reordered_entity_dict[ent] = tuple([reordered[verts.index(i)] for i in entity_verts])
+        print(entity_dict)
+        print(reordered_entity_dict)
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
         entity_vert_num = len(entity_dict[min_id])
-        entity_group = symmetric_group_rep(entity_vert_num).add_cell(self.get_node(min_id))
+        # entity_group = groups.new_groups.GroupRepresentation(SymmetricGroup(entity_vert_num)).add_cell(self.get_node(min_id))
+        entity_group = self.d_entities(d, get_class=True)[0].group
+        print(entity_group)
         for ent in entities:
             for ent1 in entities:
                 if set(entity_dict[ent]) == set(reordered_entity_dict[ent1]):
@@ -221,6 +322,8 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
+                else:
+                    print("set doesn't match")
         return reordered_entities
 
 
