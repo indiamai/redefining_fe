@@ -74,8 +74,9 @@ class GroupRepresentation(object):
                     reordered = temp_perm(vertices)
                 else:
                     reordered = g(vertices)
-                M = np.linalg.solve(np.c_[np.array(vertices),
-                                            np.ones(len(vertices))], np.array(reordered))
+                A = np.c_[np.array(vertices),np.ones(len(vertices))]
+                b = np.array(reordered)
+                M, _, _, _ = np.linalg.lstsq(A, b)
                 rep = construct_rep_func(M)
                 rep.__name__ = "g" + str(counter)
                 self.generators.append(GroupMemberRep(g, rep, self))

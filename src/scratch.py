@@ -2,6 +2,11 @@ import numpy as np
 from cell_complex.cells import Point, Edge
 import matplotlib.pyplot as plt
 import sympy as sp
+from groups.new_groups import r, rot, S1, S2, S3, D4, C4
+from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
+from triples import ElementTriple, DOFGenerator, immerse
+from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
+from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
 
 def compute_scaled_verts_2d(n):
     source = np.array([0, 1])
@@ -10,7 +15,8 @@ def compute_scaled_verts_2d(n):
     rot_mat = np.array([[np.cos((2*np.pi)/n), -np.sin((2*np.pi)/n)],[np.sin((2*np.pi)/n), np.cos((2*np.pi)/n)]])
     for i in range(1, n):
         rot_coords[i] = np.matmul(rot_mat, rot_coords[i-1])
-    xdiff, ydiff = (rot_coords[0][0] - rot_coords[1][0], rot_coords[0][1] - rot_coords[1][1])
+    xdiff, ydiff = (rot_coords[0][0] - rot_coords[1][0],
+                    rot_coords[0][1] - rot_coords[1][1])
     scale = 2 / np.sqrt(xdiff**2 + ydiff**2)
     scaled_coords = np.array([[scale*x, scale*y] for (x, y) in rot_coords])
     return scaled_coords
@@ -86,7 +92,6 @@ def compute_attachments(n, dimension, points, orientations={}):
             else:
                 edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
     if dimension == 3:
-        
         coords, faces = compute_scaled_verts_and_faces_3d(n)
         coords_2d = np.c_[np.ones(len(faces[0])), compute_scaled_verts_2d(len(faces[0]))]
         
@@ -137,11 +142,44 @@ def r(x):
 
 
 # new_tri.plot()
+tri = n_sided_polygon(3)
+# tri2.plot()
+print(tri.vertices(return_coords=True))
+print(tri.group.size())
 
-# tri2 = n_sided_polygon(3)
-# # tri2.plot()
-# print(tri2.vertices(return_coords=True))
+square = n_sided_polygon(4)
+# tri2.plot()
+print(square.vertices(return_coords=True))
+print(square.group.size())
 
+xs = [DOF(DeltaPairing(), PointKernel((-np.sqrt(2), 0)))]
+
+dg1 = ElementTriple(square, (P1, CellL2, "C0"),
+                    DOFGenerator(xs, C4, S1))
+ls = dg1.generate()
+for l in ls:
+    print(l)
+dg1.plot()
+
+v_xs = [immerse(square, dg0, CellH1)]
+v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+
+e_xs = [immerse(a4, dg0_int, CellH1)]
+e_dofs = DOFGenerator(e_xs, S3, S1)
+
+i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
+
+cg3 = ElementTriple(a4, (P3, CellH1, "C0"),
+                    [v_dofs, e_dofs, i_dofs])
+
+phi_0 = MyTestFunction(lambda x, y: (x, y))
+ls = cg3.generate()
+print("num dofs ", cg3.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.eval(phi_0))
+cg3.plot()
 # hex = n_sided_polygon(6)
 # hex.plot()
 # print(hex.vertices(return_coords=True))
@@ -154,67 +192,67 @@ def r(x):
 #     print(a(-1, -np.sqrt(2)/2))
 
 
-vertices1 = []
-for i in range(4):
-    vertices1.append(Point(0))
-edges1 = []
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[0], vertices1[1]])))  # 4
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[1], vertices1[2]])))  # 5
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[2], vertices1[0]])))  # 6
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[3], vertices1[0]])))  # 7
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[1], vertices1[3]])))  # 8
-edges1.append(
-    Point(1, compute_attachments(2, 1, [vertices1[2], vertices1[3]]))) # 9
-aa = compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]])
+# vertices1 = []
+# for i in range(4):
+#     vertices1.append(Point(0))
+# edges1 = []
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[0], vertices1[1]])))  # 4
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[1], vertices1[2]])))  # 5
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[2], vertices1[0]])))  # 6
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[3], vertices1[0]])))  # 7
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[1], vertices1[3]])))  # 8
+# edges1.append(
+#     Point(1, compute_attachments(2, 1, [vertices1[2], vertices1[3]]))) # 9
+# aa = compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]])
 
-for a in aa:
-    print(a(-1))
-    print(a(1))
+# for a in aa:
+#     print(a(-1))
+#     print(a(1))
 
-face10 = Point(2, compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]], {2: r}))
-face11 = Point(2, compute_attachments(3, 2, [edges1[3], edges1[0], edges1[4]]))
-face12 = Point(2, compute_attachments(3, 2, [edges1[2], edges1[0], edges1[1]]))
-face13 = Point(2, compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]], {0:r, 2: r}))
-e10 = compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]])
-e11 = compute_attachments(3, 2, [edges1[3], edges1[0], edges1[4]])
-e12 = compute_attachments(3, 2, [edges1[2], edges1[0], edges1[1]])
-e13 = compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]])
-
-# # breakpoint()
-# face10 = Point(2, compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]]))
+# face10 = Point(2, compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]], {2: r}))
 # face11 = Point(2, compute_attachments(3, 2, [edges1[3], edges1[0], edges1[4]]))
 # face12 = Point(2, compute_attachments(3, 2, [edges1[2], edges1[0], edges1[1]]))
-# face13 = Point(2, compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]]))
+# face13 = Point(2, compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]], {0:r, 2: r}))
+# e10 = compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]])
+# e11 = compute_attachments(3, 2, [edges1[3], edges1[0], edges1[4]])
+# e12 = compute_attachments(3, 2, [edges1[2], edges1[0], edges1[1]])
+# e13 = compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]])
 
-f10, f11, f12, f13 = compute_attachments(4, 3, [face10, face11, face12, face12])
-tetra = Point(3, compute_attachments(4, 3, [face13, face11, face12, face10])) 
-# tetra.hasse_diagram()
-verts = compute_scaled_verts_2d(3)
+# # # breakpoint()
+# # face10 = Point(2, compute_attachments(3, 2, [edges1[5], edges1[3], edges1[2]]))
+# # face11 = Point(2, compute_attachments(3, 2, [edges1[3], edges1[0], edges1[4]]))
+# # face12 = Point(2, compute_attachments(3, 2, [edges1[2], edges1[0], edges1[1]]))
+# # face13 = Point(2, compute_attachments(3, 2, [edges1[1], edges1[4], edges1[5]]))
 
-print("f10")
-print(verts[0], f10(*verts[0]))
-print(verts[1], f10(*verts[1]))
-print(verts[2], f10(*verts[2]))
+# f10, f11, f12, f13 = compute_attachments(4, 3, [face10, face11, face12, face12])
+# tetra = Point(3, compute_attachments(4, 3, [face13, face11, face12, face10])) 
+# # tetra.hasse_diagram()
+# verts = compute_scaled_verts_2d(3)
 
-print("f11")
-print(verts[0], f11(*verts[0]))
-print(verts[1], f11(*verts[1]))
-print(verts[2], f11(*verts[2]))
+# print("f10")
+# print(verts[0], f10(*verts[0]))
+# print(verts[1], f10(*verts[1]))
+# print(verts[2], f10(*verts[2]))
 
-print("f12")
-print(verts[0], f12(*verts[0]))
-print(verts[1], f12(*verts[1]))
-print(verts[2], f12(*verts[2]))
+# print("f11")
+# print(verts[0], f11(*verts[0]))
+# print(verts[1], f11(*verts[1]))
+# print(verts[2], f11(*verts[2]))
 
-print("f13")
-print(verts[0], f13(*verts[0]))
-print(verts[1], f13(*verts[1]))
-print(verts[2], f13(*verts[2]))
+# print("f12")
+# print(verts[0], f12(*verts[0]))
+# print(verts[1], f12(*verts[1]))
+# print(verts[2], f12(*verts[2]))
+
+# print("f13")
+# print(verts[0], f13(*verts[0]))
+# print(verts[1], f13(*verts[1]))
+# print(verts[2], f13(*verts[2]))
 # print(tetra.basis_vectors(return_coords=True))
 # face1 = Point(2, [Edge(edges[3], lambda x: [x, -np.sqrt(3) / 3]),
 #                   Edge(edges[2], lambda x: [(1 - x) / 2,

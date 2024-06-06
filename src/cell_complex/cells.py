@@ -8,6 +8,7 @@ import copy
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
+from sympy.combinatorics.named_groups import SymmetricGroup, Permutation, PermutationGroup
 
 
 class Arrow3D(FancyArrowPatch):
@@ -24,6 +25,7 @@ class Arrow3D(FancyArrowPatch):
 
 
 def symmetric_group_rep(d):
+    return groups.new_groups.GroupRepresentation(SymmetricGroup(d))
     if d == 1:
         return groups.new_groups.S1
     if d == 2:
@@ -50,7 +52,9 @@ def topo_pos(G):
 def fold_reduce(func_list, *prev):
     """ nested function composition helper function, right to left """
     for func in reversed(func_list):
+        # print(prev)
         prev = func(*prev)
+    # print(prev)
     return prev
 
 
@@ -94,8 +98,35 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
+        group = self.compute_cell_group()
         if group:
             self.group = group.add_cell(self)
+
+    def compute_cell_group(self):
+        verts = self.vertices()
+        v_coords = self.vertices(return_coords=True)
+        coords_dict = {v: coord for v, coord in zip(verts, v_coords)}
+        print(verts)
+        n = len(verts)
+        max_group = SymmetricGroup(n)
+        edges = [edge.vertices() for edge in self.edges(get_class=True)]
+
+        accepted_perms = max_group.elements
+        print("max num", len(accepted_perms))
+        if n > 2:
+            for element in max_group.elements:
+                reordered = element(verts)
+                for edge in edges:
+                    diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])])
+                    edge_len = np.sqrt(np.dot(diff, diff))
+                    if not np.allclose(edge_len, 2):
+                        accepted_perms.remove(element)
+                        break
+        print("Accepted", len(accepted_perms))
+        print(accepted_perms)
+        return groups.new_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
+
+
 
 
     def dim(self):
@@ -153,7 +184,7 @@ class Point():
         return verts
 
     
-    def edges(self, get_class=False, coords = False):
+    def edges(self, get_class=False):
         if self.oriented:
             return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
@@ -257,7 +288,7 @@ class Point():
                     if not plain:
                         make_arrow(ax, 0, attach)
                 else:
-                    raise "Error not implemented general plotting"
+                    raise ValueError("General plotting not implemented")
             # if i == 2:
             #     if len(vert_coords) > 2:
             #         hull = ConvexHull(vert_coords)
@@ -299,13 +330,15 @@ class Point():
         if len(attachments) == 0:
             raise ValueError("No paths from node {} to node {}"
                              .format(source, dst))
-        
+        # print(attachments)
         # check all attachments resolve to the same function
         if len(attachments) > 1:
             dst_dim = self.dim_of_node(dst)
             basis = np.eye(dst_dim)
             if dst_dim == 0:
                 vals = [fold_reduce(attachment) for attachment in attachments]
+                # for val in vals:
+                #     print(val)
                 assert all(np.isclose(val, vals[0]).all() for val in vals)
             else:
                 for i in range(dst_dim):
