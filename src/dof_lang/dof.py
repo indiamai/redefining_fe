@@ -2,7 +2,6 @@
 from cell_complex.cells import Point, Edge
 from FIAT.quadrature import GaussLegendreQuadratureLineRule
 from FIAT.reference_element import DefaultLine
-
 import numpy as np
 
 class Pairing():
@@ -37,13 +36,13 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # evaluates integral on generic edge only
-        # print("evaluating", kernel, v, "on", self.entity)
+        print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-            return quadrature.integrate(lambda *x: np.dot(kernel(), v(*x)), unpack=True)
+            return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)), unpack=True)
         elif self.entity.dim() == 2:
             # ("evaluating at origin")
-            return np.dot(kernel(), v(0, 0))
+            return np.dot(kernel(0, 0), v(0, 0))
         else:
             raise NotImplementedError("L2 Inner product evaluation not implemented for this dimension")
 
@@ -63,11 +62,11 @@ class PointKernel():
     def permute(self, g):
         return PointKernel(g(self.pt))
 
-    def __call__(self):
+    def __call__(self, *args):
         return self.pt
 
 
-class GeneralKernel():
+class PolynomialKernel():
 
     def __init__(self, fn):
         self.fn = fn
@@ -76,10 +75,12 @@ class GeneralKernel():
         return str(self.fn)
 
     def permute(self, g):
-        return self
+        def permuting(*x):
+            return self.fn(*g(*x))
+        return PolynomialKernel(permuting)
 
-    def __call__(self):
-        return self.fn
+    def __call__(self, *args):
+        return self.fn(*args)
 
 
 class DOF():

@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from groups.new_groups import r, rot, S1, S2, S3, D4, C4, S4
 from cell_complex.cells import Point, Edge, n_sided_polygon
-from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel
+from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
@@ -119,7 +119,7 @@ xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
 dg1 = ElementTriple(edge, (P1, CellL2, "C0"),
                     DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
-print("num dofs ", dg1.num_dofs())
+# print("num dofs ", dg1.num_dofs())
 # for dof in ls:
 #     print(dof)
 #     print(dof.eval(test_func))
@@ -242,7 +242,7 @@ her = ElementTriple(tri, (P3, CellH2, "C0"),
 
 phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
 ls = her.generate()
-print("num dofs ", her.num_dofs())
+# print("num dofs ", her.num_dofs())
 # for dof in ls:
 #     print(dof)
 # #     # print("dof eval", dof.eval(phi_0))
@@ -253,8 +253,8 @@ print("num dofs ", her.num_dofs())
 print("CG1 on Square")
 square = n_sided_polygon(4)
 # tri2.plot()
-print(square.vertices(return_coords=True))
-print(square.group.size())
+# print(square.vertices(return_coords=True))
+# print(square.group.size())
 vert = square.d_entities(0, get_class=True)[0]
 edge = square.d_entities(1, get_class=True)[0]
 
@@ -281,8 +281,32 @@ cg3 = ElementTriple(square, (P3, CellH1, "C0"),
 
 phi_0 = MyTestFunction(lambda x, y: (x, y))
 ls = cg3.generate()
-print("num dofs ", cg3.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof.eval(phi_0))
-cg3.plot()
+# print("num dofs ", cg3.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof.eval(phi_0))
+# cg3.plot()
+
+print("Edge of RT 2nd order")
+xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: (1/2)*(1 + x)))]
+dofs = DOFGenerator(xs, S2, S2)
+int_rt2 = ElementTriple(edge, (P1, CellHDiv, "C0"), dofs)
+ls = int_rt2.generate()
+for l in ls:
+    print(l.eval(MyTestFunction(lambda x: x)))
+    # print(l.eval(MyTestFunction(lambda x: 0)))
+
+
+xs = [immerse(tri, int_rt2, CellHDiv)]
+tri_dofs = DOFGenerator(xs, S3, S3)
+
+i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
+        lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
+i_dofs = DOFGenerator(i_xs, S1, S1)
+
+vecP3 = VectorPolynomialSpace(P3, P3)
+rt2 = ElementTriple(tri, (vecP3, CellHDiv, "C0"), [tri_dofs, i_dofs])
+ls = rt2.generate()
+for l in ls:
+    print(l)
+

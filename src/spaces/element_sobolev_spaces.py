@@ -188,7 +188,7 @@ class CellL2(ElementSobolevSpace):
     def pullback(self, v, trace_entity):
         return 0
     
-    def plot(self, ax, coord, trace_entity, g, **kwargs):
+    def plot(self, ax, coord, trace_entity,  g, **kwargs):
         # plot dofs of the type associated with this space
         ax.scatter(*coord, **kwargs)
     

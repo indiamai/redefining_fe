@@ -62,11 +62,18 @@ class GroupRepresentation(object):
     def __init__(self, base_group, cell=None):
         assert isinstance(base_group, PermutationGroup)
         self.base_group = base_group
+        
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
         if cell is not None:
             self.cell = cell
             vertices = cell.vertices(return_coords=True)
+
+            A = np.c_[np.array(vertices), np.ones(len(vertices))]
+            b = np.array(vertices)
+            M, _, _, _ = np.linalg.lstsq(A, b)
+            self.identity = GroupMemberRep(base_group.identity, construct_rep_func(M), self)
+
             counter = 0
             for g in self.base_group.generators:
                 if len(vertices) > g.size:
@@ -181,7 +188,9 @@ class GroupRepresentation(object):
 # Function Representation of the coordinate transforms that make up the groups.
 
 
-def e(x):
+def e(*x):
+    print(isinstance(x, tuple))
+    print(x)
     return x
 
 

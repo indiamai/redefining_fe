@@ -158,7 +158,10 @@ class Point():
         self.dimension = d
         if d == 0:
             assert (edges == [])
-        
+        # if d > 1:
+        #     print(edges[2].cell_attachment(0)())
+        #     print(edges[1].cell_attachment(0)())
+        #     breakpoint()
         if vertex_num:
             edges = self.compute_attachments(vertex_num, edges, edge_orientations)
 
@@ -172,6 +175,12 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
+        # if d > 1:
+            # print(edges[2].cell_attachment(0)())
+            # for a in self.d_entities(3):
+            #     print(a)
+            #     print(self.cell_attachment(a)())
+            # breakpoint()
         group = self.compute_cell_group()
         if group:
             self.group = group.add_cell(self)
@@ -194,6 +203,8 @@ class Point():
                     edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
         if self.dimension == 3:
             coords, faces = compute_scaled_verts(3, n)
+            # print(coords)
+            # print(faces)
             coords_2d = np.c_[np.ones(len(faces[0])), compute_scaled_verts(2, len(faces[0]))]
             
             res = []
@@ -201,10 +212,14 @@ class Point():
 
             for i in range(len(faces)):
                 res = np.linalg.solve(coords_2d.T, faces[i])
+                print(i)
+                print(construct_attach_3d(res)(0, 0))
                 if i in orientations.keys():
                     edges.append(Edge(points[i], construct_attach_3d(res), o=orientations[i]))
                 else:
                     edges.append(Edge(points[i], construct_attach_3d(res)))
+
+            # breakpoint()
         return edges
 
 
@@ -293,7 +308,8 @@ class Point():
         reordered = g.permute(verts)
 
         if d == 0:
-            return list(zip(reordered, [lambda *x: () for r in reordered]))
+            entity_group = self.d_entities(d, get_class=True)[0].group
+            return list(zip(reordered, [entity_group.identity for r in reordered]))
 
         entity_dict = {}
         reordered_entity_dict = {}
@@ -306,14 +322,12 @@ class Point():
                     entity_verts.append(v)
             entity_dict[ent] = tuple(entity_verts)
             reordered_entity_dict[ent] = tuple([reordered[verts.index(i)] for i in entity_verts])
-        print(entity_dict)
-        print(reordered_entity_dict)
+
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
-        entity_vert_num = len(entity_dict[min_id])
+        # entity_vert_num = len(entity_dict[min_id])
         # entity_group = groups.new_groups.GroupRepresentation(SymmetricGroup(entity_vert_num)).add_cell(self.get_node(min_id))
         entity_group = self.d_entities(d, get_class=True)[0].group
-        print(entity_group)
         for ent in entities:
             for ent1 in entities:
                 if set(entity_dict[ent]) == set(reordered_entity_dict[ent1]):
@@ -322,8 +336,6 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
-                else:
-                    print("set doesn't match")
         return reordered_entities
 
 
@@ -483,6 +495,8 @@ class Edge():
         self.o = o
 
     def __call__(self, *x):
+        # print(x)
+        # print(*self.o(x))
         return self.attachment(*self.o(x))
 
     def lower_dim(self):
