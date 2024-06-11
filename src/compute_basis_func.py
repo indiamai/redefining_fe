@@ -136,26 +136,26 @@ threed4 = np.array([B, D, C])
 # print(threed3)
 # print(threed4)
 
-res1 = np.linalg.solve(twod, threed1)
-res2 = np.linalg.solve(twod, threed2)
-res3 = np.linalg.solve(twod, threed3)
-res4 = np.linalg.solve(twod, threed4)
+# res1 = np.linalg.solve(twod, threed1)
+# res2 = np.linalg.solve(twod, threed2)
+# res3 = np.linalg.solve(twod, threed3)
+# res4 = np.linalg.solve(twod, threed4)
 
-print(xy)
-print(xy.T * res1)
-print(xy.T * res2)
-print(xy.T * res3)
-print(xy.T * res4)
+# print(xy)
+# print(xy.T * res1)
+# print(xy.T * res2)
+# print(xy.T * res3)
+# print(xy.T * res4)
 
 
-func1 =lambda x, y: [-0.577350269189626*y - 1/3,
-                                     -x,
-                                     0.235702260395516 - 0.816496580927726*y]
-i = 0 
-for a, x, y in twod:
-    print(threed1[i])
-    print(func1(x, y))
-    i += 1 
+# func1 =lambda x, y: [-0.577350269189626*y - 1/3,
+#                                      -x,
+#                                      0.235702260395516 - 0.816496580927726*y]
+# i = 0 
+# for a, x, y in twod:
+#     print(threed1[i])
+#     print(func1(x, y))
+#     i += 1 
 
 # func2 = lambda x, y: [-0.5*x - 0.866025403784439*y,
 #                       0.866025403784439*x - 0.5*y ,
@@ -166,3 +166,9 @@ for a, x, y in twod:
 #     print(threed2[i])
 #     print(func2(x, y))
 #     i += 1 
+
+vander = np.array([[1, -1, 1], [1, 0, 0], [1, 1, 1]])
+ident = np.eye(3)
+
+print(np.matmul(np.invert(vander), ident))
+print(np.linalg.solve(vander, ident))

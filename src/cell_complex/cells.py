@@ -76,8 +76,7 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    print(res.T*xy)
-    return lambda x, y: list(np.array((res*xy).subs({"x": x, "y": y}), dtype=float))
+    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y}), dtype=float)
 
 
 def compute_scaled_verts(d, n):
@@ -100,9 +99,9 @@ def compute_scaled_verts(d, n):
             C = [1, 1, 1]
             D = [-1, -1, 1]
             coords = [A, B, C, D]
-            face1 = np.array([D, A, C])
+            face1 = np.array([A, D, C])
             face2 = np.array([A, B, D])
-            face3 = np.array([A, B, C])
+            face3 = np.array([A, C, B])
             face4 = np.array([B, D, C])
             faces = [face1, face2, face3, face4]
         elif n == 8:
@@ -203,23 +202,25 @@ class Point():
                     edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
         if self.dimension == 3:
             coords, faces = compute_scaled_verts(3, n)
-            # print(coords)
-            # print(faces)
+        
             coords_2d = np.c_[np.ones(len(faces[0])), compute_scaled_verts(2, len(faces[0]))]
             
             res = []
             edges = []
 
             for i in range(len(faces)):
-                res = np.linalg.solve(coords_2d.T, faces[i])
-                print(i)
-                print(construct_attach_3d(res)(0, 0))
+                res = np.linalg.solve(coords_2d, faces[i])
+
+                res_fn = construct_attach_3d(res)
+                assert np.allclose(res_fn(coords_2d[0][1], coords_2d[0][2]), faces[i][0])
+                assert np.allclose(res_fn(coords_2d[1][1], coords_2d[1][2]), faces[i][1])
+                assert np.allclose(res_fn(coords_2d[2][1], coords_2d[2][2]), faces[i][2])
                 if i in orientations.keys():
                     edges.append(Edge(points[i], construct_attach_3d(res), o=orientations[i]))
                 else:
                     edges.append(Edge(points[i], construct_attach_3d(res)))
 
-            # breakpoint()
+                # breakpoint()
         return edges
 
 
@@ -235,8 +236,9 @@ class Point():
             for element in max_group.elements:
                 reordered = element(verts)
                 for edge in edges:
+                    print(v_coords)
                     diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])])
-                    edge_len = np.sqrt(np.dot(diff, diff))
+                    edge_len = np.sqrt(np.dot(diff.T, diff))
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
