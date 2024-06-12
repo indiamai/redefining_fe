@@ -76,8 +76,7 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y}), dtype=float)
-
+    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y})).astype(np.float64)[0]  
 
 def compute_scaled_verts(d, n):
     if d == 2:
@@ -236,12 +235,17 @@ class Point():
             for element in max_group.elements:
                 reordered = element(verts)
                 for edge in edges:
-                    print(v_coords)
                     diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])])
+                    print(v_coords)
+                    print(diff)
+                    print(diff.shape)
+                    print(np.dot(diff, diff))
                     edge_len = np.sqrt(np.dot(diff.T, diff))
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
+
+        # print(accepted_perms)
         return groups.new_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
 
     def dim(self):
