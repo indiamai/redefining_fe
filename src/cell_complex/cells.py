@@ -236,11 +236,7 @@ class Point():
                 reordered = element(verts)
                 for edge in edges:
                     diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])])
-                    print(v_coords)
-                    print(diff)
-                    print(diff.shape)
-                    print(np.dot(diff, diff))
-                    edge_len = np.sqrt(np.dot(diff.T, diff))
+                    edge_len = np.sqrt(np.dot(diff, diff))
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
