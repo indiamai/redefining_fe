@@ -1,5 +1,10 @@
 from firedrake import *
+from FIAT import polynomial_set
+import sympy as sp
 
+
+def convert_to_fiat_element(cell):
+    verts = cell.vertices(get_coords=True)
 
 class PolynomialSpace(object):
     """
@@ -24,8 +29,58 @@ class PolynomialSpace(object):
     def complete(self):
         return self.subdegree == self.superdegree
     
-    # def __mul__(self, x):
-    #     return VectorPolynomialSpace([self, x])
+    def to_ON_polynomial_set(self, cell):
+        # how does super/sub degrees work here
+
+        expansion_set = {
+                reference_element.POINT: PointExpansionSet,
+                reference_element.LINE: LineExpansionSet,
+                reference_element.TRIANGLE: TriangleExpansionSet,
+                reference_element.TETRAHEDRON: TetrahedronExpansionSet,
+            }[ref_el.get_shape()]
+        return polynomial_set.ONPolynomialSet(cell, self.subdegree)
+    
+    def __repr__(self):
+        if self.complete():
+            return "P" + str(self.subdegree)
+        else:
+            return "Psub" + str(self.subdegree) + "sup" + str(self.superdegree)
+
+    def __mul__(self, x):
+        if isinstance(x, sp.Symbol):
+            return ConstructedPolynomialSpace([x], [self])
+        else:
+            raise TypeError(f'Cannot multiply a PolySpace with {type(other)}')
+        
+    __rmul__ = __mul__
+    
+    def __add__(self, x):
+        return ConstructedPolynomialSpace([1, 1], [self, x])
+
+
+class ConstructedPolynomialSpace(PolynomialSpace):
+    """
+    Sub degree is inherited from the largest of the component spaces,
+    super degree is unknown. 
+    """
+    def __init__(self, weights, spaces):
+
+        self.weights = weights
+        self.spaces = spaces
+
+        subdegree = max([space.subdegree for space in spaces])
+        super(ConstructedPolynomialSpace, self).__init__(subdegree, None)
+
+    def __repr__(self):
+        return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
+
+    def __mul__(self, x):
+        return ConstructedPolynomialSpace([x*w for w in self.weights],
+                                          self.spaces)
+    
+    def __add__(self, x):
+        return ConstructedPolynomialSpace(self.weights.extend([1]),
+                                          self.spaces.extend(x))
 
 
 class VectorPolynomialSpace(PolynomialSpace):

@@ -1,5 +1,5 @@
 # from firedrake import *
-from groups.groups import Group, S1, S2, S3
+# from groups.groups import Group, S1, S2, S3
 from cell_complex.cells import Point, Edge
 import sympy as sp
 import numpy as np

@@ -1,7 +1,8 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from redefining_fe.groups.groups import r, rot, S1, S2, S3, D4, C4, S4
+import sympy as sp
+from groups.groups import r, rot, S1, S2, S3, D4, C4, S4
 from cell_complex.cells import Point, Edge, n_sided_polygon
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse
@@ -15,13 +16,13 @@ from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 
 # from scratch import n_sided_polygon
 
-# vertices = []
-# for i in range(3):
-#     vertices.append(Point(0))
-# edges = []
-# edges.append(
-#     Point(1, [Edge(vertices[0], lambda: (-1,)),
-#               Edge(vertices[1], lambda: (1,))]))
+vertices = []
+for i in range(2):
+    vertices.append(Point(0))
+edges = []
+edges.append(
+    Point(1, [Edge(vertices[0], lambda: (-1,)),
+              Edge(vertices[1], lambda: (1,))]))
 # edges.append(
 #     Point(1, [Edge(vertices[0], lambda: (1,)),
 #               Edge(vertices[2], lambda: (-1,))]))
@@ -82,6 +83,16 @@ from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 # # def test_p1_v(x):
 # #     return 2*x + 3
 
+x = sp.Symbol("x")
+
+RTspace1 = P0 + x*P0
+print(RTspace1.weights)
+print(RTspace1.spaces)
+print(RTspace1)
+# edges[0].get_topology()
+# print(P0.to_ON_polynomial_set(edges[0]))
+# quit()
+
 tri = n_sided_polygon(3)
 vert = tri.d_entities(0, get_class=True)[0]
 edge = tri.d_entities(1, get_class=True)[0]
@@ -110,10 +121,10 @@ xs = [immerse(edge, dg0, CellH1)]
 cg1 = ElementTriple(edge, (P1, CellH1, C0),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
-# print("num dofs ", cg1.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof.eval(test_func))
+print("num dofs ", cg1.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.eval(test_func))
 # cg1.plot()
 
 # # # # # dg1 on interval

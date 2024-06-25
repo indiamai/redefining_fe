@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
-import redefining_fe.groups.groups
+import groups.groups
 import copy
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
@@ -244,8 +244,43 @@ class Point():
         # print(accepted_perms)
         return groups.groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
 
+    def get_spatial_dimension(self):
+        return self.dimension
+    
     def dim(self):
         return self.dimension
+    
+    def get_shape(self):
+        num_verts = len(self.vertices())
+        if num_verts == 1:
+            # Point
+            return 0
+        elif num_verts == 2:
+            # Line
+            return 1
+        elif num_verts == 3:
+            # Triangle
+            return 2
+        elif num_verts == 4:
+            if self.dimension == 2:
+                # quadrilateral
+                return 11 
+            elif self.dimension == 3:
+                # tetrahedron
+                return 3
+        elif num_verts == 8:
+            # hexahedron
+            return 111
+        else:
+            raise TypeError("Shape undefined for {}".format(str(self)))
+        
+    def get_topology(self):
+        structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        print(structure)
+        topo_dict = {0: {}}
+        for i in range(len(structure) - 1, 0, -1):
+
+
 
     def graph_dim(self):
         if self.oriented:
@@ -327,8 +362,6 @@ class Point():
 
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
-        # entity_vert_num = len(entity_dict[min_id])
-        # entity_group = redefining_fe.groups.new_groups.GroupRepresentation(SymmetricGroup(entity_vert_num)).add_cell(self.get_node(min_id))
         entity_group = self.d_entities(d, get_class=True)[0].group
         for ent in entities:
             for ent1 in entities:
@@ -345,7 +378,7 @@ class Point():
         if not entity:
             entity = self
         vertices = entity.vertices()
-        if self.dim == 0:
+        if self.dimension == 0:
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
