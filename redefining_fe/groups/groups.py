@@ -1,9 +1,7 @@
+import cell_complex.cells
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
-import cell_complex.cells
-import matplotlib.pyplot as plt
-
 
 def fold_reduce(func_list, x):
     """ duplicated from cells.py """

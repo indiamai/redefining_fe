@@ -1,15 +1,18 @@
 # top level file for linking together all the packages
 from firedrake import *
 import numpy as np
-from groups.new_groups import r, rot, S1, S2, S3, D4, C4, S4
+from redefining_fe.groups.groups import r, rot, S1, S2, S3, D4, C4, S4
 from cell_complex.cells import Point, Edge, n_sided_polygon
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
+from spaces.interpolation_spaces import C0, L2, H1, HDiv
 import matplotlib.pyplot as plt
-import json
-import jsonpickle
+from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
+# import json
+# import jsonpickle
+
 # from scratch import n_sided_polygon
 
 # vertices = []
@@ -90,7 +93,7 @@ test_func = MyTestFunction(lambda x: 2*x + 3)
 # # # dg0 on point
 print("DG0 on point")
 xs = [DOF(DeltaPairing(), PointKernel(()))]
-dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
+dg0 = ElementTriple(vert, (P0, CellL2, C0),
                     DOFGenerator(xs, S1, S1))
 ls = dg0.generate()
 # print("num dofs ", dg0.num_dofs())
@@ -104,7 +107,7 @@ ls = dg0.generate()
 # # cg1 on interval
 print("CG1 on interval")
 xs = [immerse(edge, dg0, CellH1)]
-cg1 = ElementTriple(edge, (P1, CellH1, "C0"),
+cg1 = ElementTriple(edge, (P1, CellH1, C0),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
 # print("num dofs ", cg1.num_dofs())
@@ -116,7 +119,7 @@ ls = cg1.generate()
 # # # # # dg1 on interval
 print("DG1 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
-dg1 = ElementTriple(edge, (P1, CellL2, "C0"),
+dg1 = ElementTriple(edge, (P1, CellL2, C0),
                     DOFGenerator(xs, S2, S1))
 ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
@@ -127,7 +130,7 @@ ls = dg1.generate()
 # # dg1 on triangle
 print("DG1 on triangle")
 xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
-dg1 = ElementTriple(tri, (P1, CellL2, "C0"),
+dg1 = ElementTriple(tri, (P1, CellL2, C0),
                     DOFGenerator(xs, S3/S2, S1))
 ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
@@ -136,7 +139,7 @@ ls = dg1.generate()
 
 # print("DG0 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
-dg0_int = ElementTriple(edge, (P0, CellL2, "C0"),
+dg0_int = ElementTriple(edge, (P0, CellL2, C0),
                         DOFGenerator(xs, S1, S1))
 ls = dg0_int.generate()
 # print("num dofs ", dg0_int.num_dofs())
@@ -155,7 +158,7 @@ e_dofs = DOFGenerator(e_xs, S3, S1)
 i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
-cg3 = ElementTriple(tri, (P3, CellH1, "C0"),
+cg3 = ElementTriple(tri, (P3, CellH1, C0),
                     [v_dofs, e_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: (x, y))
@@ -170,7 +173,7 @@ print("Integral Moment")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
 
-int_ned = ElementTriple(edge, (P1, CellHCurl, "C0"), dofs)
+int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 ls = int_ned.generate()
 # for dof in ls:
 #     print(dof)
@@ -186,7 +189,7 @@ print("Nedelec")
 xs = [immerse(tri, int_ned, CellHCurl)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
-ned = ElementTriple(tri, (vecP3, CellHCurl, "C0"), [tri_dofs])
+ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 # ned.plot()
 ls = ned.generate()
 # for dof in ls:
@@ -198,7 +201,7 @@ ls = ned.generate()
 print("Edge of RT")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
-int_rt = ElementTriple(edge, (P1, CellHDiv, "C0"), dofs)
+int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 ls = int_rt.generate()
 # for dof in ls:
 #     print(dof)
@@ -215,7 +218,7 @@ phi_1 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
 xs = [immerse(tri, int_rt, CellHDiv)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
-rt = ElementTriple(tri, (vecP3, CellHDiv, "C0"), [tri_dofs])
+rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
 # ls = rt.generate()
 # for dof in ls:
 #     print(dof)
@@ -237,7 +240,7 @@ v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
 i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
-her = ElementTriple(tri, (P3, CellH2, "C0"),
+her = ElementTriple(tri, (P3, CellH2, C0),
                     [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: x**2 + 3*y**3 + 4*x*y)
@@ -259,11 +262,11 @@ vert = square.d_entities(0, get_class=True)[0]
 edge = square.d_entities(1, get_class=True)[0]
 
 xs = [DOF(DeltaPairing(), PointKernel(()))]
-dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
+dg0 = ElementTriple(vert, (P0, CellL2, C0),
                     DOFGenerator(xs, S1, S1))
 
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
-dg0_int = ElementTriple(edge, (P0, CellL2, "C0"),
+dg0_int = ElementTriple(edge, (P0, CellL2, C0),
                         DOFGenerator(xs, S1, S1))
 
 print("CG3")
@@ -276,7 +279,7 @@ e_dofs = DOFGenerator(e_xs, D4, S1)
 i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
-cg3 = ElementTriple(square, (P3, CellH1, "C0"),
+cg3 = ElementTriple(square, (P3, CellH1, C0),
                     [v_dofs, e_dofs, i_dofs])
 
 phi_0 = MyTestFunction(lambda x, y: (x, y))
@@ -290,10 +293,10 @@ ls = cg3.generate()
 print("Edge of RT 2nd order")
 xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: (1/2)*(1 + x)))]
 dofs = DOFGenerator(xs, S2, S2)
-int_rt2 = ElementTriple(edge, (P1, CellHDiv, "C0"), dofs)
-ls = int_rt2.generate()
-for l in ls:
-    print(l.eval(MyTestFunction(lambda x: x)))
+int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+# ls = int_rt2.generate()
+# for l in ls:
+#     print(l.eval(MyTestFunction(lambda x: x)))
     # print(l.eval(MyTestFunction(lambda x: 0)))
 
 
@@ -305,8 +308,8 @@ i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
 i_dofs = DOFGenerator(i_xs, S1, S1)
 
 vecP3 = VectorPolynomialSpace(P3, P3)
-rt2 = ElementTriple(tri, (vecP3, CellHDiv, "C0"), [tri_dofs, i_dofs])
+rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 ls = rt2.generate()
-for l in ls:
-    print(l)
+# for l in ls:
+#     print(l)
 

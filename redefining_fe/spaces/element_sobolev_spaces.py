@@ -30,8 +30,8 @@ class ElementSobolevSpace(SobolevSpace):
         super(ElementSobolevSpace, self).__init__(underlying_space.name,
                                                   underlying_space.parents)
 
-    def trace(self, v):
-        raise NotImplementedError("Trace not implemented for", str(type(self)))
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
+        raise NotImplementedError("Plotting not implemented for", str(type(self)))
 
     def pullback(self, v, trace_entity, g):
         raise NotImplementedError("Pullback not implemented for", str(type(self)))

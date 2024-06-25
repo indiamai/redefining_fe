@@ -3,7 +3,7 @@ from firedrake import *
 import numpy as np
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
-from groups.new_groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
+from redefining_fe.groups.groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
 from cell_complex.cells import Point, Edge
 from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse

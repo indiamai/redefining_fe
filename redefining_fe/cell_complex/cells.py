@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
-import groups.new_groups
+import redefining_fe.groups.groups
 import copy
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
@@ -242,7 +242,7 @@ class Point():
                         break
 
         # print(accepted_perms)
-        return groups.new_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
+        return groups.groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
 
     def dim(self):
         return self.dimension
@@ -328,7 +328,7 @@ class Point():
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
         # entity_vert_num = len(entity_dict[min_id])
-        # entity_group = groups.new_groups.GroupRepresentation(SymmetricGroup(entity_vert_num)).add_cell(self.get_node(min_id))
+        # entity_group = redefining_fe.groups.new_groups.GroupRepresentation(SymmetricGroup(entity_vert_num)).add_cell(self.get_node(min_id))
         entity_group = self.d_entities(d, get_class=True)[0].group
         for ent in entities:
             for ent1 in entities:
