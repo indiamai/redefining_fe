@@ -1,10 +1,8 @@
 from firedrake import *
-from FIAT import polynomial_set
+from FIAT.reference_element import POINT, LINE, TRIANGLE, TETRAHEDRON, Point, DefaultLine, DefaultTriangle, DefaultTetrahedron
+from FIAT.polynomial_set import ONPolynomialSet
 import sympy as sp
 
-
-def convert_to_fiat_element(cell):
-    verts = cell.vertices(get_coords=True)
 
 class PolynomialSpace(object):
     """
@@ -31,14 +29,14 @@ class PolynomialSpace(object):
     
     def to_ON_polynomial_set(self, cell):
         # how does super/sub degrees work here
-
-        expansion_set = {
-                reference_element.POINT: PointExpansionSet,
-                reference_element.LINE: LineExpansionSet,
-                reference_element.TRIANGLE: TriangleExpansionSet,
-                reference_element.TETRAHEDRON: TetrahedronExpansionSet,
-            }[ref_el.get_shape()]
-        return polynomial_set.ONPolynomialSet(cell, self.subdegree)
+        # Temporary link to incorrect defaults
+        ref_el = {
+                POINT: Point(),
+                LINE: DefaultLine(),
+                TRIANGLE: DefaultTriangle(),
+                TETRAHEDRON: DefaultTetrahedron(),
+            }[cell.get_shape()]
+        return ONPolynomialSet(ref_el, self.subdegree)
     
     def __repr__(self):
         if self.complete():
@@ -73,6 +71,10 @@ class ConstructedPolynomialSpace(PolynomialSpace):
 
     def __repr__(self):
         return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
+    
+    def to_ON_polynomial_set(self, cell):
+        space_poly_sets = [s.to_ON_polynomial_set(cell) for s in self.spaces]
+        return super().to_ON_polynomial_set(cell)
 
     def __mul__(self, x):
         return ConstructedPolynomialSpace([x*w for w in self.weights],

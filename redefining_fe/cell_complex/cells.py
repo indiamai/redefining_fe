@@ -278,7 +278,7 @@ class Point():
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
         print(structure)
         topo_dict = {0: {}}
-        for i in range(len(structure) - 1, 0, -1):
+        # for i in range(len(structure) - 1, 0, -1):
 
 
 

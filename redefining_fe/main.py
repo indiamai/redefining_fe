@@ -90,8 +90,8 @@ print(RTspace1.weights)
 print(RTspace1.spaces)
 print(RTspace1)
 # edges[0].get_topology()
-# print(P0.to_ON_polynomial_set(edges[0]))
-# quit()
+polyset = P0.to_ON_polynomial_set(edges[0])
+quit()
 
 tri = n_sided_polygon(3)
 vert = tri.d_entities(0, get_class=True)[0]
@@ -121,10 +121,10 @@ xs = [immerse(edge, dg0, CellH1)]
 cg1 = ElementTriple(edge, (P1, CellH1, C0),
                     DOFGenerator(xs, S2, S1))
 ls = cg1.generate()
-print("num dofs ", cg1.num_dofs())
-for dof in ls:
-    print(dof)
-    print(dof.eval(test_func))
+# print("num dofs ", cg1.num_dofs())
+# for dof in ls:
+#     print(dof)
+#     print(dof.eval(test_func))
 # cg1.plot()
 
 # # # # # dg1 on interval
