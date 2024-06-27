@@ -150,22 +150,36 @@ class DOF():
 
 class MyTestFunction():
 
-    def __init__(self, eq, attach_func=None):
+    def __init__(self, eq, attach_func=None, symbols=None):
         self.eq = eq
         self.attach_func = attach_func
+        self.symbols = symbols
 
     def __call__(self, *x, sym=False):
+        if self.symbols:
+            if self.attach_func and not sym:
+                if len(x) > 0:
+                    print("symbolic")
+                    print(self.attach_func(*tuple([self.symbols[i] for i in range(len(x))])))
+                return self.eq.subs({symb: val for (symb, val) in zip(self.symbols, self.attach_func(*x))})
+            else:
+                return self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
         if self.attach_func and not sym:
-            return self.eq(*self.attach_func(*x))
+            return self.eq(*self.attach_func(*x))   
         else:
             return self.eq(*x)
 
     def attach(self, attachment):
         if not self.attach_func:
-            return MyTestFunction(self.eq, attach_func=attachment)
+            return MyTestFunction(self.eq, attach_func=attachment, symbols=self.symbols)
         else:
             old_attach = self.attach_func
-            return MyTestFunction(self.eq,
+            if self.symbols:
+                return MyTestFunction(self.eq,
+                                  attach_func=attachment(old_attach(*self.symbols)),
+                                  symbols=self.symbols)
+            else:
+                return MyTestFunction(self.eq,
                                   attach_func=lambda *x: attachment(old_attach(*x)))
 
     def __repr__(self):

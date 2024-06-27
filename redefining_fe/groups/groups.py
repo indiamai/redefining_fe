@@ -2,6 +2,7 @@ import cell_complex.cells
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
+import sympy as sp
 
 def fold_reduce(func_list, x):
     """ duplicated from cells.py """
@@ -13,9 +14,13 @@ def fold_reduce(func_list, x):
 
 def construct_rep_func(M):
     def rep(*x):
-        x_ones = np.r_[np.array(*x), np.ones(1)]
-        # breakpoint()
-        sum = np.matmul(x_ones, M)
+        if isinstance(x, sp.Expr):
+            breakpoint()
+            x_ones = sp.r_[sp.array(*x), sp.ones(1)]
+            sum = sp.matmul(x_ones, M)
+        else:
+            x_ones = np.r_[np.array(*x), np.ones(1)]
+            sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
         return tuple(sum)
@@ -34,6 +39,7 @@ class GroupMemberRep(object):
     def __call__(self, x):
         if isinstance(x, cell_complex.cells.Point):
             return x.orient(self)
+        # breakpoint()
         return fold_reduce(self.rep, x)
 
     def permute(self, lst):
@@ -67,8 +73,9 @@ class GroupRepresentation(object):
             self.cell = cell
             vertices = cell.vertices(return_coords=True)
 
-            A = np.c_[np.array(vertices), np.ones(len(vertices))]
-            b = np.array(vertices)
+            A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+            b = np.array(vertices, dtype=float)
+           
             M, _, _, _ = np.linalg.lstsq(A, b)
             self.identity = GroupMemberRep(base_group.identity, construct_rep_func(M), self)
 
@@ -79,8 +86,9 @@ class GroupRepresentation(object):
                     reordered = temp_perm(vertices)
                 else:
                     reordered = g(vertices)
-                A = np.c_[np.array(vertices),np.ones(len(vertices))]
-                b = np.array(reordered)
+                A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+                b = np.array(reordered, dtype=float)
+
                 M, _, _, _ = np.linalg.lstsq(A, b)
                 rep = construct_rep_func(M)
                 rep.__name__ = "g" + str(counter)

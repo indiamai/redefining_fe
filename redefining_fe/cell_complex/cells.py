@@ -68,8 +68,13 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     ax.add_artist(a)
 
 
-def construct_attach_2d(a, b, c, d):
+def construct_attach_2d_old(a, b, c, d):
     return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
+
+
+def construct_attach_2d(a, b, c, d):
+    x = sp.Symbol("x")
+    return [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
 
 
 def construct_attach_3d(res):
@@ -185,8 +190,8 @@ class Point():
 
     def compute_attachments(self, n, points, orientations={}):
         if self.dimension == 1:
-            edges = [Edge(points[0], lambda: (-1,)),
-                        Edge(points[1], lambda: (1,))]
+            edges = [Edge(points[0], sp.sympify((-1,))),
+                     Edge(points[1], sp.sympify((1,)))]
         if self.dimension == 2:
             coords = compute_scaled_verts(2, n)
             edges = []
@@ -471,6 +476,7 @@ class Point():
 
     def attachment(self, source, dst):
         if source == dst:
+            # return x
             return lambda *x: x
         
         paths = nx.all_simple_edge_paths(self.G, source, dst)
@@ -487,8 +493,6 @@ class Point():
             basis = np.eye(dst_dim)
             if dst_dim == 0:
                 vals = [fold_reduce(attachment) for attachment in attachments]
-                # for val in vals:
-                #     print(val)
                 assert all(np.isclose(val, vals[0]).all() for val in vals)
             else:
                 for i in range(dst_dim):
@@ -530,9 +534,24 @@ class Edge():
         self.o = o
 
     def __call__(self, *x):
-        # print(x)
-        # print(*self.o(x))
-        return self.attachment(*self.o(x))
+        oriented = self.o(x)
+        syms = ["x", "y", "z"]
+        if hasattr(self.attachment, '__iter__'):
+            res = []
+            evaluated = True
+            for attach_comp in self.attachment:
+                subsituted = attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))})
+                evaluated = subsituted.atoms(sp.Symbol) == set() and evaluated
+                res.append(subsituted)
+            if evaluated:
+                return tuple(np.array(res).astype(np.float64))                
+            else:
+                return tuple(res)
+            
+        if subsituted.atoms(sp.Symbol) == set():
+            return self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})
+        return np.array(self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})).astype(np.float64)
+
 
     def lower_dim(self):
         return self.point.dim()

@@ -170,7 +170,7 @@ class ImmersedDOF():
             return []
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []
-
+        
         def oriented_attachment(*x):
             return attachment(*o(x))
         

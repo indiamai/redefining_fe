@@ -16,13 +16,12 @@ from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 
 # from scratch import n_sided_polygon
 
-vertices = []
-for i in range(2):
-    vertices.append(Point(0))
-edges = []
-edges.append(
-    Point(1, [Edge(vertices[0], lambda: (-1,)),
-              Edge(vertices[1], lambda: (1,))]))
+# vertices = []
+# for i in range(2):
+#     vertices.append(Point(0))
+# edges = []
+# edges.append(
+#     Point(1, [vertices[0], vertices[1]], vertex_num=2))
 # edges.append(
 #     Point(1, [Edge(vertices[0], lambda: (1,)),
 #               Edge(vertices[2], lambda: (-1,))]))
@@ -83,22 +82,25 @@ edges.append(
 # # def test_p1_v(x):
 # #     return 2*x + 3
 
-x = sp.Symbol("x")
+# x = sp.Symbol("x")
 
-RTspace1 = P0 + x*P0
-print(RTspace1.weights)
-print(RTspace1.spaces)
-print(RTspace1)
-# edges[0].get_topology()
-polyset = P0.to_ON_polynomial_set(edges[0])
-quit()
+# RTspace1 = P0 + x*P0
+# print(RTspace1.weights)
+# print(RTspace1.spaces)
+# print(RTspace1)
+# # edges[0].get_topology()
+# polyset = P0.to_ON_polynomial_set(edges[0])
+# quit()
 
 tri = n_sided_polygon(3)
 vert = tri.d_entities(0, get_class=True)[0]
 edge = tri.d_entities(1, get_class=True)[0]
-
+# quit()
 
 test_func = MyTestFunction(lambda x: 2*x + 3)
+x = sp.Symbol("x")
+y = sp.Symbol("y")
+sym_test_func = MyTestFunction(2*x + 3, symbols=(x,))
 # # test_func2 = MyTestFunction(lambda x, y: (10*x, y))
 # # print(test_func)
 # # # dg0 on point
@@ -106,7 +108,7 @@ print("DG0 on point")
 xs = [DOF(DeltaPairing(), PointKernel(()))]
 dg0 = ElementTriple(vert, (P0, CellL2, C0),
                     DOFGenerator(xs, S1, S1))
-ls = dg0.generate()
+# ls = dg0.generate()
 # print("num dofs ", dg0.num_dofs())
 # for dof in ls:
 #     print(dof)
@@ -120,19 +122,22 @@ print("CG1 on interval")
 xs = [immerse(edge, dg0, CellH1)]
 cg1 = ElementTriple(edge, (P1, CellH1, C0),
                     DOFGenerator(xs, S2, S1))
-ls = cg1.generate()
+# ls = cg1.generate()
 # print("num dofs ", cg1.num_dofs())
 # for dof in ls:
-#     print(dof)
-#     print(dof.eval(test_func))
+    # print(dof)
+    # print(dof.eval(test_func))
+    # print(dof.eval(sym_test_func))
+
 # cg1.plot()
+
 
 # # # # # dg1 on interval
 print("DG1 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
 dg1 = ElementTriple(edge, (P1, CellL2, C0),
                     DOFGenerator(xs, S2, S1))
-ls = dg1.generate()
+# ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
 # for dof in ls:
 #     print(dof)
@@ -143,7 +148,7 @@ print("DG1 on triangle")
 xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
 dg1 = ElementTriple(tri, (P1, CellL2, C0),
                     DOFGenerator(xs, S3/S2, S1))
-ls = dg1.generate()
+# ls = dg1.generate()
 # print("num dofs ", dg1.num_dofs())
 # for dof in ls:
 #     print(dof)
@@ -152,7 +157,7 @@ ls = dg1.generate()
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
 dg0_int = ElementTriple(edge, (P0, CellL2, C0),
                         DOFGenerator(xs, S1, S1))
-ls = dg0_int.generate()
+# ls = dg0_int.generate()
 # print("num dofs ", dg0_int.num_dofs())
 # for dof in ls:
 #     print(dof)
@@ -172,12 +177,14 @@ i_dofs = DOFGenerator(i_xs, S1, S1)
 cg3 = ElementTriple(tri, (P3, CellH1, C0),
                     [v_dofs, e_dofs, i_dofs])
 
-phi_0 = MyTestFunction(lambda x, y: (x, y))
+# phi_0 = MyTestFunction(lambda x, y: (x, y))
+phi_0 = MyTestFunction(sp.Matrix([x, y]), symbols=(x, y))
 ls = cg3.generate()
-# print("num dofs ", cg3.num_dofs())
-# for dof in ls:
-#     print(dof)
-#     print(dof.eval(phi_0))
+print("num dofs ", cg3.num_dofs())
+# ls[0].attach_func(x)
+for dof in ls:
+    print(dof)
+    print(dof.eval(phi_0))
 # cg3.plot()
 
 print("Integral Moment")
@@ -189,12 +196,12 @@ ls = int_ned.generate()
 # for dof in ls:
 #     print(dof)
 
-phi_2 = MyTestFunction(lambda x, y: (1/3 - (np.sqrt(3)/6)*y,
-                                     (np.sqrt(3)/6)*x))
-phi_0 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
-                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
-phi_1 = MyTestFunction(lambda x, y: (-1/6 - (np.sqrt(3)/6)*y,
-                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x))
+phi_2 = MyTestFunction(sp.Matrix(1/3 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6)*x), symbols=(x, y))
+phi_0 = MyTestFunction(sp.Matrix(-1/6 - (np.sqrt(3)/6)*y,
+                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x), symbols=(x, y))
+phi_1 = MyTestFunction(sp.Matrix(-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x), symbols=(x, y))
 
 print("Nedelec")
 xs = [immerse(tri, int_ned, CellHCurl)]
