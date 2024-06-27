@@ -1,4 +1,5 @@
 from functools import total_ordering
+from typing import Any
 
 @total_ordering
 class InterpolationSpace(object):
@@ -8,7 +9,7 @@ class InterpolationSpace(object):
     other spaces can be tested for inclusion.
     """
 
-    def __init__(self, name, parents=None):
+    def __init__(self, name, shape=None, parents=None):
         """Instantiate a InterpolationSpace object.
 
         Args:
@@ -20,6 +21,7 @@ class InterpolationSpace(object):
         p = frozenset(parents or [])
         # Ensure that the inclusion operations are transitive.
         self.parents = p.union(*[p_.parents for p_ in p])
+
         
     def __str__(self):
         """Format as a string."""
@@ -31,7 +33,7 @@ class InterpolationSpace(object):
 
     def __eq__(self, other):
         """Check equality."""
-        return isinstance(other, InterpolationSpace) and self.name == other.name
+        return isinstance(other, InterpolationSpace) and self.name == other.name and self.shape == other.shape
 
     def __ne__(self, other):
         """Not equal."""
@@ -57,9 +59,11 @@ class Sobolev(InterpolationSpace):
     
     """
 
-    def __init__(self, derivatives, lebesgue, name=None,  parents=[]):
+    def __init__(self, derivatives, lebesgue, shape=None, name=None,  parents=[]):
         self.derivatives = derivatives
         self.lebesgue = lebesgue
+        self.shape = shape
+        
         if name is None:
             if derivatives == 0:
                 name = "L_" + str(lebesgue)
@@ -78,6 +82,9 @@ class Sobolev(InterpolationSpace):
                 return other.derivatives < self.derivatives or other in self.parents
         
         return other in self.parents
+    
+    def __call__(self, shape):
+        return Sobolev(self.derivatives, self.lebesgue, shape, name=self.name, parents=self.parents)
 
 class Continuous(InterpolationSpace):
     """
@@ -87,9 +94,9 @@ class Continuous(InterpolationSpace):
     - Derivatives(n): the number of times the functions can be continously differentiated
     """
     
-    def __init__(self, derivatives, parents=[]):
+    def __init__(self, derivatives, shape=None, parents=[]):
         self.derivatives = derivatives
-
+        self.shape = shape
         name = "C_" + str(derivatives)
         super(Continuous, self).__init__(name, parents)
 
@@ -101,11 +108,14 @@ class Continuous(InterpolationSpace):
         
         return other in self.parents
     
+    def __call__(self, shape):
+        return Continuous(self.derivatives, shape=shape, parents=self.parents)
+
 C0 = Continuous(0)
 L2 = Sobolev(0, 2)
 H1 = Sobolev(1, 2)
-HDiv = Sobolev(0, 2, "HDiv", parents=[L2])
-HCurl = Sobolev(0, 2, "HCurl", parents=[L2])
+HDiv = Sobolev(0, 2, name="HDiv", parents=[L2])
+HCurl = Sobolev(0, 2, name="HCurl", parents=[L2])
 
 
 
