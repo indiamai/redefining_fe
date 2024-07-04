@@ -2,14 +2,9 @@ from firedrake import *
 import numpy as np
 import sympy as sp
 from ufl.sobolevspace import SobolevSpace
-from spaces.polynomial_spaces import PolynomialSpace
+from redefining_fe.spaces.polynomial_spaces import PolynomialSpace
 import matplotlib.pyplot as plt
 
-def apply_pullback(*x):
-    result = np.dot(np.matmul(tangent, subEntityBasis), np.array(v(*x)))
-    if isinstance(result, np.float64):
-        return (result,)
-    return tuple(result)
 
 class ElementSpaceTriple():
 
@@ -44,11 +39,11 @@ class CellH1(ElementSobolevSpace):
 
     def pullback(self, v, trace_entity, g):
         return v
-    
+
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         ax.scatter(*coord, **kwargs)
-    
+
     def __repr__(self):
         return "H1"
 
@@ -75,7 +70,7 @@ class CellHDiv(ElementSobolevSpace):
                 return (result,)
             return tuple(result)
         return apply
-    
+
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         entityBasis = np.array(trace_entity.basis_vectors())
@@ -107,7 +102,7 @@ class CellHCurl(ElementSobolevSpace):
                 return (result,)
             return tuple(result)
         return apply
-    
+
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         tangent = np.array(trace_entity.basis_vectors())
@@ -122,7 +117,7 @@ class CellHCurl(ElementSobolevSpace):
 class CellH2(ElementSobolevSpace):
 
     def __init__(self, cell):
-        super(CellH2 , self).__init__(H2, cell)
+        super(CellH2, self).__init__(H2, cell)
 
     def pullback(self, v, trace_entity, g):
         # Compute grad v and then dot with tangent rotated according to the group member
@@ -140,7 +135,7 @@ class CellH2(ElementSobolevSpace):
                 return (result,)
             return tuple(result)
         return apply
-    
+
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         circle1 = plt.Circle(coord, 0.075, fill=False, **kwargs)
         ax.add_patch(circle1)
@@ -152,7 +147,7 @@ class CellH2(ElementSobolevSpace):
 class CellH3(ElementSobolevSpace):
 
     def __init__(self, cell):
-        super(CellH3 , self).__init__(H2, cell)
+        super(CellH3, self).__init__(H2, cell)
 
     def pullback(self, v, trace_entity, g):
         b0, b1 = self.domain.basis_vectors()
@@ -161,7 +156,7 @@ class CellH3(ElementSobolevSpace):
 
         def apply(*x):
             X = sp.DeferredVector('x')
-            
+
             dX = tuple([X[i] for i in range(self.domain.dim())])
             hess_v = [[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))]
             print(hess_v)
@@ -171,7 +166,7 @@ class CellH3(ElementSobolevSpace):
                 return (result,)
             return tuple(result)
         return apply
-    
+
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         circle1 = plt.Circle(coord, 0.15, fill=False, **kwargs)
         ax.add_patch(circle1)
@@ -187,10 +182,10 @@ class CellL2(ElementSobolevSpace):
 
     def pullback(self, v, trace_entity):
         return 0
-    
-    def plot(self, ax, coord, trace_entity,  g, **kwargs):
+
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
         ax.scatter(*coord, **kwargs)
-    
+
     def __repr__(self):
         return "L2"

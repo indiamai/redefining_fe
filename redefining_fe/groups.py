@@ -4,6 +4,7 @@ from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, Cycl
 import numpy as np
 import sympy as sp
 
+
 def fold_reduce(func_list, x):
     """ duplicated from cells.py """
     """ nested function composition helper function, right to left """
@@ -11,6 +12,7 @@ def fold_reduce(func_list, x):
     for func in reversed(func_list):
         prev = func(prev)
     return prev
+
 
 def construct_rep_func(M):
     def rep(*x):
@@ -25,6 +27,7 @@ def construct_rep_func(M):
             return tuple(map(tuple, sum))
         return tuple(sum)
     return rep
+
 
 class GroupMemberRep(object):
 
@@ -66,7 +69,6 @@ class GroupRepresentation(object):
     def __init__(self, base_group, cell=None):
         assert isinstance(base_group, PermutationGroup)
         self.base_group = base_group
-        
         self.identity = GroupMemberRep(base_group.identity, e, self)
         self.generators = []
         if cell is not None:
@@ -75,7 +77,7 @@ class GroupRepresentation(object):
 
             A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
             b = np.array(vertices, dtype=float)
-           
+
             M, _, _, _ = np.linalg.lstsq(A, b)
             self.identity = GroupMemberRep(base_group.identity, construct_rep_func(M), self)
 
@@ -102,14 +104,14 @@ class GroupRepresentation(object):
             temp_group_elems = self.base_group._elements
             temp_group_elems.remove(self.base_group.identity)
             remaining_members = self.compute_reps(self.base_group.identity,
-                                                None, temp_group_elems)
+                                                  None, temp_group_elems)
             assert (len(remaining_members) == 0)
         else:
             self.cell = None
-    
+
     def add_cell(self, cell):
         return GroupRepresentation(self.base_group, cell=cell)
-        
+
     def members(self, perm=False):
         if self.cell is None:
             raise ValueError("Group does not have a domain - members have not been calculated")
@@ -120,7 +122,7 @@ class GroupRepresentation(object):
     def size(self):
         assert len(self._members) == self.base_group.order()
         return self.base_group.order()
-    
+
     def transform_between_perms(self, perm1, perm2):
         member_perms = self.members(perm=True)
         # breakpoint()
@@ -148,8 +150,8 @@ class GroupRepresentation(object):
                     new_path = path.copy()
                     new_path.extend(generator.rep)
                     self._members.append(GroupMemberRep(new_perm,
-                                                       new_path,
-                                                       self))
+                                                        new_path,
+                                                        self))
                 remaining_members.remove(new_perm)
                 next_candidates.append((new_perm, new_path))
 
@@ -164,7 +166,7 @@ class GroupRepresentation(object):
             if m.perm == perm:
                 return m
         raise ValueError("Permutation not a member of group")
-    
+
     def __mul__(self, other_group):
         return GroupRepresentation(PermutationGroup(self.base_group.generators + other_group.base_group.generators))
 
@@ -208,6 +210,7 @@ def r(x):
     x_list[0] = -x_list[0]
     return tuple(x_list)
 
+
 def r_y(x):
     # reflection in the second component
     if isinstance(x, int) or len(x) < 2:
@@ -215,6 +218,7 @@ def r_y(x):
     x_list = list(x)
     x_list[1] = -x_list[1]
     return tuple(x_list)
+
 
 def rot(xs, rad=2*np.pi/3):
     #  anticlockwise rotation by rad radians, default is 120 deg
@@ -256,88 +260,3 @@ Z4 = GroupRepresentation(CyclicGroup(4))
 D2 = GroupRepresentation(DihedralGroup(2))
 A4 = GroupRepresentation(AlternatingGroup(4))
 A3 = GroupRepresentation(AlternatingGroup(3))
-
- 
-
-# S2 = GroupRepresentation(SymmetricGroup(2), {Permutation(0, 1): r})
-# S3 = GroupRepresentation(SymmetricGroup(3), {Permutation(0, 1, 2): rot,
-#                                              Permutation([1, 0, 2]): r})
-
-# D4 = GroupRepresentation(DihedralGroup(4), {Permutation(0, 1, 2, 3): sqrot,
-#                                             Permutation([3, 2, 1, 0]): r})
-
-# C3 = GroupRepresentation(CyclicGroup(3), {Permutation(0, 1, 2): rot})
-# C4 = GroupRepresentation(CyclicGroup(4), {Permutation(0, 1, 2, 3): sqrot})
-
-# S4 = GroupRepresentation(SymmetricGroup(4), {Permutation(0, 1, 2, 3): g1,
-#                                              Permutation([1, 0, 2, 3]): g2})
-
-# if __name__ == "__main__":
-
-    
-    # print(C3.members)
-    # print(C4.members)
-    # print((D4/C4).members)
-    # print((S3/S2).base_group._elements)
-
-    # for m in S3.members:
-    #     print(m)
-    #     print(m((-1, -np.sqrt(3)/3)))
-    #     coord = m((-0.9, -np.sqrt(3)/3))
-    #     plt.scatter(coord[0], coord[1], marker="o")
-    #     plt.text(coord[0], coord[1], repr(m))
-
-    # plt.show()
-
-    # source = (-1, -0.9)
-    # for m in D4.members:
-    #     print(m)
-    #     print(m(source))
-    #     coord = m(source)
-    #     plt.scatter(coord[0], coord[1], marker="o")
-    #     plt.text(coord[0], coord[1], repr(m))
-    # plt.plot([-1, -0.5, 0, 0.5, 1], [-1, -1, -1, -1, -1])
-    # plt.plot([-1, -0.5, 0, 0.5, 1], [1, 1, 1, 1, 1])
-    # plt.plot([-1, -1, -1, -1, -1], [-1, -0.5, 0, 0.5, 1])
-    # plt.plot([1, 1, 1, 1, 1], [-1, -0.5, 0, 0.5, 1])
-
-    # plt.show()
-
-    # gens = refD4.generators
-    # d4rot = gens[1]
-    # d4r = gens[0]
-
-    # point = d4rot * d4rot * d4rot * d4rot
-    # print(point)
-    # print(point(coord))
-
-# a = Permutation(0, 1)(2, 3)
-# b = Permutation(0, 2)(1, 3)
-# c = Permutation(0, 3)(1, 2)
-# K4 = GroupRepresentation(PermutationGroup(a, b, c))
-# print("K4")
-# print(K4.base_group.generators)
-# print(K4.base_group.order())
-
-# print("S4/S2")
-# print((S4/S2).base_group.generators)
-# print((S4/S2).base_group.order())
-# c3_2_tet = (S4/S2).add_cell(tetrahedron)
-# mems = c3_2_tet.members()
-# for m in mems:
-#     print(m.perm.array_form)
-# # # breakpoint()
-
-# a = Permutation(1)(0, 2, 3)
-# b = Permutation(2, 3)
-# C3_2 = GroupRepresentation(PermutationGroup(a))
-# print("Weird group")
-# print(C3_2.base_group.generators)
-# print(C3_2.base_group.order())
-# c3_2_tet = C3_2.add_cell(tetrahedron)
-# mems = c3_2_tet.members()
-# for m in mems:
-#     print(m.perm.array_form)
-# # # breakpoint()
-# # print((D2 * C3).base_group.generators)
-

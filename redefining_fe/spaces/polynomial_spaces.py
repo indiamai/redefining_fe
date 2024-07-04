@@ -1,4 +1,3 @@
-from firedrake import *
 from FIAT.reference_element import POINT, LINE, TRIANGLE, TETRAHEDRON, Point, DefaultLine, DefaultTriangle, DefaultTetrahedron
 from FIAT.polynomial_set import ONPolynomialSet
 import sympy as sp
@@ -9,7 +8,7 @@ class PolynomialSpace(object):
     subdegree: the degree of the maximum degree Lagrange space that is spanned by this element. If this
     element's polynomial space does not include the constant function, this function should
     return -1.
-    
+
     super degree: the degree of the minimum degree Lagrange space that spans this element.If this
     element contains basis functions that are not in any Lagrange space, this property should
     be None.
@@ -23,21 +22,18 @@ class PolynomialSpace(object):
         self.subdegree = subdegree
         self.superdegree = superdegree
 
-
     def complete(self):
         return self.subdegree == self.superdegree
-    
+
     def to_ON_polynomial_set(self, cell):
         # how does super/sub degrees work here
         # Temporary link to incorrect defaults
-        ref_el = {
-                POINT: Point(),
-                LINE: DefaultLine(),
-                TRIANGLE: DefaultTriangle(),
-                TETRAHEDRON: DefaultTetrahedron(),
-            }[cell.get_shape()]
+        ref_el = {POINT: Point(),
+                  LINE: DefaultLine(),
+                  TRIANGLE: DefaultTriangle(),
+                  TETRAHEDRON: DefaultTetrahedron()}[cell.get_shape()]
         return ONPolynomialSet(ref_el, self.subdegree)
-    
+
     def __repr__(self):
         if self.complete():
             return "P" + str(self.subdegree)
@@ -48,10 +44,10 @@ class PolynomialSpace(object):
         if isinstance(x, sp.Symbol):
             return ConstructedPolynomialSpace([x], [self])
         else:
-            raise TypeError(f'Cannot multiply a PolySpace with {type(other)}')
-        
+            raise TypeError(f'Cannot multiply a PolySpace with {type(x)}')
+
     __rmul__ = __mul__
-    
+
     def __add__(self, x):
         return ConstructedPolynomialSpace([1, 1], [self, x])
 
@@ -59,7 +55,7 @@ class PolynomialSpace(object):
 class ConstructedPolynomialSpace(PolynomialSpace):
     """
     Sub degree is inherited from the largest of the component spaces,
-    super degree is unknown. 
+    super degree is unknown.
     """
     def __init__(self, weights, spaces):
 
@@ -71,15 +67,15 @@ class ConstructedPolynomialSpace(PolynomialSpace):
 
     def __repr__(self):
         return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
-    
+
     def to_ON_polynomial_set(self, cell):
-        space_poly_sets = [s.to_ON_polynomial_set(cell) for s in self.spaces]
+        # space_poly_sets = [s.to_ON_polynomial_set(cell) for s in self.spaces]
         return super().to_ON_polynomial_set(cell)
 
     def __mul__(self, x):
         return ConstructedPolynomialSpace([x*w for w in self.weights],
                                           self.spaces)
-    
+
     def __add__(self, x):
         return ConstructedPolynomialSpace(self.weights.extend([1]),
                                           self.spaces.extend(x))

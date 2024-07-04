@@ -1,11 +1,11 @@
 from functools import total_ordering
-from typing import Any
+
 
 @total_ordering
 class InterpolationSpace(object):
     """Symbolic representation of an interpolation function space
 
-    This implements a subset of the methods of a Python set so that 
+    This implements a subset of the methods of a Python set so that
     other spaces can be tested for inclusion.
     """
 
@@ -22,7 +22,6 @@ class InterpolationSpace(object):
         # Ensure that the inclusion operations are transitive.
         self.parents = p.union(*[p_.parents for p_ in p])
 
-        
     def __str__(self):
         """Format as a string."""
         return self.name
@@ -43,7 +42,6 @@ class InterpolationSpace(object):
         """Hash."""
         return hash(("InterpolationSpace", self.name))
 
-
     def __lt__(self, other):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return other in self.parents
@@ -56,10 +54,9 @@ class Sobolev(InterpolationSpace):
     Arguments:
     - Derivatives (m): the numbers of derivatives that are required to exist
     - Lebesgue (p): The L_p space the derivatives are required to be in
-    
     """
 
-    def __init__(self, derivatives, lebesgue, shape=None, name=None,  parents=[]):
+    def __init__(self, derivatives, lebesgue, shape=None, name=None, parents=[]):
         self.derivatives = derivatives
         self.lebesgue = lebesgue
         self.shape = shape
@@ -73,18 +70,19 @@ class Sobolev(InterpolationSpace):
                 name = "W_" + str(derivatives) + ", " + str(lebesgue)
 
         super(Sobolev, self).__init__(name, parents)
-    
+
     def __lt__(self, other):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
 
         if isinstance(other, Sobolev):
             if self.lebesgue >= other.lebesgue:
                 return other.derivatives < self.derivatives or other in self.parents
-        
+
         return other in self.parents
-    
+
     def __call__(self, shape):
         return Sobolev(self.derivatives, self.lebesgue, shape, name=self.name, parents=self.parents)
+
 
 class Continuous(InterpolationSpace):
     """
@@ -93,7 +91,7 @@ class Continuous(InterpolationSpace):
     Arguments:
     - Derivatives(n): the number of times the functions can be continously differentiated
     """
-    
+
     def __init__(self, derivatives, shape=None, parents=[]):
         self.derivatives = derivatives
         self.shape = shape
@@ -104,10 +102,10 @@ class Continuous(InterpolationSpace):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
 
         if isinstance(other, Continuous):
-            return other.derivatives > self.derivatives 
-        
+            return other.derivatives > self.derivatives
+
         return other in self.parents
-    
+
     def __call__(self, shape):
         return Continuous(self.derivatives, shape=shape, parents=self.parents)
 
@@ -118,17 +116,14 @@ H1 = Sobolev(1, 2)
 HDiv = Sobolev(0, 2, name="HDiv", parents=[L2])
 HCurl = Sobolev(0, 2, name="HCurl", parents=[L2])
 
-
-
-    
-## Want to have
+# Want to have
 # c_0
 # c_n
 # w_m,p st mp < 1
 
 # h_n ~ w_n,2
-# l_2 ~ h_0 
-# h_1 
+# l_2 ~ h_0
+# h_1
 
 # inclusions
-# c_0 
+# c_0

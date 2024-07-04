@@ -1,8 +1,7 @@
-
-from redefining_fe.cells import Point, Edge
 from FIAT.quadrature import GaussLegendreQuadratureLineRule
 from FIAT.reference_element import DefaultLine
 import numpy as np
+
 
 class Pairing():
 
@@ -28,7 +27,7 @@ class DeltaPairing(Pairing):
 
 
 class L2InnerProd(Pairing):
-    """ need to think about the abstraction level here - 
+    """ need to think about the abstraction level here -
     are we wanting to define them as quadrature now? or defer this?
     """
     def __init__(self):
@@ -39,8 +38,7 @@ class L2InnerProd(Pairing):
         print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-            breakpoint()
-            return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)), unpack=True)
+            return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)))
         elif self.entity.dim() == 2:
             # ("evaluating at origin")
             return np.dot(kernel(0, 0), v(0, 0))
@@ -59,7 +57,7 @@ class PointKernel():
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
-    
+
     def permute(self, g):
         return PointKernel(g(self.pt))
 
@@ -87,7 +85,7 @@ class PolynomialKernel():
 class DOF():
 
     def __init__(self, pairing, kernel, immersed=False,
-                 entity=None, attachment=None, target_space=None, g = None):
+                 entity=None, attachment=None, target_space=None, g=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -108,22 +106,12 @@ class DOF():
 
             if not pullback:
                 return self.pairing(self.kernel, attached_fn)
-            
+
             return self.pairing(self.kernel,
                                 self.target_space.pullback(attached_fn,
                                                            self.trace_entity,
                                                            self.g))
         return self.pairing(self.kernel, fn)
-    
-    # def fn_eval(self, fn, pullback=True):
-    #     if self.immersed:
-    #         attached_fn = fn.attach(self.attachment)
-    #         if pullback:
-    #             return self.target_space.pullback(attached_fn, self.trace_entity,
-    #                                                            self.g)
-    #         else:
-    #             return self.pairing(self.kernel, attached_fn)
-    #     return fn
 
     def add_context(self, cell, space):
         # We only want to store the first instance of each
@@ -166,7 +154,7 @@ class MyTestFunction():
             else:
                 return self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
         if self.attach_func and not sym:
-            return self.eq(*self.attach_func(*x))   
+            return self.eq(*self.attach_func(*x))
         else:
             return self.eq(*x)
 
@@ -177,11 +165,11 @@ class MyTestFunction():
             old_attach = self.attach_func
             if self.symbols:
                 return MyTestFunction(self.eq,
-                                  attach_func=attachment(old_attach(*self.symbols)),
-                                  symbols=self.symbols)
+                                      attach_func=attachment(old_attach(*self.symbols)),
+                                      symbols=self.symbols)
             else:
                 return MyTestFunction(self.eq,
-                                  attach_func=lambda *x: attachment(old_attach(*x)))
+                                      attach_func=lambda *x: attachment(old_attach(*x)))
 
     def __repr__(self):
         if self.attach_func:

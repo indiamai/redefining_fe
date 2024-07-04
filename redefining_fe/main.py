@@ -2,13 +2,7 @@
 from firedrake import *
 import numpy as np
 import sympy as sp
-from redefining_fe.groups import r, rot, S1, S2, S3, D4, C4, S4
-from redefining_fe.cells import Point, Edge, n_sided_polygon
-from redefining_fe.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
-from triples import ElementTriple, DOFGenerator, immerse
-from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
-from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
-from spaces.interpolation_spaces import C0, L2, H1, HDiv
+from redefining_fe import *
 import matplotlib.pyplot as plt
 from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 # import json
@@ -132,7 +126,7 @@ for dof in ls:
     print(dof.eval(test_func))
     print(dof.eval(sym_test_func))
 
-cg1.plot()
+# cg1.plot()
 
 
 # # # # # dg1 on interval
@@ -212,11 +206,11 @@ vecP3 = VectorPolynomialSpace(P3, P3)
 ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 # ned.plot()
 ls = ned.generate()
-for dof in ls:
-    print(dof)
-    print("phi_0 ", dof.eval(phi_0))
-    print("phi_1 ", dof.eval(phi_1))
-    print("phi_2 ", dof.eval(phi_2))
+# for dof in ls:
+#     print(dof)
+#     print("phi_0 ", dof.eval(phi_0))
+#     print("phi_1 ", dof.eval(phi_1))
+#     print("phi_2 ", dof.eval(phi_2))
 
 print("Edge of RT")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]

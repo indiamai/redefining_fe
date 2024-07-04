@@ -1,16 +1,13 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
 import redefining_fe.groups as fe_groups
 import copy
 import sympy as sp
-from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
-from sympy.combinatorics.named_groups import SymmetricGroup, Permutation, PermutationGroup
-
+from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 
 
 class Arrow3D(FancyArrowPatch):
@@ -81,14 +78,15 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y})).astype(np.float64)[0]  
+    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y})).astype(np.float64)[0]
+
 
 def compute_scaled_verts(d, n):
     if d == 2:
         source = np.array([0, 1])
         rot_coords = [source for i in range(0, n)]
 
-        rot_mat = np.array([[np.cos((2*np.pi)/n), -np.sin((2*np.pi)/n)],[np.sin((2*np.pi)/n), np.cos((2*np.pi)/n)]])
+        rot_mat = np.array([[np.cos((2*np.pi)/n), -np.sin((2*np.pi)/n)], [np.sin((2*np.pi)/n), np.cos((2*np.pi)/n)]])
         for i in range(1, n):
             rot_coords[i] = np.matmul(rot_mat, rot_coords[i-1])
         xdiff, ydiff = (rot_coords[0][0] - rot_coords[1][0],
@@ -115,7 +113,7 @@ def compute_scaled_verts(d, n):
                 for j in [-1, 1]:
                     for k in [-1, 1]:
                         coords.append([i, j, k])
-            
+
             for j in [-1, 1]:
                 for k in [-1, 1]:
                     faces[0].append([1, j, k])
@@ -179,11 +177,11 @@ class Point():
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
         # if d > 1:
-            # print(edges[2].cell_attachment(0)())
-            # for a in self.d_entities(3):
-            #     print(a)
-            #     print(self.cell_attachment(a)())
-            # breakpoint()
+        # print(edges[2].cell_attachment(0)())
+        # for a in self.d_entities(3):
+        #     print(a)
+        #     print(self.cell_attachment(a)())
+        # breakpoint()
         group = self.compute_cell_group()
         if group:
             self.group = group.add_cell(self)
@@ -206,9 +204,7 @@ class Point():
                     edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
         if self.dimension == 3:
             coords, faces = compute_scaled_verts(3, n)
-        
             coords_2d = np.c_[np.ones(len(faces[0])), compute_scaled_verts(2, len(faces[0]))]
-            
             res = []
             edges = []
 
@@ -226,7 +222,6 @@ class Point():
 
                 # breakpoint()
         return edges
-
 
     def compute_cell_group(self):
         verts = self.vertices()
@@ -251,10 +246,10 @@ class Point():
 
     def get_spatial_dimension(self):
         return self.dimension
-    
+
     def dim(self):
         return self.dimension
-    
+
     def get_shape(self):
         num_verts = len(self.vertices())
         if num_verts == 1:
@@ -269,7 +264,7 @@ class Point():
         elif num_verts == 4:
             if self.dimension == 2:
                 # quadrilateral
-                return 11 
+                return 11
             elif self.dimension == 3:
                 # tetrahedron
                 return 3
@@ -278,14 +273,12 @@ class Point():
             return 111
         else:
             raise TypeError("Shape undefined for {}".format(str(self)))
-        
+
     def get_topology(self):
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
         print(structure)
-        topo_dict = {0: {}}
+        # topo_dict = {0: {}}
         # for i in range(len(structure) - 1, 0, -1):
-
-
 
     def graph_dim(self):
         if self.oriented:
@@ -325,7 +318,7 @@ class Point():
             if node in levels[i]:
                 return self.graph_dim() - i
         raise "Error: Node not found in graph"
-    
+
     def vertices(self, get_class=False, return_coords=False):
         if self.oriented:
             verts = self.oriented.permute(self.d_entities(0, get_class))
@@ -338,12 +331,11 @@ class Point():
             return [self.attachment(top_level_node, v)() for v in verts]
         return verts
 
-    
     def edges(self, get_class=False):
         if self.oriented:
             return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
-    
+
     def permute_entities(self, g, d):
         verts = self.vertices()
         entities = self.d_entities(d)
@@ -378,7 +370,6 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
         return reordered_entities
 
-
     def basis_vectors(self, return_coords=True, entity=None):
         if not entity:
             entity = self
@@ -402,7 +393,6 @@ class Point():
                 basis_vecs.append((v, v_0))
         return basis_vecs
 
-
     def plot(self, show=True, plain=False, ax=None):
         """ for now into 2 dimensional space """
 
@@ -419,7 +409,6 @@ class Point():
                 attach = self.attachment(top_level_node, node)
                 points.extend(attach())
             plt.plot(np.array(points), np.zeros_like(points), color="black")
-
 
         for i in range(self.dimension - 1, -1, -1):
             nodes = self.d_entities(i)
@@ -451,7 +440,7 @@ class Point():
         if show:
             plt.show()
 
-    def plot3d(self, show=True, ax = None):
+    def plot3d(self, show=True, ax=None):
         assert self.dimension == 3
         if ax is None:
             fig = plt.figure()
@@ -463,7 +452,7 @@ class Point():
         for node in nodes:
             attach = self.attachment(top_level_node, node)
             plotted = attach()
-            ax.scatter(plotted[0], plotted[1], plotted[2],color="black")
+            ax.scatter(plotted[0], plotted[1], plotted[2], color="black")
 
         nodes = self.d_entities(1)
         for node in nodes:
@@ -478,7 +467,7 @@ class Point():
         if source == dst:
             # return x
             return lambda *x: x
-        
+
         paths = nx.all_simple_edge_paths(self.G, source, dst)
         attachments = [[self.G[s][d]["edge_class"]
                         for (s, d) in path] for path in paths]
@@ -516,7 +505,7 @@ class Point():
                                   edge_class=Edge(None, o=o))
         oriented_point.oriented = o
         return oriented_point
-    
+
     def __repr__(self):
         entity_name = ["v", "e", "f", "c"]
         return entity_name[self.dimension] + str(self.id)
@@ -543,17 +532,16 @@ class Edge():
                 evaluated = subsituted.atoms(sp.Symbol) == set() and evaluated
                 res.append(subsituted)
             if evaluated:
-                return tuple(np.array(res).astype(np.float64))                
+                return tuple(np.array(res).astype(np.float64))
             else:
                 return tuple(res)
-            
+
         if subsituted.atoms(sp.Symbol) == set():
             return self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})
         return np.array(self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})).astype(np.float64)
 
-
     def lower_dim(self):
         return self.point.dim()
-    
+
     def __repr__(self):
         return str(self.point)

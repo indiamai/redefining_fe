@@ -1,10 +1,6 @@
-# from firedrake import *
-# from groups.groups import Group, S1, S2, S3
-from redefining_fe.cells import Point, Edge
-import sympy as sp
-import numpy as np
-from spaces.element_sobolev_spaces import ElementSobolevSpace
-from redefining_fe.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction, PointKernel
+from redefining_fe.cells import Point
+from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
+from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 import matplotlib.pyplot as plt
 import inspect
 
@@ -31,8 +27,6 @@ class ElementTriple():
         self.spaces = tuple(cell_spaces)
         self.DOFGenerator = dof_gen
 
-        # assert self.num_dofs() > self.spaces[0].subdegree
-
     def generate(self):
         res = []
         for dof_gen in self.DOFGenerator:
@@ -46,7 +40,7 @@ class ElementTriple():
 
     def num_dofs(self):
         return sum([dof_gen.num_dofs() for dof_gen in self.DOFGenerator])
-    
+
     def get_dof_info(self, dof):
         if dof.trace_entity.dimension == 0:
             center = self.cell.cell_attachment(dof.trace_entity.id)()
@@ -67,7 +61,7 @@ class ElementTriple():
         # point evaluation nodes only
         dofs = self.generate()
         identity = MyTestFunction(lambda *x: x)
-        
+
         if self.cell.dimension < 3:
             fig = plt.figure()
             ax = plt.gca()
@@ -125,7 +119,7 @@ class DOFGenerator():
         if self.dof_numbers is None:
             raise ValueError("DOFs not generated yet")
         return self.dof_numbers
-        
+
     def generate(self, cell, space):
         if self.ls is None:
             self.ls = []
@@ -140,7 +134,7 @@ class DOFGenerator():
             self.dof_numbers = len(self.ls)
             return self.ls
         return self.ls
-    
+
     def __repr__(self):
         repr_str = ""
         for x_elem in self.x:
@@ -170,17 +164,17 @@ class ImmersedDOF():
             return []
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []
-        
+
         def oriented_attachment(*x):
             return attachment(*o(x))
-        
+
         for generated_dof in self.triple.generate():
             new_dof = generated_dof.immerse(self.target_cell.get_node(target_node),
                                             oriented_attachment,
                                             self.target_space, g)
             new_dofs.append(new_dof)
         return new_dofs
-    
+
     def __repr__(self):
         repr_str = ""
         for dof_gen in self.E:
