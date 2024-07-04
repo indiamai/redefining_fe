@@ -3,7 +3,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 import itertools
 import networkx as nx
-import groups.groups
+import redefining_fe.groups as fe_groups
 import copy
 import sympy as sp
 from mpl_toolkits.mplot3d import Axes3D
@@ -247,7 +247,7 @@ class Point():
                         break
 
         # print(accepted_perms)
-        return groups.groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
+        return fe_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
 
     def get_spatial_dimension(self):
         return self.dimension
@@ -523,7 +523,6 @@ class Point():
 
     def copy(self):
         return copy.deepcopy(self)
-
 
 
 class Edge():

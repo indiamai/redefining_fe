@@ -1,10 +1,10 @@
 # from firedrake import *
 # from groups.groups import Group, S1, S2, S3
-from cell_complex.cells import Point, Edge
+from redefining_fe.cells import Point, Edge
 import sympy as sp
 import numpy as np
 from spaces.element_sobolev_spaces import ElementSobolevSpace
-from dof_lang.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction, PointKernel
+from redefining_fe.dof import DeltaPairing, L2InnerProd, DOF, MyTestFunction, PointKernel
 import matplotlib.pyplot as plt
 import inspect
 

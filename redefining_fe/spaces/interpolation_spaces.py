@@ -63,7 +63,7 @@ class Sobolev(InterpolationSpace):
         self.derivatives = derivatives
         self.lebesgue = lebesgue
         self.shape = shape
-        
+
         if name is None:
             if derivatives == 0:
                 name = "L_" + str(lebesgue)
@@ -110,6 +110,7 @@ class Continuous(InterpolationSpace):
     
     def __call__(self, shape):
         return Continuous(self.derivatives, shape=shape, parents=self.parents)
+
 
 C0 = Continuous(0)
 L2 = Sobolev(0, 2)

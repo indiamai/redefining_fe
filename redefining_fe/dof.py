@@ -1,5 +1,5 @@
 
-from cell_complex.cells import Point, Edge
+from redefining_fe.cells import Point, Edge
 from FIAT.quadrature import GaussLegendreQuadratureLineRule
 from FIAT.reference_element import DefaultLine
 import numpy as np
@@ -39,6 +39,7 @@ class L2InnerProd(Pairing):
         print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
+            breakpoint()
             return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)), unpack=True)
         elif self.entity.dim() == 2:
             # ("evaluating at origin")

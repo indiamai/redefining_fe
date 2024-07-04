@@ -2,9 +2,9 @@
 from firedrake import *
 import numpy as np
 import sympy as sp
-from groups.groups import r, rot, S1, S2, S3, D4, C4, S4
-from cell_complex.cells import Point, Edge, n_sided_polygon
-from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
+from redefining_fe.groups import r, rot, S1, S2, S3, D4, C4, S4
+from redefining_fe.cells import Point, Edge, n_sided_polygon
+from redefining_fe.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
@@ -82,14 +82,17 @@ from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 # # def test_p1_v(x):
 # #     return 2*x + 3
 
-# x = sp.Symbol("x")
+x = sp.Symbol("x")
 
-# RTspace1 = P0 + x*P0
-# print(RTspace1.weights)
-# print(RTspace1.spaces)
-# print(RTspace1)
-# # edges[0].get_topology()
+RTspace1 = P0 + x*P0
+print(RTspace1.weights)
+print(RTspace1.spaces)
+print(RTspace1)
+# edges[0].get_topology()
 # polyset = P0.to_ON_polynomial_set(edges[0])
+
+print(C0)
+print(C0((2,)))
 # quit()
 
 tri = n_sided_polygon(3)
@@ -122,14 +125,14 @@ print("CG1 on interval")
 xs = [immerse(edge, dg0, CellH1)]
 cg1 = ElementTriple(edge, (P1, CellH1, C0),
                     DOFGenerator(xs, S2, S1))
-# ls = cg1.generate()
-# print("num dofs ", cg1.num_dofs())
-# for dof in ls:
-    # print(dof)
-    # print(dof.eval(test_func))
-    # print(dof.eval(sym_test_func))
+ls = cg1.generate()
+print("num dofs ", cg1.num_dofs())
+for dof in ls:
+    print(dof)
+    print(dof.eval(test_func))
+    print(dof.eval(sym_test_func))
 
-# cg1.plot()
+cg1.plot()
 
 
 # # # # # dg1 on interval
@@ -196,12 +199,11 @@ ls = int_ned.generate()
 # for dof in ls:
 #     print(dof)
 
-phi_2 = MyTestFunction(sp.Matrix(1/3 - (np.sqrt(3)/6)*y,
-                                     (np.sqrt(3)/6)*x), symbols=(x, y))
-phi_0 = MyTestFunction(sp.Matrix(-1/6 - (np.sqrt(3)/6)*y,
-                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x), symbols=(x, y))
-phi_1 = MyTestFunction(sp.Matrix(-1/6 - (np.sqrt(3)/6)*y,
-                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x), symbols=(x, y))
+phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
+phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
+                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
 
 print("Nedelec")
 xs = [immerse(tri, int_ned, CellHCurl)]
@@ -210,11 +212,11 @@ vecP3 = VectorPolynomialSpace(P3, P3)
 ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 # ned.plot()
 ls = ned.generate()
-# for dof in ls:
-#     print(dof)
-#     print("phi_0 ", dof.eval(phi_0))
-#     print("phi_1 ", dof.eval(phi_1))
-#     print("phi_2 ", dof.eval(phi_2))
+for dof in ls:
+    print(dof)
+    print("phi_0 ", dof.eval(phi_0))
+    print("phi_1 ", dof.eval(phi_1))
+    print("phi_2 ", dof.eval(phi_2))
 
 print("Edge of RT")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]

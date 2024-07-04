@@ -1,4 +1,4 @@
-import cell_complex.cells
+import redefining_fe.cells as cells
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
@@ -37,7 +37,7 @@ class GroupMemberRep(object):
         self.group = group
 
     def __call__(self, x):
-        if isinstance(x, cell_complex.cells.Point):
+        if isinstance(x, cells.Point):
             return x.orient(self)
         # breakpoint()
         return fold_reduce(self.rep, x)

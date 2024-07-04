@@ -1,11 +1,9 @@
 # Examples of Elements in 3 dimensions
 from firedrake import *
 import numpy as np
-from sympy.combinatorics import PermutationGroup, Permutation
-from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
-from redefining_fe.groups.groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
-from cell_complex.cells import Point, Edge
-from dof_lang.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
+from redefining_fe.groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
+from redefining_fe.cells import Point, Edge
+from redefining_fe.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
 from triples import ElementTriple, DOFGenerator, immerse
 from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
 from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
