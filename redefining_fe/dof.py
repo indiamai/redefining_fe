@@ -147,12 +147,16 @@ class MyTestFunction():
     def __call__(self, *x, sym=False):
         if self.symbols:
             if self.attach_func and not sym:
-                if len(x) > 0:
-                    print("symbolic")
-                    print(self.attach_func(*tuple([self.symbols[i] for i in range(len(x))])))
-                return self.eq.subs({symb: val for (symb, val) in zip(self.symbols, self.attach_func(*x))})
+                # if len(x) > 0:
+                #     print("symbolic")
+                #     print(self.attach_func(*tuple([self.symbols[i] for i in range(len(x))])))
+                res = self.eq.subs({symb: val for (symb, val) in zip(self.symbols, self.attach_func(*x))})
             else:
-                return self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
+                res = self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
+            if res.free_symbols == set():
+                return np.array(res).astype(np.float64)
+            else:
+                return res
         if self.attach_func and not sym:
             return self.eq(*self.attach_func(*x))
         else:

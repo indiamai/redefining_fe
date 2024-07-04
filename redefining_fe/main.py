@@ -9,25 +9,24 @@ from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 # import jsonpickle
 
 # from scratch import n_sided_polygon
+edge = Point(1, [Point(0), Point(0)], vertex_num=2)
 
-# vertices = []
-# for i in range(2):
-#     vertices.append(Point(0))
-# edges = []
-# edges.append(
-#     Point(1, [vertices[0], vertices[1]], vertex_num=2))
-# edges.append(
-#     Point(1, [Edge(vertices[0], lambda: (1,)),
-#               Edge(vertices[2], lambda: (-1,))]))
-# edges.append(
-#     Point(1, [Edge(vertices[1], lambda: (-1,)),
-#               Edge(vertices[2], lambda: (1,))]))
+xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
 
-# a4 = Point(2, [Edge(edges[0], lambda x: [x, -np.sqrt(3) / 3]),
-#                Edge(edges[1], lambda x: [(- x - 1) / 2,
-#                                          np.sqrt(3) * (3 * -x + 1) / 6]),
-#                Edge(edges[2], lambda x: [(1 - x) / 2,
-#                                          np.sqrt(3) * (3 * x + 1) / 6])])
+x = sp.Symbol("x")
+test_func = MyTestFunction(2*x, symbols=(x,))
+
+eval_set = set()
+
+for dof in dg1.generate():
+    eval_set.add(dof.eval(test_func))
+
+val_set = set([-2, 2])
+assert val_set == eval_set
+
+quit()
+
 # print(a4.vertices())
 # print(a4.basis_vectors())
 # print(a4.basis_vectors(return_coords=True))
@@ -141,14 +140,6 @@ dg1 = ElementTriple(edge, (P1, CellL2, C0),
 #     print(dof.eval(test_func))
 # dg1.plot()
 # # dg1 on triangle
-print("DG1 on triangle")
-xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
-dg1 = ElementTriple(tri, (P1, CellL2, C0),
-                    DOFGenerator(xs, S3/S2, S1))
-# ls = dg1.generate()
-# print("num dofs ", dg1.num_dofs())
-# for dof in ls:
-#     print(dof)
 
 # print("DG0 on interval")
 xs = [DOF(DeltaPairing(), PointKernel((0,)))]
@@ -326,4 +317,5 @@ rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 ls = rt2.generate()
 # for l in ls:
 #     print(l)
+
 

@@ -159,10 +159,6 @@ class Point():
         self.dimension = d
         if d == 0:
             assert (edges == [])
-        # if d > 1:
-        #     print(edges[2].cell_attachment(0)())
-        #     print(edges[1].cell_attachment(0)())
-        #     breakpoint()
         if vertex_num:
             edges = self.compute_attachments(vertex_num, edges, edge_orientations)
 
