@@ -151,6 +151,17 @@ def n_sided_polygon(n):
 
 
 class Point():
+    """
+    Cell complex representation of a finite element cell
+
+    :param: d: dimension of the cell
+    :param: edges: list of subcells (either as edge or point objects)
+    :param: vertex_num: Optional argument, number of vertices
+    :param: oriented: adds orientation to the cell
+    :param: group: Symmetric group of the cell
+    :param: edge_orientations: dictionary of the orientations of the subcells
+
+    """
 
     id_iter = itertools.count()
 
