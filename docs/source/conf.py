@@ -38,10 +38,11 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+nitpick_ignore = [('py:class', 'type')]
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "ufl", "FIAT"]
+autodoc_mock_imports = ["firedrake", "ufl", "FIAT", "networkx"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
