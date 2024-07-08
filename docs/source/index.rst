@@ -12,3 +12,4 @@ Welcome to RedefiningFE's documentation!
     spaces
     triples
     dof
+    examples

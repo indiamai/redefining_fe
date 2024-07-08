@@ -5,20 +5,22 @@ import numpy as np
 
 
 def test_dg_examples():
-    # [test_dg0_definition]
+    # [test_dg0 0]
     vert = Point(0)
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+    # [test_dg0 1]
 
     test_func = MyTestFunction(lambda: 3)
 
     for dof in dg0.generate():
         assert np.allclose(dof.eval(test_func), 3)
 
+    # [test_dg1_int 0]
     edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-
     xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
     dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+    # [test_dg1_int 1]
 
     x = sp.Symbol("x")
     test_func = MyTestFunction(2*x, symbols=(x,))
@@ -29,9 +31,11 @@ def test_dg_examples():
         # Avoiding assuming order of generation
         assert any(np.isclose(val, dof.eval(test_func)) for val in dof_vals)
 
+    # [test_dg1_tri 0]
     tri = n_sided_polygon(3)
     xs = [DOF(DeltaPairing(), PointKernel((-1, -np.sqrt(3)/3)))]
     dg1 = ElementTriple(tri, (P1, CellL2, C0), DOFGenerator(xs, S3/S2, S1))
+    # [test_dg1_tri 1]
 
     dof_vals = [-11, 2, 9]
 
@@ -44,17 +48,20 @@ def test_dg_examples():
 
 
 def test_cg_examples():
-    # [test_cg_definition]
+    # [test_cg1 0]
     tri = n_sided_polygon(3)
     edge = tri.edges(get_class=True)[0]
     vert = tri.vertices(get_class=True)[0]
+    # [test_cg1 1]
 
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
-
+    
+    # [test_cg1 2]
     xs = [immerse(edge, dg0, CellH1)]
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
                         DOFGenerator(xs, S2, S1))
+    # [test_cg1 3]
 
     x = sp.Symbol("x")
     test_func = MyTestFunction(2*x, symbols=(x,))
@@ -65,6 +72,7 @@ def test_cg_examples():
         # Avoiding assuming order of generation
         assert any(np.isclose(val, dof.eval(test_func)) for val in val_set)
 
+    # [test_cg3 0]
     v_xs = [immerse(tri, dg0, CellH1)]
     v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
@@ -78,6 +86,7 @@ def test_cg_examples():
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
     cg3 = ElementTriple(tri, (P3, CellH1, C0), [v_dofs, e_dofs, i_dofs])
+    # [test_cg3 1]
 
     x = sp.Symbol("x")
     y = sp.Symbol("y")
