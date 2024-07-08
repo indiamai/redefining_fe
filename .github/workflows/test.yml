@@ -1,0 +1,40 @@
+name: Run tests
+
+on:
+  # Run on pushes to master
+  push:
+    branches:
+      - master
+  # And all pull requests
+  pull_request:
+
+jobs:
+  build_docs:
+    name: Run tests
+    # Run on the Github hosted runner
+    runs-on: ubuntu-latest
+    container:
+      image: firedrakeproject/firedrake-docdeps:latest
+      # Github hosted runners require running as root user:
+      # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
+      options: --user root
+      volumes:
+        - ${{ github.workspace }}:/home/firedrake/output
+    # Steps represent a sequence of tasks that will be executed as
+    # part of the jobs
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install checkedout redefining_fe
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          python -m pip install -e .
+      - name: Install networkx 
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          python -m pip install networkx
+      - name: Run tests
+      # fail on warnings
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          cd test
+          python -m pytest

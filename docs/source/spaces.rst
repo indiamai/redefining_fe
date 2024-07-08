@@ -10,7 +10,9 @@ Element Sobolev Spaces
 
 .. automodule:: redefining_fe.spaces.element_sobolev_spaces
    :members:
+   :exclude-members: ufl.sobolevspace.SobolevSpace
    :show-inheritance:
+
 
 Polynomial Spaces
 =====================
