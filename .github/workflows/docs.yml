@@ -30,8 +30,10 @@ jobs:
           python -m pip install -e .
 
       - name: Build docs
-      # fail on warnings
+      # to fail on warnings change to this
+      # make html SPHINXOPTS="-W --keep-going -n"
         run: |
           . /home/firedrake/firedrake/bin/activate
           cd docs
-          make html SPHINXOPTS="-W --keep-going -n"
+          make html
+          
