@@ -1,7 +1,7 @@
 Examples
 ===========================
 
-This page will describe the foundational element definitons and how they are written in this software.
+This page will describe the foundational element definitions and how they are written in this software.
 
 DG0  
 --------------------------
@@ -26,10 +26,20 @@ DG1 on interval
 .. plot::
 
     from redefining_fe import *
-    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+    edge = Point(1, [Point(0, group=S1), Point(0, group=S1)], vertex_num=2, group=S2)
     xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
     dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
     dg1.plot()
+
+.. plot::
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+   x = np.random.randn(1000)
+   plt.hist( x, 20)
+   plt.grid()
+   plt.title(r'Normal: $\mu=%.2f, \sigma=%.2f$'%(x.mean(), x.std()))
+   plt.show()
 
 .. plot:: ../../test/test_2d_examples_docs.py plot_dg1
 

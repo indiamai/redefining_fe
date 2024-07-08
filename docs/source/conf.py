@@ -45,7 +45,7 @@ nitpick_ignore = [('py:class', 'type')]
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "ufl", "FIAT", "networkx"]
+autodoc_mock_imports = ["ufl", "FIAT"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
