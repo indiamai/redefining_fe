@@ -42,9 +42,9 @@ def topo_pos(G):
 def fold_reduce(func_list, *prev):
     """
     Right to left function comprehension
-    
+
     :param: func_list: list of functions
-    :param: *prev: starting value(s)
+    :param: prev: starting value(s)
     """
     for func in reversed(func_list):
         # print(prev)
