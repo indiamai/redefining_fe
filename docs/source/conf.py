@@ -28,7 +28,8 @@ author = 'India Marsden, David A. Ham, Patrick E. Farrell'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.autosummary']
+              'sphinx.ext.autosummary',
+              "sphinx.ext.autosectionlabel"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,6 +43,8 @@ exclude_patterns = []
 
 autodoc_mock_imports = ["firedrake", "ufl", "FIAT"]
 
+# Make sure the target is unique
+autosectionlabel_prefix_document = True
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

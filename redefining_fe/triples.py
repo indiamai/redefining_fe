@@ -6,6 +6,13 @@ import inspect
 
 
 class ElementTriple():
+    """
+    Class to represent the three core parts of the element
+
+    :param: cell: CellComplex
+    :param: spaces: Triple of spaces: (PolynomialSpace, SobolovSpace, InterpolationSpace)
+    :param: dof_gen: Generator Triple to generate the degrees of freedom.
+    """
 
     def __init__(self, cell, spaces, dof_gen):
         assert isinstance(cell, Point)

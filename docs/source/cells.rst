@@ -4,5 +4,5 @@ Cells
 
 .. automodule:: redefining_fe.cells
    :members:
-   :undoc-members:
-   :no-index:
+   :exclude-members: Arrow3D
+   :show-inheritance:

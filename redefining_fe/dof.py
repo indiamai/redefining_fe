@@ -4,16 +4,24 @@ import numpy as np
 
 
 class Pairing():
+    """
+    Akin to an inner product, the pairing combines a kernel and an input function
+    """
 
     def __init__(self):
         self.entity = None
-        self.space = None
 
     def add_entity(self, entity):
         self.entity = entity
 
 
 class DeltaPairing(Pairing):
+    """
+    The delta pairing allows the evaluation at a single points
+    
+    Calling method:
+    :param: kernel: Normally a PointKernel
+    """
 
     def __init__(self):
         super(DeltaPairing, self).__init__()

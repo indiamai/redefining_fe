@@ -24,8 +24,11 @@ class Arrow3D(FancyArrowPatch):
 
 
 def topo_pos(G):
-    """ helper function for hasse diagram visualisation
-    Display in topological order, with simple offsetting for legibility"""
+    """ 
+    Helper function for hasse diagram visualisation
+    Offsets the nodes and displays in topological order
+    
+    """
     pos_dict = {}
     for i, node_list in enumerate(nx.topological_generations(G)):
         x_offset = len(node_list) / 2
@@ -37,7 +40,12 @@ def topo_pos(G):
 
 
 def fold_reduce(func_list, *prev):
-    """ nested function composition helper function, right to left """
+    """
+    Right to left function comprehension
+    
+    :param: func_list: list of functions
+    :param: *prev: starting value(s)
+    """
     for func in reversed(func_list):
         # print(prev)
         prev = func(*prev)
@@ -70,11 +78,21 @@ def construct_attach_2d_old(a, b, c, d):
 
 
 def construct_attach_2d(a, b, c, d):
+    """
+    Compute polynomial attachment in x based on two points (a,b) and (c,d)
+
+    :param: a,b,c,d: two points (a,b) and (c,d)
+    """
     x = sp.Symbol("x")
     return [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
 
 
 def construct_attach_3d(res):
+    """
+    Convert matrix of coefficients into a vector of polynomials in x and y
+    
+    :param: res: matrix of coefficients
+    """
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
@@ -82,6 +100,12 @@ def construct_attach_3d(res):
 
 
 def compute_scaled_verts(d, n):
+    """
+    Construct default cell vertices
+
+    :param: d: dimension of cell
+    :param: n: number of vertices
+    """
     if d == 2:
         source = np.array([0, 1])
         rot_coords = [source for i in range(0, n)]
@@ -139,6 +163,11 @@ def compute_scaled_verts(d, n):
 
 
 def n_sided_polygon(n):
+    """
+    Constructs the 2D default cell with n sides/vertices
+
+    :param: n: number of vertices
+    """
     vertices = []
     for i in range(n):
         vertices.append(Point(0))
@@ -158,7 +187,7 @@ class Point():
     :param: edges: list of subcells (either as edge or point objects)
     :param: vertex_num: Optional argument, number of vertices
     :param: oriented: adds orientation to the cell
-    :param: group: Symmetric group of the cell
+    :param: group: Symmetry group of the cell
     :param: edge_orientations: dictionary of the orientations of the subcells
 
     """
@@ -174,7 +203,6 @@ class Point():
             edges = self.compute_attachments(vertex_num, edges, edge_orientations)
 
         self.oriented = oriented
-        self.group = None
         self.G = nx.DiGraph()
         self.G.add_node(self.id, point_class=self)
         for edge in edges:
@@ -183,17 +211,20 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
-        # if d > 1:
-        # print(edges[2].cell_attachment(0)())
-        # for a in self.d_entities(3):
-        #     print(a)
-        #     print(self.cell_attachment(a)())
-        # breakpoint()
-        group = self.compute_cell_group()
-        if group:
+
+        self.group = group
+        if not self.group:
+            group = self.compute_cell_group()
             self.group = group.add_cell(self)
 
     def compute_attachments(self, n, points, orientations={}):
+        """
+        Compute the attachment function between two nodes
+
+        :param: n: number of vertices
+        :param: points: List of Point objects
+        :param: orientations: (Optional) Orientation associated with the attachment
+        """
         if self.dimension == 1:
             edges = [Edge(points[0], sp.sympify((-1,))),
                      Edge(points[1], sp.sympify((1,)))]
@@ -231,6 +262,9 @@ class Point():
         return edges
 
     def compute_cell_group(self):
+        """
+        Systematically work out the symmetry group of the constructed cell
+        """
         verts = self.vertices()
         v_coords = self.vertices(return_coords=True)
         n = len(verts)
@@ -522,6 +556,13 @@ class Point():
 
 
 class Edge():
+    """
+    Representation of the connections in a cell complex.
+
+    :param: point: the point being connected (lower level)
+    :param: attachment: the function describing how the point is attached
+    :param: o: orientation function (optional)
+    """
 
     def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
         self.attachment = attachment

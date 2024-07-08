@@ -10,3 +10,5 @@ Welcome to RedefiningFE's documentation!
     groups
     cells
     spaces
+    triples
+    dof
