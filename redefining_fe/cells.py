@@ -347,6 +347,7 @@ class Point():
         if get_class:
             return [self.G.nodes.data("point_class")[i]
                     for i in levels[self.graph_dim() - d]]
+        
         return levels[self.graph_dim() - d]
 
     def get_node(self, node):

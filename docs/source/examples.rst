@@ -11,6 +11,7 @@ DG0
    :start-after: [test_dg0 0]
    :end-before: [test_dg0 1]
 
+
 DG1 on interval 
 --------------------------
 
@@ -20,6 +21,16 @@ DG1 on interval
    :start-after: [test_dg1_int 0]
    :end-before: [test_dg1_int 1]
 
+
+
+.. plot::
+
+    from redefining_fe import *
+    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+    xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+    dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+    dg1.plot()
+
 DG1 on triangle
 --------------------------
 .. literalinclude:: ../../test/test_2d_examples_docs.py
@@ -27,6 +38,8 @@ DG1 on triangle
    :dedent:
    :start-after: [test_dg1_tri 0]
    :end-before: [test_dg1_tri 1]
+
+# .. plot:: ../../test_2d_examples_docs.py plot_dg1_tri
 
 CG elements
 --------------------------
