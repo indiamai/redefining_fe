@@ -70,32 +70,35 @@ def test_dg_examples():
         assert any(np.isclose(val, dof.eval(test_func)) for val in dof_vals)
 
 
-def test_cg_examples():
+def construct_cg1():
     # [test_cg1 0]
-    tri = n_sided_polygon(3)
-    edge = tri.edges(get_class=True)[0]
-    vert = tri.vertices(get_class=True)[0]
-    # [test_cg1 1]
+    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+    vert = edge.vertices(get_class=True)[0]
 
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
-    
-    # [test_cg1 2]
+
     xs = [immerse(edge, dg0, CellH1)]
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
                         DOFGenerator(xs, S2, S1))
-    # [test_cg1 3]
+    # [test_cg1 1]
+    return cg1
 
-    x = sp.Symbol("x")
-    test_func = MyTestFunction(2*x, symbols=(x,))
 
-    val_set = set([-2, 2])
+def plot_cg1():
+    cg1 = construct_cg1()
+    cg1.plot()
 
-    for dof in cg1.generate():
-        # Avoiding assuming order of generation
-        assert any(np.isclose(val, dof.eval(test_func)) for val in val_set)
 
+def construct_cg3():
     # [test_cg3 0]
+    tri = n_sided_polygon(3)
+    edge = tri.edges(get_class=True)[0]
+    vert = tri.vertices(get_class=True)[0]
+
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+
     v_xs = [immerse(tri, dg0, CellH1)]
     v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
@@ -110,6 +113,28 @@ def test_cg_examples():
 
     cg3 = ElementTriple(tri, (P3, CellH1, C0), [v_dofs, e_dofs, i_dofs])
     # [test_cg3 1]
+    return cg3
+
+
+def plot_cg3():
+    cg3 = construct_cg3()
+    cg3.plot()
+
+
+def test_cg_examples():
+
+    cg1 = construct_cg1()
+
+    x = sp.Symbol("x")
+    test_func = MyTestFunction(2*x, symbols=(x,))
+
+    val_set = set([-2, 2])
+
+    for dof in cg1.generate():
+        # Avoiding assuming order of generation
+        assert any(np.isclose(val, dof.eval(test_func)) for val in val_set)
+
+    cg3 = construct_cg3()
 
     x = sp.Symbol("x")
     y = sp.Symbol("y")

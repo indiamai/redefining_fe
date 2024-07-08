@@ -31,6 +31,8 @@ DG1 on interval
     dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
     dg1.plot()
 
+.. plot:: ../../test/test_2d_examples_docs.py plot_dg1
+
 DG1 on triangle
 --------------------------
 .. literalinclude:: ../../test/test_2d_examples_docs.py
@@ -39,12 +41,10 @@ DG1 on triangle
    :start-after: [test_dg1_tri 0]
    :end-before: [test_dg1_tri 1]
 
-# .. plot:: ../../test_2d_examples_docs.py plot_dg1_tri
+.. plot:: ../../test/test_2d_examples_docs.py plot_dg1_tri
 
-CG elements
+CG1 on interval
 --------------------------
-
-First, we set up the cells. As we are including our lower dim definitons into higher dim ones they need to resolve to common objects:
 
 .. literalinclude:: ../../test/test_2d_examples_docs.py
    :language: python3
@@ -52,19 +52,15 @@ First, we set up the cells. As we are including our lower dim definitons into hi
    :start-after: [test_cg1 0]
    :end-before: [test_cg1 1]
 
+.. plot:: ../../test/test_2d_examples_docs.py plot_cg1
 
-Then, CG1 looks like this:
-
-.. literalinclude:: ../../test/test_2d_examples_docs.py
-   :language: python3
-   :dedent:
-   :start-after: [test_cg1 2]
-   :end-before: [test_cg1 3]
-
-And CG3 like this:
+CG3 on triangle
+--------------------------
 
 .. literalinclude:: ../../test/test_2d_examples_docs.py
    :language: python3
    :dedent:
    :start-after: [test_cg3 0]
    :end-before: [test_cg3 1]
+
+.. plot:: ../../test/test_2d_examples_docs.py plot_cg3
