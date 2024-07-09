@@ -67,7 +67,7 @@ class CellHDiv(ElementSobolevSpace):
 
         def apply(*x):
             if len(v(*x)) == 2:
-                result = np.cross(np.array(v(*x)), basis)
+                result = np.cross(np.array(v(*x)).squeeze(), basis)
                 # vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
             elif trace_entity.dimension == 2:
                 result = np.dot(np.array(v(*x)), np.cross(basis[0], basis[1]))
@@ -104,6 +104,7 @@ class CellHCurl(ElementSobolevSpace):
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
 
         def apply(*x):
+            # breakpoint()
             result = np.dot(np.matmul(tangent, subEntityBasis),
                             np.array(v(*x)))
             if isinstance(result, np.float64):
