@@ -46,7 +46,10 @@ class L2InnerProd(Pairing):
         print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-            return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)))
+
+            def kernel_dot(x):
+                return np.dot(kernel(*x), v(*x))
+            return quadrature.integrate(kernel_dot)
         elif self.entity.dim() == 2:
             # ("evaluating at origin")
             return np.dot(kernel(0, 0), v(0, 0))
@@ -169,6 +172,7 @@ class MyTestFunction():
             return self.eq(*self.attach_func(*x))
         else:
             return self.eq(*x)
+
 
     def attach(self, attachment):
         if not self.attach_func:
