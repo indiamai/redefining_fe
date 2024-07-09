@@ -95,7 +95,8 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    return lambda x, y: np.array((xy.T * res).subs({"x": x, "y": y})).astype(np.float64)[0]
+    breakpoint()
+    return (xy.T * res)
 
 
 def compute_scaled_verts(d, n):
@@ -250,9 +251,10 @@ class Point():
                 res = np.linalg.solve(coords_2d, faces[i])
 
                 res_fn = construct_attach_3d(res)
-                assert np.allclose(res_fn(coords_2d[0][1], coords_2d[0][2]), faces[i][0])
-                assert np.allclose(res_fn(coords_2d[1][1], coords_2d[1][2]), faces[i][1])
-                assert np.allclose(res_fn(coords_2d[2][1], coords_2d[2][2]), faces[i][2])
+                breakpoint()
+                assert np.allclose(np.array(res_fn.subs({"x": coords_2d[0][1], "y": coords_2d[0][2]})).astype(np.float64), faces[i][0])
+                assert np.allclose(np.array(res_fn.subs({"x": coords_2d[1][1], "y": coords_2d[1][2]})).astype(np.float64), faces[i][1])
+                assert np.allclose(np.array(res_fn.subs({"x": coords_2d[2][1], "y": coords_2d[2][2]})).astype(np.float64), faces[i][2])
                 if i in orientations.keys():
                     edges.append(Edge(points[i], construct_attach_3d(res), o=orientations[i]))
                 else:
@@ -276,7 +278,7 @@ class Point():
             for element in max_group.elements:
                 reordered = element(verts)
                 for edge in edges:
-                    diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])])
+                    diff = np.subtract(v_coords[reordered.index(edge[0])], v_coords[reordered.index(edge[1])]).squeeze()
                     edge_len = np.sqrt(np.dot(diff, diff))
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
@@ -585,9 +587,8 @@ class Edge():
                 return tuple(np.array(res).astype(np.float64))
             else:
                 return tuple(res)
-
-        if subsituted.atoms(sp.Symbol) == set():
-            return self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})
+            # if all(res_elem.atoms(sp.Symbol) == set() for res_elem in res):
+            #     return self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})
         return np.array(self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})).astype(np.float64)
 
     def lower_dim(self):
