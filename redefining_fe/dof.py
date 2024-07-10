@@ -173,7 +173,6 @@ class MyTestFunction():
         else:
             return self.eq(*x)
 
-
     def attach(self, attachment):
         if not self.attach_func:
             return MyTestFunction(self.eq, attach_func=attachment, symbols=self.symbols)
