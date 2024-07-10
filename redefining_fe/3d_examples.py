@@ -1,13 +1,7 @@
 # Examples of Elements in 3 dimensions
 from firedrake import *
 import numpy as np
-from redefining_fe.groups import r, r_y, rot, S1, S2, S3, D4, Z3, Z4, S4, A4, GroupRepresentation
-from redefining_fe.cells import Point, Edge
-from redefining_fe.dof import DeltaPairing, DOF, L2InnerProd, MyTestFunction, PointKernel, PolynomialKernel
-from triples import ElementTriple, DOFGenerator, immerse
-from spaces.element_sobolev_spaces import CellH1, CellL2, CellHDiv, CellHCurl, CellH2, CellH3
-from spaces.polynomial_spaces import P0, P1, P2, P3, Q2, VectorPolynomialSpace
-import matplotlib.pyplot as plt
+from redefining_fe import *
 
 vertices = []
 for i in range(4):
@@ -30,7 +24,7 @@ edges.append(
 face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
 face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
 face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
-face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations= {0:r, 2: r})
+face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
 
 tetrahedron = Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
 tetra = tetrahedron
@@ -80,7 +74,7 @@ dg1_int = ElementTriple(edges[0], (P0, CellL2, "C0"),
 
 xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 dg0_face = ElementTriple(face1, (P0, CellL2, "C0"),
-                        DOFGenerator(xs, S1, S1))
+                         DOFGenerator(xs, S1, S1))
 
 v_xs = [immerse(tetra, dg0, CellH1)]
 cgverts = DOFGenerator(v_xs, Z4, S1)
@@ -100,7 +94,6 @@ ls = cg3.generate()
 # for dof in ls:
 #     print(dof)
 # print("num dofs ", cg3.num_dofs())
-
 
 
 print("Raviart Thomas")

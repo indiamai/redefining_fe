@@ -18,7 +18,7 @@ class Pairing():
 class DeltaPairing(Pairing):
     """
     The delta pairing allows the evaluation at a single points
-    
+
     Calling method:
     :param: kernel: Normally a PointKernel
     """

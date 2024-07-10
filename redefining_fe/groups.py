@@ -74,7 +74,6 @@ class GroupRepresentation(object):
         if cell is not None:
             self.cell = cell
             vertices = cell.vertices(return_coords=True)
-
             A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
             b = np.array(vertices, dtype=float)
 

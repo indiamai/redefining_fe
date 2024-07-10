@@ -23,8 +23,8 @@ class ElementSobolevSpace(SobolevSpace):
     Representation of a Sobolev space on a single cell
 
     :param: *underlying_space*: The UFL representation of the Sobolev Space
-    :param: *domain*: (Optional) the cell defined over- if not originally provided it should be provided during use. 
-    
+    :param: *domain*: (Optional) the cell defined over- if not originally provided it should be provided during use.
+
     """
 
     def __init__(self, underlying_space, domain=None):
@@ -74,6 +74,7 @@ class CellHDiv(ElementSobolevSpace):
             else:
                 raise ValueError("Immersion of HDiv edges not defined in 3D")
             if isinstance(result, np.float64):
+                # todo: might always be a float
                 return (result,)
             return tuple(result)
         return apply

@@ -1,6 +1,7 @@
 from redefining_fe import *
 # .. plot:: ../../test/plots.py
 
+
 def construct_dg1():
     # [test_dg1_int 0]
     edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -13,7 +14,6 @@ def construct_dg1():
 def plot_dg1():
     dg1 = construct_dg1()
     dg1.plot()
-
 
 
 plot_dg1()

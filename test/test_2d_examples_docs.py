@@ -1,5 +1,4 @@
 from redefining_fe import *
-import pytest
 import sympy as sp
 import numpy as np
 
