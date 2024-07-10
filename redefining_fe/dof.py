@@ -18,7 +18,7 @@ class Pairing():
 class DeltaPairing(Pairing):
     """
     The delta pairing allows the evaluation at a single points
-    
+
     Calling method:
     :param: kernel: Normally a PointKernel
     """
@@ -172,7 +172,6 @@ class MyTestFunction():
             return self.eq(*self.attach_func(*x))
         else:
             return self.eq(*x)
-
 
     def attach(self, attachment):
         if not self.attach_func:

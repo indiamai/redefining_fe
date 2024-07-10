@@ -23,8 +23,8 @@ class ElementSobolevSpace(SobolevSpace):
     Representation of a Sobolev space on a single cell
 
     :param: *underlying_space*: The UFL representation of the Sobolev Space
-    :param: *domain*: (Optional) the cell defined over- if not originally provided it should be provided during use. 
-    
+    :param: *domain*: (Optional) the cell defined over- if not originally provided it should be provided during use.
+
     """
 
     def __init__(self, underlying_space, domain=None):
