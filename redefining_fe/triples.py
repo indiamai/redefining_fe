@@ -69,6 +69,9 @@ class ElementTriple():
         dofs = self.generate()
         identity = MyTestFunction(lambda *x: x)
 
+        if self.cell.dimension == 0:
+            raise ValueError(" Dimension 0 cells cannot be plotted")
+
         if self.cell.dimension < 3:
             fig = plt.figure()
             ax = plt.gca()

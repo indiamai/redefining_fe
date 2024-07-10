@@ -1,4 +1,3 @@
-import numpy as np
 from redefining_fe import *
 import pytest
 

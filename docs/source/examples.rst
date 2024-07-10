@@ -1,7 +1,7 @@
 Examples
 ===========================
 
-This page will describe the foundational element definitons and how they are written in this software.
+This page will describe the foundational element definitions and how they are written in this software.
 
 DG0  
 --------------------------
@@ -10,6 +10,7 @@ DG0
    :dedent:
    :start-after: [test_dg0 0]
    :end-before: [test_dg0 1]
+
 
 DG1 on interval 
 --------------------------
@@ -20,6 +21,29 @@ DG1 on interval
    :start-after: [test_dg1_int 0]
    :end-before: [test_dg1_int 1]
 
+
+..
+    .. plot::
+
+        from redefining_fe import *
+        edge = Point(1, [Point(0, group=S1), Point(0, group=S1)], vertex_num=2, group=S2)
+        xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+        dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+        dg1.plot()
+
+.. plot::
+
+   import matplotlib.pyplot as plt
+   import numpy as np
+   x = np.random.randn(1000)
+   plt.hist( x, 20)
+   plt.grid()
+   plt.title(r'Normal: $\mu=%.2f, \sigma=%.2f$'%(x.mean(), x.std()))
+   plt.show()
+
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_dg1
+
 DG1 on triangle
 --------------------------
 .. literalinclude:: ../../test/test_2d_examples_docs.py
@@ -28,10 +52,11 @@ DG1 on triangle
    :start-after: [test_dg1_tri 0]
    :end-before: [test_dg1_tri 1]
 
-CG elements
---------------------------
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_dg1_tri
 
-First, we set up the cells. As we are including our lower dim definitons into higher dim ones they need to resolve to common objects:
+CG1 on interval
+--------------------------
 
 .. literalinclude:: ../../test/test_2d_examples_docs.py
    :language: python3
@@ -39,19 +64,17 @@ First, we set up the cells. As we are including our lower dim definitons into hi
    :start-after: [test_cg1 0]
    :end-before: [test_cg1 1]
 
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_cg1
 
-Then, CG1 looks like this:
-
-.. literalinclude:: ../../test/test_2d_examples_docs.py
-   :language: python3
-   :dedent:
-   :start-after: [test_cg1 2]
-   :end-before: [test_cg1 3]
-
-And CG3 like this:
+CG3 on triangle
+--------------------------
 
 .. literalinclude:: ../../test/test_2d_examples_docs.py
    :language: python3
    :dedent:
    :start-after: [test_cg3 0]
    :end-before: [test_cg3 1]
+
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_cg3

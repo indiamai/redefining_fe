@@ -13,3 +13,4 @@ Welcome to RedefiningFE's documentation!
     triples
     dof
     examples
+    modules

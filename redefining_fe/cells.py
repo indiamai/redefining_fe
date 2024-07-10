@@ -24,10 +24,9 @@ class Arrow3D(FancyArrowPatch):
 
 
 def topo_pos(G):
-    """ 
+    """
     Helper function for hasse diagram visualisation
     Offsets the nodes and displays in topological order
-    
     """
     pos_dict = {}
     for i, node_list in enumerate(nx.topological_generations(G)):
@@ -90,7 +89,7 @@ def construct_attach_2d(a, b, c, d):
 def construct_attach_3d(res):
     """
     Convert matrix of coefficients into a vector of polynomials in x and y
-    
+
     :param: res: matrix of coefficients
     """
     x = sp.Symbol("x")
@@ -213,9 +212,10 @@ class Point():
         self.connections = edges
 
         self.group = group
-        if not self.group:
-            group = self.compute_cell_group()
-            self.group = group.add_cell(self)
+        if not group:
+            self.group = self.compute_cell_group()
+
+        self.group = self.group.add_cell(self)
 
     def compute_attachments(self, n, points, orientations={}):
         """
@@ -347,6 +347,8 @@ class Point():
         if get_class:
             return [self.G.nodes.data("point_class")[i]
                     for i in levels[self.graph_dim() - d]]
+        # if self.graph_dim() - d == 0 or self.graph_dim() - d > len(levels):
+        #     raise ValueError("{0} graph dim {1} d {2}".format(self.graph_dim(), d, levels))
         return levels[self.graph_dim() - d]
 
     def get_node(self, node):

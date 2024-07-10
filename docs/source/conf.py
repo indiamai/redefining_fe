@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../'))
+sys.path.append(os.path.abspath('sphinxext'))
 
 
 # -- Project information -----------------------------------------------------
@@ -29,7 +30,10 @@ author = 'India Marsden, David A. Ham, Patrick E. Farrell'
 # ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
-              "sphinx.ext.autosectionlabel"]
+              "sphinx.ext.autosectionlabel",
+              'sphinx.ext.mathjax',
+              'sphinx.ext.intersphinx',
+              "matplotlib.sphinxext.plot_directive"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -38,11 +42,11 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-nitpick_ignore = [('py:class', 'type')]
+# nitpick_ignore = [('py:class', 'type')]
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "ufl", "FIAT", "networkx"]
+autodoc_mock_imports = ["firedrake", "networkx", "FIAT"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
@@ -56,4 +60,12 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+
+intersphinx_mapping = {
+    'ufl': ('https://fenics.readthedocs.io/projects/ufl/en/latest/', None),
+    'FIAT': ('https://fenics.readthedocs.io/projects/fiat/en/latest/', None),
+    'FInAT': ('https://finat.github.io/FInAT/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)}

@@ -3,29 +3,27 @@ from firedrake import *
 import numpy as np
 import sympy as sp
 from redefining_fe import *
-import matplotlib.pyplot as plt
-from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
+# import matplotlib.pyplot as plt
+# from ufl.sobolevspace import L2 as uflL2, H1 as uflH1, HDiv as uflHDiv
 # import json
 # import jsonpickle
 
 # from scratch import n_sided_polygon
-edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+# edge = Point(1, [Point(0), Point(0)], vertex_num=2)
 
-xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
-dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+# xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+# dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
 
-x = sp.Symbol("x")
-test_func = MyTestFunction(2*x, symbols=(x,))
+# x = sp.Symbol("x")
+# test_func = MyTestFunction(2*x, symbols=(x,))
 
-eval_set = set()
+# eval_set = set()
 
-for dof in dg1.generate():
-    eval_set.add(dof.eval(test_func))
+# for dof in dg1.generate():
+#     eval_set.add(dof.eval(test_func))
 
-val_set = set([-2, 2])
-assert val_set == eval_set
-
-quit()
+# val_set = set([-2, 2])
+# assert val_set == eval_set
 
 # print(a4.vertices())
 # print(a4.basis_vectors())
@@ -174,7 +172,7 @@ for dof in ls:
     print(dof)
     print(dof.eval(phi_0))
 # cg3.plot()
-
+# quit()
 print("Integral Moment")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
 dofs = DOFGenerator(xs, S1, S2)
@@ -186,9 +184,9 @@ ls = int_ned.generate()
 
 phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
 phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
-                                     (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+                                  (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
 phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
-                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+                                  (np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
 
 print("Nedelec")
 xs = [immerse(tri, int_ned, CellHCurl)]
@@ -197,11 +195,11 @@ vecP3 = VectorPolynomialSpace(P3, P3)
 ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 # ned.plot()
 ls = ned.generate()
-# for dof in ls:
-#     print(dof)
-#     print("phi_0 ", dof.eval(phi_0))
-#     print("phi_1 ", dof.eval(phi_1))
-#     print("phi_2 ", dof.eval(phi_2))
+for dof in ls:
+    print(dof)
+    print("phi_0 ", dof.eval(phi_0))
+    print("phi_1 ", dof.eval(phi_1))
+    print("phi_2 ", dof.eval(phi_2))
 
 print("Edge of RT")
 xs = [DOF(L2InnerProd(), PointKernel((1,)))]
@@ -220,16 +218,23 @@ phi_0 = MyTestFunction(lambda x, y: ((-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
 phi_1 = MyTestFunction(lambda x, y: ((np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
                                      1/6 + (np.sqrt(3)/6)*y))
 
+phi_2 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6)*x,
+                                  -1/3 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+phi_0 = MyTestFunction(sp.Matrix([(-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                  1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+phi_1 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                  1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+
 xs = [immerse(tri, int_rt, CellHDiv)]
 tri_dofs = DOFGenerator(xs, S3, S3)
 vecP3 = VectorPolynomialSpace(P3, P3)
 rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
-# ls = rt.generate()
-# for dof in ls:
-#     print(dof)
-#     print("phi_0 ", dof.eval(phi_0))
-#     print("phi_1 ", dof.eval(phi_1))
-#     print("phi_2 ", dof.eval(phi_2))
+ls = rt.generate()
+for dof in ls:
+    print(dof)
+    print("phi_0 ", dof.eval(phi_0))
+    print("phi_1 ", dof.eval(phi_1))
+    print("phi_2 ", dof.eval(phi_2))
 # rt.plot()
 
 print("Hermite")
@@ -254,7 +259,7 @@ ls = her.generate()
 # for dof in ls:
 #     print(dof)
 # #     # print("dof eval", dof.eval(phi_0))
-    
+
 # her.plot()
 
 
@@ -302,7 +307,7 @@ int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 # ls = int_rt2.generate()
 # for l in ls:
 #     print(l.eval(MyTestFunction(lambda x: x)))
-    # print(l.eval(MyTestFunction(lambda x: 0)))
+# print(l.eval(MyTestFunction(lambda x: 0)))
 
 
 xs = [immerse(tri, int_rt2, CellHDiv)]
@@ -317,5 +322,3 @@ rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 ls = rt2.generate()
 # for l in ls:
 #     print(l)
-
-
