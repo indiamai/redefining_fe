@@ -47,7 +47,7 @@ exclude_patterns = []
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "networkx", "ufl", "FIAT"]
+autodoc_mock_imports = ["firedrake", "networkx", "FIAT"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
@@ -69,4 +69,4 @@ intersphinx_mapping = {
     'FInAT': ('https://finat.github.io/FInAT/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'python': ('https://docs.python.org/3/', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)}
