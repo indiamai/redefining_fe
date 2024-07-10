@@ -22,14 +22,14 @@ DG1 on interval
    :end-before: [test_dg1_int 1]
 
 
+..
+    .. plot::
 
-.. plot::
-
-    from redefining_fe import *
-    edge = Point(1, [Point(0, group=S1), Point(0, group=S1)], vertex_num=2, group=S2)
-    xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
-    dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
-    dg1.plot()
+        from redefining_fe import *
+        edge = Point(1, [Point(0, group=S1), Point(0, group=S1)], vertex_num=2, group=S2)
+        xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+        dg1 = ElementTriple(edge, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+        dg1.plot()
 
 .. plot::
 
@@ -41,7 +41,8 @@ DG1 on interval
    plt.title(r'Normal: $\mu=%.2f, \sigma=%.2f$'%(x.mean(), x.std()))
    plt.show()
 
-.. plot:: ../../test/test_2d_examples_docs.py plot_dg1
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_dg1
 
 DG1 on triangle
 --------------------------
@@ -51,7 +52,8 @@ DG1 on triangle
    :start-after: [test_dg1_tri 0]
    :end-before: [test_dg1_tri 1]
 
-.. plot:: ../../test/test_2d_examples_docs.py plot_dg1_tri
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_dg1_tri
 
 CG1 on interval
 --------------------------
@@ -62,7 +64,8 @@ CG1 on interval
    :start-after: [test_cg1 0]
    :end-before: [test_cg1 1]
 
-.. plot:: ../../test/test_2d_examples_docs.py plot_cg1
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_cg1
 
 CG3 on triangle
 --------------------------
@@ -73,4 +76,5 @@ CG3 on triangle
    :start-after: [test_cg3 0]
    :end-before: [test_cg3 1]
 
-.. plot:: ../../test/test_2d_examples_docs.py plot_cg3
+..
+    .. plot:: ../../test/test_2d_examples_docs.py plot_cg3

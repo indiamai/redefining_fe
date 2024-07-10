@@ -32,6 +32,8 @@ author = 'India Marsden, David A. Ham, Patrick E. Farrell'
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               "sphinx.ext.autosectionlabel",
+              'sphinx.ext.mathjax',
+              'sphinx.ext.intersphinx',
               "matplotlib.sphinxext.plot_directive"]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -41,11 +43,11 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
-nitpick_ignore = [('py:class', 'type')]
+# nitpick_ignore = [('py:class', 'type')]
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["ufl", "FIAT"]
+autodoc_mock_imports = ["firedrake", "networkx", "ufl", "FIAT"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True
@@ -60,3 +62,11 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+intersphinx_mapping = {
+    'ufl': ('https://fenics.readthedocs.io/projects/ufl/en/latest/', None),
+    'FIAT': ('https://fenics.readthedocs.io/projects/fiat/en/latest/', None),
+    'FInAT': ('https://finat.github.io/FInAT/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'python': ('https://docs.python.org/3/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
