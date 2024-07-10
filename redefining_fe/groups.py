@@ -78,7 +78,7 @@ class GroupRepresentation(object):
             A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
             b = np.array(vertices, dtype=float)
 
-            M, _, _, _ = np.linalg.lstsq(A, b)
+            M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
             self.identity = GroupMemberRep(base_group.identity, construct_rep_func(M), self)
 
             counter = 0
@@ -91,7 +91,7 @@ class GroupRepresentation(object):
                 A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
                 b = np.array(reordered, dtype=float)
 
-                M, _, _, _ = np.linalg.lstsq(A, b)
+                M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
                 rep = construct_rep_func(M)
                 rep.__name__ = "g" + str(counter)
                 self.generators.append(GroupMemberRep(g, rep, self))

@@ -56,7 +56,7 @@ def test_cg_examples():
 
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
-    
+
     # [test_cg1 2]
     xs = [immerse(edge, dg0, CellH1)]
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
@@ -99,3 +99,152 @@ def test_cg_examples():
 
     for dof in cg3.generate():
         assert any([np.allclose(val, dof.eval(test_func).flatten()) for val in dof_vals])
+
+
+def test_nd_example():
+    tri = n_sided_polygon(3)
+    edge = tri.edges(get_class=True)[0]
+
+    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+    dofs = DOFGenerator(xs, S1, S2)
+    int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
+
+    xs = [immerse(tri, int_ned, CellHCurl)]
+    tri_dofs = DOFGenerator(xs, S3, S3)
+    vecP3 = VectorPolynomialSpace(P3, P3)
+    ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
+
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
+    phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+    phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+    basis_funcs = [phi_0, phi_1, phi_2]
+
+    for dof in ned.generate():
+        assert [np.allclose(1, dof.eval(basis_func).flatten()) for basis_func in basis_funcs].count(True) == 1
+        assert [np.allclose(0, dof.eval(basis_func).flatten()) for basis_func in basis_funcs].count(True) == 2
+
+
+def test_rt_example():
+    tri = n_sided_polygon(3)
+    edge = tri.edges(get_class=True)[0]
+
+    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+    dofs = DOFGenerator(xs, S1, S2)
+    int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    phi_2 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6)*x,
+                                      -1/3 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+    phi_0 = MyTestFunction(sp.Matrix([(-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                      1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+    phi_1 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                      1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+
+    xs = [immerse(tri, int_rt, CellHDiv)]
+    tri_dofs = DOFGenerator(xs, S3, S3)
+    vecP3 = VectorPolynomialSpace(P3, P3)
+    rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
+
+    basis_funcs = [phi_0, phi_1, phi_2]
+
+    for dof in rt.generate():
+        assert [np.allclose(1, dof.eval(basis_func).flatten()) for basis_func in basis_funcs].count(True) == 1
+        assert [np.allclose(0, dof.eval(basis_func).flatten()) for basis_func in basis_funcs].count(True) == 2
+
+
+def test_hermite_example():
+    tri = n_sided_polygon(3)
+    vert = tri.vertices(get_class=True)[0]
+
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+
+    v_xs = [immerse(tri, dg0, CellH1)]
+    v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+
+    v_derv_xs = [immerse(tri, dg0, CellH2)]
+    v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
+
+    v_derv2_xs = [immerse(tri, dg0, CellH3)]
+    v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
+
+    i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    her = ElementTriple(tri, (P3, CellH2, C0),
+                        [v_dofs, v_derv_dofs, v_derv2_dofs, i_dofs])
+
+    # TODO improve this test
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    phi_0 = MyTestFunction(x**2 + 3*y**3 + 4*x*y, symbols=(x, y))
+    ls = her.generate()
+    print("num dofs ", her.num_dofs())
+    for dof in ls:
+        print(dof)
+        print("dof eval", dof.eval(phi_0))
+
+
+def test_square_cg():
+    square = n_sided_polygon(4)
+
+    vert = square.d_entities(0, get_class=True)[0]
+    edge = square.d_entities(1, get_class=True)[0]
+
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(vert, (P0, CellL2, C0),
+                        DOFGenerator(xs, S1, S1))
+
+    xs = [DOF(DeltaPairing(), PointKernel((0,)))]
+    dg0_int = ElementTriple(edge, (P0, CellL2, C0),
+                            DOFGenerator(xs, S1, S1))
+
+    v_xs = [immerse(square, dg0, CellH1)]
+    v_dofs = DOFGenerator(v_xs, C4, S1)
+
+    e_xs = [immerse(square, dg0_int, CellH1)]
+    e_dofs = DOFGenerator(e_xs, D4, S1)
+
+    i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    cg3 = ElementTriple(square, (P3, CellH1, C0),
+                        [v_dofs, e_dofs, i_dofs])
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    test_func = MyTestFunction(x**2 + y**2, symbols=(x, y))
+
+    dof_vals = np.array([0, 1, 2])
+    for dof in cg3.generate():
+        assert any([np.allclose(val, dof.eval(test_func).flatten()) for val in dof_vals])
+
+
+def test_rt_second_order():
+    tri = n_sided_polygon(3)
+    edge = tri.d_entities(1, get_class=True)[0]
+
+    xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: (1/2)*(1 + x)))]
+    dofs = DOFGenerator(xs, S2, S2)
+    int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+
+    xs = [immerse(tri, int_rt2, CellHDiv)]
+    tri_dofs = DOFGenerator(xs, S3, S3)
+
+    i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
+            lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    vecP3 = VectorPolynomialSpace(P3, P3)
+    rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
+
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    phi = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
+                                    1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
+
+    for dof in rt2.generate():
+        dof.eval(phi)
