@@ -13,7 +13,7 @@ lint:
 	@python -m flake8 $(FLAKE8_FORMAT) test
 
 test_examples:
-	@echo "    Running test of examples"
+	@echo "    Running examples"
 	@python -m pytest test/test_2d_examples.py
 
 tests:
