@@ -33,8 +33,6 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           python -m pip install networkx
       - name: Run tests
-      # fail on warnings
         run: |
           . /home/firedrake/firedrake/bin/activate
-          cd test
-          python -m pytest
+          make tests
