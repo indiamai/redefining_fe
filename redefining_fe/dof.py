@@ -50,7 +50,7 @@ class L2InnerProd(Pairing):
             def kernel_dot(x):
                 return np.dot(kernel(*x), v(*x))
             return quadrature.integrate(kernel_dot)
-        elif self.entity.dim() == 2:
+        elif self.entity.dim() == 2 and len(self.entity.vertices(return_coords=True)[0]) == 2:
             # ("evaluating at origin")
             return np.dot(kernel(0, 0), v(0, 0))
         else:

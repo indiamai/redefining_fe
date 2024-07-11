@@ -14,7 +14,8 @@ lint:
 
 test_examples:
 	@echo "    Running examples"
-	@python -m pytest test/test_2d_examples.py
+	@python -m pytest test/test_2d_examples_docs.py
+	@python -m pytest test/test_3d_examples_docs.py
 
 tests:
 	@echo "    Running all tests"
