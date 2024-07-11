@@ -8,7 +8,7 @@ import sympy as sp
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
-
+from redefining_fe.utils import sympy_to_numpy, fold_reduce
 
 class Arrow3D(FancyArrowPatch):
     def __init__(self, xs, ys, zs, *args, **kwargs):
@@ -38,18 +38,18 @@ def topo_pos(G):
     return pos_dict
 
 
-def fold_reduce(func_list, *prev):
-    """
-    Right to left function comprehension
+# def fold_reduce(func_list, *prev):
+#     """
+#     Right to left function comprehension
 
-    :param: func_list: list of functions
-    :param: prev: starting value(s)
-    """
-    for func in reversed(func_list):
-        # print(prev)
-        prev = func(*prev)
-    # print(prev)
-    return prev
+#     :param: func_list: list of functions
+#     :param: prev: starting value(s)
+#     """
+#     for func in reversed(func_list):
+#         # print(prev)
+#         prev = func(*prev)
+#     # print(prev)
+#     return prev
 
 
 def normalise(v):
@@ -578,18 +578,13 @@ class Edge():
         syms = ["x", "y", "z"]
         if hasattr(self.attachment, '__iter__'):
             res = []
-            evaluated = True
             for attach_comp in self.attachment:
-                subsituted = attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))})
-                evaluated = subsituted.atoms(sp.Symbol) == set() and evaluated
-                res.append(subsituted)
-            if evaluated:
-                return tuple(np.array(res).astype(np.float64))
-            else:
-                return tuple(res)
-            # if all(res_elem.atoms(sp.Symbol) == set() for res_elem in res):
-            #     return self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})
-        return np.array(self.attachment.subs({syms[i]: oriented[i] for i in range(len(oriented))})).astype(np.float64)
+                if len(attach_comp.atoms(sp.Symbol)) == len(oriented):
+                    res.append(sympy_to_numpy(attach_comp, syms, oriented))
+                else:
+                    res.append(attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))}))
+            return tuple(res)
+        return sympy_to_numpy(self.attachment, syms, oriented)
 
     def lower_dim(self):
         return self.point.dim()

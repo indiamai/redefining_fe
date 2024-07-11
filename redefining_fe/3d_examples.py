@@ -1,6 +1,7 @@
 # Examples of Elements in 3 dimensions
 from firedrake import *
 import numpy as np
+import sympy as sp
 from redefining_fe import *
 
 vertices = []
@@ -57,8 +58,8 @@ dg1 = ElementTriple(tetra, (P1, CellL2, "C0"),
                     DOFGenerator(xs, A4, S1))
 ls = dg1.generate()
 # dg1.plot()
-# for dof in ls:
-#     print(dof)
+for dof in ls:
+    print(dof)
 # print("num dofs ", dg1.num_dofs())
 
 
@@ -91,9 +92,14 @@ cg3 = ElementTriple(tetra, (P1, CellH1, "C0"),
 
 ls = cg3.generate()
 # cg3.plot()
-# for dof in ls:
-#     print(dof)
-# print("num dofs ", cg3.num_dofs())
+x = sp.Symbol("x")
+y = sp.Symbol("y")
+z = sp.Symbol("z")
+test_func = MyTestFunction(sp.Matrix([10*x, 3*y/np.sqrt(3), z*4]), symbols=(x, y, z))
+for dof in ls:
+    print(dof)
+    print(dof.eval(test_func))
+print("num dofs ", cg3.num_dofs())
 
 
 print("Raviart Thomas")
@@ -109,8 +115,8 @@ rt1 = ElementTriple(tetra, (P1, CellHDiv, "C0"),
                     [face])
 ls = rt1.generate()
 # rt1.plot()
-# for dof in ls:
-#     print(dof)
+for dof in ls:
+    print(dof)
 # print("num dofs ", rt1.num_dofs())
 
 print("Nedelec")
@@ -125,7 +131,7 @@ edge = DOFGenerator(im_xs, A4, Z4)
 ned = ElementTriple(tetra, (P1, CellHCurl, "C0"),
                     [edge])
 ls = ned.generate()
-ned.plot()
+# ned.plot()
 for dof in ls:
     print(dof)
 print("num dofs ", ned.num_dofs())

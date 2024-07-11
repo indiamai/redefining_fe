@@ -66,7 +66,10 @@ class GroupRepresentation(object):
         if cell is not None:
             self.cell = cell
             vertices = cell.vertices(return_coords=True)
-            A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+            try:
+                A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+            except ValueError:
+                breakpoint()
             b = np.array(vertices, dtype=float)
 
             M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)

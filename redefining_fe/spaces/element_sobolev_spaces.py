@@ -4,6 +4,7 @@ import sympy as sp
 from ufl.sobolevspace import SobolevSpace
 from redefining_fe.spaces.polynomial_spaces import PolynomialSpace
 import matplotlib.pyplot as plt
+from redefining_fe.utils import sympy_to_numpy
 
 
 class ElementSpaceTriple():
@@ -136,8 +137,8 @@ class CellH2(ElementSobolevSpace):
             X = sp.DeferredVector('x')
             dX = tuple([X[i] for i in range(self.domain.dim())])
             compute_v = v(*dX, sym=True)
-            grad_v = [sp.diff(compute_v, dX[i]) for i in range(len(dX))]
-            eval_grad_v = [comp.evalf(subs=dict(zip(dX, v.attach_func(*x)))) for comp in grad_v]
+            grad_v = sp.Matrix([sp.diff(compute_v, dX[i]) for i in range(len(dX))])
+            eval_grad_v = sympy_to_numpy(grad_v, dX, v.attach_func(*x))
             result = np.dot(tangent, np.array(eval_grad_v))
 
             if not hasattr(result, "__iter__"):
@@ -167,10 +168,9 @@ class CellH3(ElementSobolevSpace):
             X = sp.DeferredVector('x')
 
             dX = tuple([X[i] for i in range(self.domain.dim())])
-            hess_v = [[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))]
-            print(hess_v)
-            eval_grad_v = [[hess_v[i][j].evalf(subs=dict(zip(dX, v.attach_func(*x)))) for i in range(len(dX))] for j in range(len(dX))]
-            result = np.dot(np.matmul(tangent0, np.array(eval_grad_v)), tangent1)
+            hess_v = sp.Matrix([[sp.diff(v(*dX, sym=True), dX[i], dX[j]) for i in range(len(dX))] for j in range(len(dX))])
+            eval_hess_v = sympy_to_numpy(hess_v, dX, v.attach_func(*x))
+            result = np.dot(np.matmul(tangent0, np.array(eval_hess_v)), tangent1)
             if not hasattr(result, "__iter__"):
                 return (result,)
             return tuple(result)
