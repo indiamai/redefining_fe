@@ -170,7 +170,7 @@ class MyTestFunction():
         if self.attach_func and not sym:
             return self.eq(*self.attach_func(*x))
         else:
-            #TODO remove this as will already be symbolic
+            # TODO remove this as will already be symbolic
             return self.eq(*x)
 
     def attach(self, attachment):
