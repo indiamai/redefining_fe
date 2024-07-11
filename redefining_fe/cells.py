@@ -95,7 +95,7 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    breakpoint()
+    # breakpoint()
     return (xy.T * res)
 
 
@@ -251,7 +251,7 @@ class Point():
                 res = np.linalg.solve(coords_2d, faces[i])
 
                 res_fn = construct_attach_3d(res)
-                breakpoint()
+                # breakpoint()
                 assert np.allclose(np.array(res_fn.subs({"x": coords_2d[0][1], "y": coords_2d[0][2]})).astype(np.float64), faces[i][0])
                 assert np.allclose(np.array(res_fn.subs({"x": coords_2d[1][1], "y": coords_2d[1][2]})).astype(np.float64), faces[i][1])
                 assert np.allclose(np.array(res_fn.subs({"x": coords_2d[2][1], "y": coords_2d[2][2]})).astype(np.float64), faces[i][2])

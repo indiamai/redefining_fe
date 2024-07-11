@@ -3,15 +3,7 @@ from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 import sympy as sp
-
-
-def fold_reduce(func_list, x):
-    """ duplicated from cells.py """
-    """ nested function composition helper function, right to left """
-    prev = x
-    for func in reversed(func_list):
-        prev = func(prev)
-    return prev
+from redefining_fe.utils import fold_reduce_group as fold_reduce
 
 
 def construct_rep_func(M):
