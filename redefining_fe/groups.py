@@ -3,15 +3,7 @@ from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 import sympy as sp
-
-
-def fold_reduce(func_list, x):
-    """ duplicated from cells.py """
-    """ nested function composition helper function, right to left """
-    prev = x
-    for func in reversed(func_list):
-        prev = func(prev)
-    return prev
+from redefining_fe.utils import fold_reduce_group as fold_reduce
 
 
 def construct_rep_func(M):
@@ -74,10 +66,13 @@ class GroupRepresentation(object):
         if cell is not None:
             self.cell = cell
             vertices = cell.vertices(return_coords=True)
-            A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+            try:
+                A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+            except ValueError:
+                breakpoint()
             b = np.array(vertices, dtype=float)
 
-            M, _, _, _ = np.linalg.lstsq(A, b)
+            M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
             self.identity = GroupMemberRep(base_group.identity, construct_rep_func(M), self)
 
             counter = 0
@@ -90,7 +85,7 @@ class GroupRepresentation(object):
                 A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
                 b = np.array(reordered, dtype=float)
 
-                M, _, _, _ = np.linalg.lstsq(A, b)
+                M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
                 rep = construct_rep_func(M)
                 rep.__name__ = "g" + str(counter)
                 self.generators.append(GroupMemberRep(g, rep, self))

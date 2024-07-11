@@ -46,8 +46,11 @@ class L2InnerProd(Pairing):
         print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
-            return quadrature.integrate(lambda *x: np.dot(kernel(*x), v(*x)))
-        elif self.entity.dim() == 2:
+
+            def kernel_dot(x):
+                return np.dot(kernel(*x), v(*x))
+            return quadrature.integrate(kernel_dot)
+        elif self.entity.dim() == 2 and len(self.entity.vertices(return_coords=True)[0]) == 2:
             # ("evaluating at origin")
             return np.dot(kernel(0, 0), v(0, 0))
         else:
@@ -155,19 +158,19 @@ class MyTestFunction():
     def __call__(self, *x, sym=False):
         if self.symbols:
             if self.attach_func and not sym:
-                # if len(x) > 0:
-                #     print("symbolic")
-                #     print(self.attach_func(*tuple([self.symbols[i] for i in range(len(x))])))
                 res = self.eq.subs({symb: val for (symb, val) in zip(self.symbols, self.attach_func(*x))})
             else:
                 res = self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
             if res.free_symbols == set():
+                array = np.array(res).astype(np.float64)
+                print(array.shape)
                 return np.array(res).astype(np.float64)
             else:
                 return res
         if self.attach_func and not sym:
             return self.eq(*self.attach_func(*x))
         else:
+            # TODO remove this as will already be symbolic
             return self.eq(*x)
 
     def attach(self, attachment):
