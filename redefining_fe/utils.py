@@ -1,15 +1,6 @@
 import numpy as np
 
 
-# TODO make these the same function
-def fold_reduce_group(func_list, x):
-    """ nested function composition helper function, right to left """
-    prev = x
-    for func in reversed(func_list):
-        prev = func(prev)
-    return prev
-
-
 def fold_reduce(func_list, *prev):
     """
     Right to left function comprehension
@@ -23,6 +14,16 @@ def fold_reduce(func_list, *prev):
 
 
 def sympy_to_numpy(array, symbols, values):
+    """
+    Convert a sympy array to a numpy array.
+
+    :param: array: sympy array
+    :param: symbols: array of symbols contained in the sympy exprs
+    :param: values: array of values to replace the symbols with.
+
+    Due to how sympy handles arrays, we need to squeeze if resulting array
+    is greater than 1 dimension to remove extra dimensions
+    """
     substituted = array.subs({symbols[i]: values[i] for i in range(len(values))})
     nparray = np.array(substituted).astype(np.float64)
 
