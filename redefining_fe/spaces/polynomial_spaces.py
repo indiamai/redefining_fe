@@ -1,5 +1,5 @@
-from FIAT.reference_element import POINT, LINE, TRIANGLE, TETRAHEDRON, Point, DefaultLine, DefaultTriangle, DefaultTetrahedron
 from FIAT.polynomial_set import ONPolynomialSet
+from redefining_fe.cells import CellComplexToFiat
 import sympy as sp
 
 
@@ -27,11 +27,7 @@ class PolynomialSpace(object):
 
     def to_ON_polynomial_set(self, cell):
         # how does super/sub degrees work here
-        # Temporary link to incorrect defaults
-        ref_el = {POINT: Point(),
-                  LINE: DefaultLine(),
-                  TRIANGLE: DefaultTriangle(),
-                  TETRAHEDRON: DefaultTetrahedron()}[cell.get_shape()]
+        ref_el = CellComplexToFiat(cell)
         return ONPolynomialSet(ref_el, self.subdegree)
 
     def __repr__(self):

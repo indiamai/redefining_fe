@@ -9,6 +9,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
+from FIAT.reference_element import SymmetricSimplex
 
 
 class Arrow3D(FancyArrowPatch):
@@ -362,8 +363,6 @@ class Point():
         if get_class:
             return [self.G.nodes.data("point_class")[i]
                     for i in levels[self.graph_dim() - d]]
-        # if self.graph_dim() - d == 0 or self.graph_dim() - d > len(levels):
-        #     raise ValueError("{0} graph dim {1} d {2}".format(self.graph_dim(), d, levels))
         return levels[self.graph_dim() - d]
 
     def get_node(self, node):
@@ -604,3 +603,21 @@ class Edge():
 
     def __repr__(self):
         return str(self.point)
+
+
+class CellComplexToFiat(SymmetricSimplex):
+    """
+    Convert cell complex to fiat
+
+    :param: cell: a redefining_fe cell complex
+
+    Currently assumes simplex.
+    """
+
+    def __init__(self, cell):
+        self.fe_cell = cell
+
+        verts = cell.vertices(return_coords=True)
+        topology = cell.get_topology()
+        shape = cell.get_shape()
+        super(CellComplexToFiat, self).__init__(shape, verts, topology)
