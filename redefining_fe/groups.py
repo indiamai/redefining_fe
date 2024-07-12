@@ -96,7 +96,9 @@ class GroupRepresentation(object):
             self._members = [self.identity]
 
             temp_group_elems = self.base_group._elements
+            print(self.base_group)
             print(self.base_group.identity)
+            print(self.base_group._elements)
             print(temp_group_elems)
             temp_group_elems.remove(self.base_group.identity)
             print(temp_group_elems)
@@ -189,6 +191,9 @@ class GroupRepresentation(object):
             raise ValueError("Invalid Quotient - no group formed")
 
         return GroupRepresentation(PermutationGroup(remaining_perms))
+    
+    def __repr__(self):
+        return "group"
 
 # Function Representation of the coordinate transforms that make up the groups.
 
