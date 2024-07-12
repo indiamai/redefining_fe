@@ -96,7 +96,10 @@ class GroupRepresentation(object):
             self._members = [self.identity]
 
             temp_group_elems = self.base_group._elements
+            print(self.base_group.identity)
+            print(temp_group_elems)
             temp_group_elems.remove(self.base_group.identity)
+            print(temp_group_elems)
             remaining_members = self.compute_reps(self.base_group.identity,
                                                   None, temp_group_elems)
             assert (len(remaining_members) == 0)

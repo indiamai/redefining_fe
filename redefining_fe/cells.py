@@ -213,10 +213,12 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
-
+        print(group)
         self.group = group
         if not group:
+            print("creating group")
             self.group = self.compute_cell_group()
+            print(self.group)
 
         self.group = self.group.add_cell(self)
 
