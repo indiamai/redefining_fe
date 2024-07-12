@@ -40,20 +40,6 @@ def topo_pos(G):
     return pos_dict
 
 
-# def fold_reduce(func_list, *prev):
-#     """
-#     Right to left function comprehension
-
-#     :param: func_list: list of functions
-#     :param: prev: starting value(s)
-#     """
-#     for func in reversed(func_list):
-#         # print(prev)
-#         prev = func(*prev)
-#     # print(prev)
-#     return prev
-
-
 def normalise(v):
     norm = np.linalg.norm(v)
     return v / norm
@@ -74,8 +60,8 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     ax.add_artist(a)
 
 
-def construct_attach_2d_old(a, b, c, d):
-    return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
+# def construct_attach_2d_old(a, b, c, d):
+#     return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
 
 
 def construct_attach_2d(a, b, c, d):
@@ -97,7 +83,6 @@ def construct_attach_3d(res):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     xy = sp.Matrix([1, x, y])
-    # breakpoint()
     return (xy.T * res)
 
 

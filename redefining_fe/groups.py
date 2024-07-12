@@ -12,11 +12,8 @@ def construct_rep_func(M):
             x_ones = sp.r_[sp.array(x), sp.ones(1)]
             sum = sp.matmul(x_ones, M)
         else:
-            try:
-                x_ones = np.r_[np.array(x), np.ones(1)]
-                sum = np.matmul(x_ones, M)
-            except ValueError:
-                breakpoint()
+            x_ones = np.r_[np.array(x), np.ones(1)]
+            sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
         return tuple(sum)
