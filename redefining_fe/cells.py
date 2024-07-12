@@ -320,9 +320,21 @@ class Point():
 
     def get_topology(self):
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
-        print(structure)
-        # topo_dict = {0: {}}
-        # for i in range(len(structure) - 1, 0, -1):
+        structure.reverse()
+
+        min_ids = [min(dimension) for dimension in structure]
+        self.topology = {}
+        for i in range(len(structure)):
+            dimension = structure[i]
+            self.topology[i] = {}
+            for node in dimension:
+                neighbours = list(self.G.neighbors(node))
+                if len(neighbours) > 0:
+                    renumbered_neighbours = tuple([neighbour - min_ids[i-1] for neighbour in neighbours])
+                    self.topology[i][node - min_ids[i]] = renumbered_neighbours
+                else:
+                    self.topology[i][node - min_ids[i]] = (node - min_ids[i], )
+        return self.topology
 
     def graph_dim(self):
         if self.oriented:
