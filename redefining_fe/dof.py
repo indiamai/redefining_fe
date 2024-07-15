@@ -43,7 +43,7 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # evaluates integral on generic edge only
-        print("evaluating", kernel, v, "on", self.entity)
+        # print("evaluating", kernel, v, "on", self.entity)
         if self.entity.dim() == 1:
             quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
 
@@ -122,9 +122,9 @@ class DOF():
                 return self.pairing(self.kernel, attached_fn)
 
             return self.pairing(self.kernel,
-                                self.target_space.pullback(attached_fn,
-                                                           self.trace_entity,
-                                                           self.g))
+                                self.target_space(attached_fn,
+                                                  self.trace_entity,
+                                                  self.g))
         return self.pairing(self.kernel, fn)
 
     def add_context(self, cell, space):
@@ -166,8 +166,7 @@ class MyTestFunction():
                 res = self.eq.subs({symb: val for (symb, val) in zip(self.symbols, x)})
             if res.free_symbols == set():
                 array = np.array(res).astype(np.float64)
-                print(array.shape)
-                return np.array(res).astype(np.float64)
+                return array
             else:
                 return res
         if self.attach_func and not sym:

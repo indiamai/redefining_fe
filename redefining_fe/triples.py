@@ -1,6 +1,7 @@
 from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
+from redefining_fe.traces import Trace
 import matplotlib.pyplot as plt
 import inspect
 
@@ -84,7 +85,10 @@ class ElementTriple():
                     coord = center
                 if len(coord) == 1:
                     coord = (coord[0], 0)
-                dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
+                if isinstance(dof.target_space, Trace):
+                    dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
+                else:
+                    ax.scatter(*coord, color=color)
 
             plt.show()
         elif self.cell.dimension == 3:
@@ -97,9 +101,13 @@ class ElementTriple():
                     center = [0, 0, 0]
                 if isinstance(dof.pairing, DeltaPairing):
                     coord = dof.eval(identity, pullback=False)
-                    dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
+                    if isinstance(dof.target_space, Trace):
+                        dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
+                    else:
+                        ax.scatter(*coord, color=color)
                 elif isinstance(dof.pairing, L2InnerProd):
                     dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
+
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")

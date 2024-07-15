@@ -78,7 +78,7 @@ def construct_cg1():
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
     # [test_cg1 2]
-    xs = [immerse(edge, dg0, CellH1)]
+    xs = [immerse(edge, dg0, TrH1)]
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
                         DOFGenerator(xs, S2, S1))
     # [test_cg1 1]
@@ -99,13 +99,13 @@ def construct_cg3():
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
-    v_xs = [immerse(tri, dg0, CellH1)]
+    v_xs = [immerse(tri, dg0, TrH1)]
     v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
 
-    e_xs = [immerse(tri, dg0_int, CellH1)]
+    e_xs = [immerse(tri, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, S3, S1)
 
     i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
@@ -157,7 +157,7 @@ def test_nd_example():
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
-    xs = [immerse(tri, int_ned, CellHCurl)]
+    xs = [immerse(tri, int_ned, TrHCurl)]
     tri_dofs = DOFGenerator(xs, S3, S3)
     vecP3 = VectorPolynomialSpace(P3, P3)
     ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
@@ -192,7 +192,7 @@ def test_rt_example():
     phi_1 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
                                       1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
 
-    xs = [immerse(tri, int_rt, CellHDiv)]
+    xs = [immerse(tri, int_rt, TrHDiv)]
     tri_dofs = DOFGenerator(xs, S3, S3)
     vecP3 = VectorPolynomialSpace(P3, P3)
     rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
@@ -211,13 +211,13 @@ def test_hermite_example():
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
-    v_xs = [immerse(tri, dg0, CellH1)]
+    v_xs = [immerse(tri, dg0, TrH1)]
     v_dofs = DOFGenerator(v_xs, S3/S2, S1)
 
-    v_derv_xs = [immerse(tri, dg0, CellH2)]
+    v_derv_xs = [immerse(tri, dg0, TrGrad)]
     v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
 
-    v_derv2_xs = [immerse(tri, dg0, CellH3)]
+    v_derv2_xs = [immerse(tri, dg0, TrHess)]
     v_derv2_dofs = DOFGenerator(v_derv2_xs, S3/S2, S1)
 
     i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
@@ -251,10 +251,10 @@ def test_square_cg():
     dg0_int = ElementTriple(edge, (P0, CellL2, C0),
                             DOFGenerator(xs, S1, S1))
 
-    v_xs = [immerse(square, dg0, CellH1)]
+    v_xs = [immerse(square, dg0, TrH1)]
     v_dofs = DOFGenerator(v_xs, C4, S1)
 
-    e_xs = [immerse(square, dg0_int, CellH1)]
+    e_xs = [immerse(square, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, D4, S1)
 
     i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
@@ -279,7 +279,7 @@ def test_rt_second_order():
     dofs = DOFGenerator(xs, S2, S2)
     int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
-    xs = [immerse(tri, int_rt2, CellHDiv)]
+    xs = [immerse(tri, int_rt2, TrHDiv)]
     tri_dofs = DOFGenerator(xs, S3, S3)
 
     i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
