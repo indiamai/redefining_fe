@@ -71,7 +71,7 @@ def test_dg_examples():
 
 def construct_cg1():
     # [test_cg1 0]
-    edge = Point(1, [Point(0), Point(0)], vertex_num=2, group=S2)
+    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
     vert = edge.vertices(get_class=True)[0]
 
     xs = [DOF(DeltaPairing(), PointKernel(()))]

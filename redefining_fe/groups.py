@@ -95,8 +95,10 @@ class GroupRepresentation(object):
             self.generators.reverse()
             self._members = [self.identity]
 
-            temp_group_elems = self.base_group._elements
+            temp_group_elems = self.base_group.elements
+
             temp_group_elems.remove(self.base_group.identity)
+
             remaining_members = self.compute_reps(self.base_group.identity,
                                                   None, temp_group_elems)
             assert (len(remaining_members) == 0)
@@ -175,8 +177,6 @@ class GroupRepresentation(object):
                             for gen in self.base_group.generators]
         other_cyclic_gens = [gen.cyclic_form
                              for gen in other_frac.base_group.generators]
-        # # breakpoint()
-        # print(all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]))
         if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
             raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen for gen in self.base_group.generators
@@ -187,12 +187,13 @@ class GroupRepresentation(object):
 
         return GroupRepresentation(PermutationGroup(remaining_perms))
 
+    def __repr__(self):
+        return "group"
+
 # Function Representation of the coordinate transforms that make up the groups.
 
 
 def e(*x):
-    print(isinstance(x, tuple))
-    print(x)
     return x
 
 
