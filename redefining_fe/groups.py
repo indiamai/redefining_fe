@@ -95,13 +95,10 @@ class GroupRepresentation(object):
             self.generators.reverse()
             self._members = [self.identity]
 
-            temp_group_elems = self.base_group._elements
-            print(self.base_group)
-            print(self.base_group.identity)
-            print(self.base_group._elements)
-            print(temp_group_elems)
+            temp_group_elems = self.base_group.elements
+
             temp_group_elems.remove(self.base_group.identity)
-            print(temp_group_elems)
+
             remaining_members = self.compute_reps(self.base_group.identity,
                                                   None, temp_group_elems)
             assert (len(remaining_members) == 0)
@@ -109,10 +106,6 @@ class GroupRepresentation(object):
             self.cell = None
 
     def add_cell(self, cell):
-        print("adding cell")
-        print(self.base_group)
-        print(self)
-        print(cell)
         return GroupRepresentation(self.base_group, cell=cell)
 
     def members(self, perm=False):
@@ -184,8 +177,6 @@ class GroupRepresentation(object):
                             for gen in self.base_group.generators]
         other_cyclic_gens = [gen.cyclic_form
                              for gen in other_frac.base_group.generators]
-        # # breakpoint()
-        # print(all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]))
         if not all([c2 in self_cyclic_gens for c2 in other_cyclic_gens]):
             raise ValueError("Invalid Quotient - mismatched cycles")
         remaining_perms = [gen for gen in self.base_group.generators
@@ -195,7 +186,7 @@ class GroupRepresentation(object):
             raise ValueError("Invalid Quotient - no group formed")
 
         return GroupRepresentation(PermutationGroup(remaining_perms))
-    
+
     def __repr__(self):
         return "group"
 
@@ -203,8 +194,6 @@ class GroupRepresentation(object):
 
 
 def e(*x):
-    print(isinstance(x, tuple))
-    print(x)
     return x
 
 

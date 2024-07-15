@@ -213,13 +213,11 @@ class Point():
         self.G = nx.compose_all([self.G]
                                 + [edge.point.graph() for edge in edges])
         self.connections = edges
-        print(group)
+
         self.group = group
         if not group:
-            print("creating group")
             self.group = self.compute_cell_group()
-            print(self.group)
-        print("created group, base", self.group.base_group)
+
         self.group = self.group.add_cell(self)
 
     def compute_attachments(self, n, points, orientations={}):
@@ -288,7 +286,6 @@ class Point():
                         accepted_perms.remove(element)
                         break
 
-        # print(accepted_perms)
         return fe_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
 
     def get_spatial_dimension(self):
