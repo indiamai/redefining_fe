@@ -63,6 +63,8 @@ class L2InnerProd(Pairing):
 class PointKernel():
 
     def __init__(self, x):
+        if not isinstance(x, tuple):
+            x = (x,)
         self.pt = x
 
     def __repr__(self):
@@ -86,11 +88,12 @@ class PolynomialKernel():
 
     def permute(self, g):
         def permuting(*x):
-            return self.fn(*g(*x))
+            return self.fn(*g(x))
         return PolynomialKernel(permuting)
 
     def __call__(self, *args):
-        return self.fn(*args)
+        res = self.fn(*args)
+        return res
 
 
 class DOF():

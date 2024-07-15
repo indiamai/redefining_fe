@@ -3,17 +3,16 @@ from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 import sympy as sp
-from redefining_fe.utils import fold_reduce_group as fold_reduce
+from redefining_fe.utils import fold_reduce
 
 
 def construct_rep_func(M):
     def rep(*x):
         if isinstance(x, sp.Expr):
-            breakpoint()
-            x_ones = sp.r_[sp.array(*x), sp.ones(1)]
+            x_ones = sp.r_[sp.array(x), sp.ones(1)]
             sum = sp.matmul(x_ones, M)
         else:
-            x_ones = np.r_[np.array(*x), np.ones(1)]
+            x_ones = np.r_[np.array(x), np.ones(1)]
             sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
@@ -34,8 +33,7 @@ class GroupMemberRep(object):
     def __call__(self, x):
         if isinstance(x, cells.Point):
             return x.orient(self)
-        # breakpoint()
-        return fold_reduce(self.rep, x)
+        return fold_reduce(self.rep, *x)
 
     def permute(self, lst):
         n = len(lst)
