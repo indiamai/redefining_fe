@@ -6,6 +6,9 @@ else
 	FLAKE8_FORMAT=
 endif
 
+doc:
+	@(cd docs/ && make html)
+
 lint:
 	@echo "    Linting redefining_fe codebase"
 	@python -m flake8 $(FLAKE8_FORMAT) redefining_fe

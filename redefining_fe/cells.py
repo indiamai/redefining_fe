@@ -9,7 +9,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import SymmetricSimplex
+from FIAT.reference_element import Simplex
 
 
 class Arrow3D(FancyArrowPatch):
@@ -604,7 +604,7 @@ class Edge():
         return str(self.point)
 
 
-class CellComplexToFiat(SymmetricSimplex):
+class CellComplexToFiat(Simplex):
     """
     Convert cell complex to fiat
 
