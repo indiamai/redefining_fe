@@ -24,3 +24,4 @@ tests:
 	@echo "    Running all tests"
 	@python -m pytest -rx -rP test
 
+prepush: lint tests doc
