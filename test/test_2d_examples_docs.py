@@ -79,7 +79,6 @@ def construct_cg1():
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
-    # [test_cg1 2]
     xs = [immerse(edge, dg0, TrH1)]
     for x in xs:
         print(type(x))

@@ -3,6 +3,35 @@ import sympy as sp
 import numpy as np
 
 
+def make_tetrahedron():
+    # [make_tet 0]
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[0], vertices[1]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[2]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[3], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[3]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[3]]))
+
+    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
+    face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
+    face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
+    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
+
+    tet = Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
+    # [make_tet 1]
+    return tet
+
+
 def test_dg1():
     tetra = make_tetrahedron()
 
@@ -22,11 +51,14 @@ def test_dg1():
 
 
 def test_tet_cg3():
-    tetra = make_tetrahedron()
-    vert = tetra.vertices(get_class=True)[0]
-    edge = tetra.edges(get_class=True)[0]
-    face = tetra.d_entities(2, get_class=True)[0]
+    tet = make_tetrahedron()
+    # [make_tet 2]
+    vert = tet.vertices(get_class=True)[0]
+    edge = tet.edges(get_class=True)[0]
+    face = tet.d_entities(2, get_class=True)[0]
+    # [make_tet 3]
 
+    # [test_tet_cg3 0]
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
                         DOFGenerator(xs, S1, S1))
@@ -39,17 +71,18 @@ def test_tet_cg3():
     dg0_face = ElementTriple(face, (P0, CellL2, "C0"),
                              DOFGenerator(xs, S1, S1))
 
-    v_xs = [immerse(tetra, dg0, TrH1)]
+    v_xs = [immerse(tet, dg0, TrH1)]
     cgverts = DOFGenerator(v_xs, Z4, S1)
 
-    e_xs = [immerse(tetra, dg1_int, TrH1)]
+    e_xs = [immerse(tet, dg1_int, TrH1)]
     cgedges = DOFGenerator(e_xs, A4, S1)
 
-    f_xs = [immerse(tetra, dg0_face, TrH1)]
+    f_xs = [immerse(tet, dg0_face, TrH1)]
     cgfaces = DOFGenerator(f_xs, S4, S1)
 
-    cg3 = ElementTriple(tetra, (P1, CellH1, "C0"),
+    cg3 = ElementTriple(tet, (P1, CellH1, "C0"),
                         [cgverts, cgedges, cgfaces])
+    # [test_tet_cg3 1]
 
     x = sp.Symbol("x")
     y = sp.Symbol("y")
@@ -64,6 +97,7 @@ def test_tet_rt():
     tetra = make_tetrahedron()
     face = tetra.d_entities(2, get_class=True)[0]
 
+    # [test_tet_rt 0]
     xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: 1))]
     dofs = DOFGenerator(xs, S1, S2)
     face_vec = ElementTriple(face, (P1, CellHDiv, "C0"), dofs)
@@ -74,6 +108,8 @@ def test_tet_rt():
 
     rt1 = ElementTriple(tetra, (P1, CellHDiv, "C0"),
                         [face])
+    # [test_tet_rt 1]
+
     ls = rt1.generate()
     # TODO make this a proper test
     for dof in ls:
@@ -84,6 +120,7 @@ def test_tet_ned():
     tetra = make_tetrahedron()
     edge = tetra.edges(get_class=True)[0]
 
+    # [test_tet_ned 0]
     xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: 1))]
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, "C0"), dofs)
@@ -94,6 +131,8 @@ def test_tet_ned():
 
     ned = ElementTriple(tetra, (P1, CellHCurl, "C0"),
                         [edge])
+    # [test_tet_ned 1]
+
     ls = ned.generate()
     # TODO make this a proper test
     for dof in ls:

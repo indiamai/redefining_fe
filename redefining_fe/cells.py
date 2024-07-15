@@ -394,6 +394,14 @@ class Point():
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=False, return_coords=False):
+        """
+        Get vertices (0 dimensional entities) of the cell complex.
+
+        :param: get_class: (Optional) Returns Point classes
+        :param: return_coords: (Optional) returns coordinates of vertices
+
+        Default return value is list of id numbers of the vertices in the cell complex graph.
+        """
         if self.oriented:
             verts = self.oriented.permute(self.d_entities(0, get_class))
         else:
