@@ -11,6 +11,10 @@ class ElementSobolevSpace(object):
         self.domain = domain
         self.parents = parents
 
+    def __lt__(self, other):
+        """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
+        return any([isinstance(other, p) for p in self.parents])
+
 
 class CellH1(ElementSobolevSpace):
 
