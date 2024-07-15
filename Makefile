@@ -20,5 +20,4 @@ test_examples:
 tests:
 	@echo "    Running all tests"
 	@python -m pytest -rx -rP test
-	@pip list
 

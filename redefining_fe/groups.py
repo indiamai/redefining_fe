@@ -109,6 +109,10 @@ class GroupRepresentation(object):
             self.cell = None
 
     def add_cell(self, cell):
+        print("adding cell")
+        print(self.base_group)
+        print(self)
+        print(cell)
         return GroupRepresentation(self.base_group, cell=cell)
 
     def members(self, perm=False):

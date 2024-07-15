@@ -32,6 +32,10 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           python -m pip install networkx
+      - name: Pip list
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          pip list
       - name: Run tests
         run: |
           . /home/firedrake/firedrake/bin/activate

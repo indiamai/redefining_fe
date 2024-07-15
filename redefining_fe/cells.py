@@ -219,7 +219,7 @@ class Point():
             print("creating group")
             self.group = self.compute_cell_group()
             print(self.group)
-
+        print("created group, base", self.group.base_group)
         self.group = self.group.add_cell(self)
 
     def compute_attachments(self, n, points, orientations={}):
