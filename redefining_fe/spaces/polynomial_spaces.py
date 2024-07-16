@@ -47,6 +47,32 @@ class PolynomialSpace(object):
     def __add__(self, x):
         return ConstructedPolynomialSpace([1, 1], [self, x])
 
+    def restrict(self, min_degree, max_degree):
+        return RestrictedPolynomialSpace(self, min_degree, max_degree)
+
+
+class RestrictedPolynomialSpace(PolynomialSpace):
+
+    def __new__(cls, base_space, min_degree, max_degree):
+        if min_degree == 0 and max_degree >= base_space.superdegree:
+            # if the restriction is trivial return the original space
+            return base_space
+        else:
+            return super(RestrictedPolynomialSpace, cls).__new__(cls)
+
+    def __init__(self, base_space, min_degree, max_degree):
+        self.base_space = base_space
+        self.min_degree = min_degree
+        self.max_degree = max_degree
+
+        if min_degree != 0:
+            super(RestrictedPolynomialSpace, self).__init__(-1, max_degree)
+        else:
+            super(RestrictedPolynomialSpace, self).__init__(base_space.subdegree, base_space.superdegree)
+
+    def __repr__(self):
+        return str(self.base_space) + "(min " + str(self.min_degree) + " max " + str(self.max_degree) + ")"
+
 
 class ConstructedPolynomialSpace(PolynomialSpace):
     """
