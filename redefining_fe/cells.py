@@ -375,6 +375,14 @@ class Point():
         plt.show()
 
     def d_entities(self, d, get_class=False):
+        """
+        Get all the d dimensional entities of the cell complex.
+
+        :param: d: Dimension of required entities
+        :param: get_class: (Optional) Returns Point classes
+
+        Default return value is list of id numbers of the entities in the cell complex graph.
+        """
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
         if get_class:
@@ -414,6 +422,13 @@ class Point():
         return verts
 
     def edges(self, get_class=False):
+        """
+        Get edges (1 dimensional entities) of the cell complex.
+
+        :param: get_class: (Optional) Returns Point classes
+
+        Default return value is list of id numbers of the 1 dimensional entities in the cell complex graph.
+        """
         if self.oriented:
             return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
