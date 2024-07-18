@@ -29,4 +29,8 @@ def sympy_to_numpy(array, symbols, values):
 
     if len(nparray.shape) > 1:
         return nparray.squeeze()
+
+    if len(nparray.shape) == 0:
+        return nparray.item()
+
     return nparray
