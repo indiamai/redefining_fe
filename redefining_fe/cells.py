@@ -516,7 +516,7 @@ class Point():
         if len(attachments) == 0:
             raise ValueError("No paths from node {} to node {}"
                              .format(source, dst))
-        # print(attachments)
+
         # check all attachments resolve to the same function
         if len(attachments) > 1:
             dst_dim = self.dim_of_node(dst)

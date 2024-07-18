@@ -34,3 +34,14 @@ def sympy_to_numpy(array, symbols, values):
         return nparray.item()
 
     return nparray
+
+
+def tabulate_sympy(expr, pts):
+    res = []
+    syms = ["x", "y", "z"]
+    for pt in pts:
+        if not hasattr(pt, "__iter__"):
+            pt = (pt,)
+        res.append(expr.subs({syms[i]: pt[i] for i in range(len(pt))}))
+
+    return np.array(res).astype(np.float64)
