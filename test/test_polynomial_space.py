@@ -16,7 +16,7 @@ def test_instantiation():
     assert isinstance(on_set, ONPolynomialSet)
 
 
-def test_unscaled_construction():    
+def test_unscaled_construction():
     cell = n_sided_polygon(3)
     composite = P0 + P1
     on_set = composite.to_ON_polynomial_set(cell)
@@ -41,7 +41,7 @@ def test_restriction():
     print(P2set.degree)
     print(restricted_set.degree)
 
-    print(construct_new_coeffs(ref_el, P2set, restricted_set))
+    print(polynomial_set.construct_new_coeffs(ref_el, P2set, restricted_set))
     assert isinstance(composite, ConstructedPolynomialSpace)
     res_on_set = restricted.to_ON_polynomial_set(cell)
     P3_on_set = P3.to_ON_polynomial_set(cell)
@@ -67,7 +67,7 @@ def test_embedding():
     print(B.degree)
 
     new_coeffs = polynomial_set.construct_new_coeffs(ref_el, A, B)
-    print(len(new_coeffs))
+    print(new_coeffs)
 
 
 def test_compare_pk_pkp1():
@@ -92,7 +92,7 @@ def test_compare_pk_pkp1():
 
     def func(x):
         return x[0]
-    
+
     Pkp1 = polynomial_set.ONPolynomialSet(ref_el, k + 1)
     PkH = Pkp1.take(list(range(dimPkm1, dimPk)))
 
