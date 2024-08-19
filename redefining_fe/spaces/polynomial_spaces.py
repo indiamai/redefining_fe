@@ -5,6 +5,7 @@ from itertools import chain
 from redefining_fe.cells import CellComplexToFiat
 from redefining_fe.utils import tabulate_sympy
 import sympy as sp
+import numpy as np
 
 
 class PolynomialSpace(object):
@@ -33,7 +34,8 @@ class PolynomialSpace(object):
         # how does super/sub degrees work here
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = CellComplexToFiat(ref_el)
-        return ONPolynomialSet(ref_el, self.subdegree)
+        sd = ref_el.get_spatial_dimension()
+        return ONPolynomialSet(ref_el, self.subdegree, (sd,))
 
     def __repr__(self):
         if self.complete():
@@ -95,10 +97,6 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         return restricted_ON
 
 
-
-         
-
-
 class ConstructedPolynomialSpace(PolynomialSpace):
     """
     Sub degree is inherited from the largest of the component spaces,
@@ -123,7 +121,10 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         sd = ref_el.get_spatial_dimension()
 
         if all([w == 1 for w in self.weights]):
-            return polynomial_set.polynomial_set_union_normalized(space_poly_sets)
+            combined_sets = space_poly_sets[0]
+            for i in range(1, len(space_poly_sets)):
+                combined_sets = polynomial_set.polynomial_set_union_normalized(combined_sets, space_poly_sets[i])
+            return combined_sets
         # otherwise have to work on this through tabulation
 
         k = max([s.superdegree for s in self.spaces])
@@ -131,10 +132,17 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         Qpts, Qwts = Q.get_points(), Q.get_weights()
         for (space, w) in zip(space_poly_sets, self.weights):
             space_at_Qpts = space.tabulate(Qpts)[(0,) * sd]
-            tabulated_expr = tabulate_sympy(w, Qpts).T
-
+            tabulated_expr = tabulate_sympy(w, Qpts)
+            print(space_at_Qpts.shape)
+            print(tabulated_expr.shape)
+            print(space_at_Qpts)
+            print(tabulated_expr)
             scaled_at_Qpts = space_at_Qpts[:, None, :] * tabulated_expr[None, :, :]
             print(scaled_at_Qpts)
+            weighted = np.multiply(scaled_at_Qpts, Qwts)
+            print(weighted)
+            # PkHx_coeffs = np.dot(np.multiply(scaled_at_Qpts, Qwts), Pkp1_at_Qpts.T)
+            # need to know degree of the expresssion
 
         raise NotImplementedError("constructed not implemented yet")
         return super().to_ON_polynomial_set(ref_el)

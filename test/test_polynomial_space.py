@@ -2,7 +2,7 @@ from redefining_fe import *
 import sympy as sp
 from redefining_fe.spaces.polynomial_spaces import PolynomialSpace, RestrictedPolynomialSpace, ConstructedPolynomialSpace
 from FIAT.polynomial_set import ONPolynomialSet
-from FIAT import expansions, polynomial_set, reference_element
+from FIAT import expansions, polynomial_set
 from redefining_fe.cells import CellComplexToFiat
 from itertools import chain
 from FIAT.quadrature_schemes import create_quadrature
@@ -11,15 +11,21 @@ import numpy as np
 
 def test_instantiation():
     cell = n_sided_polygon(3)
-    x = sp.Symbol("x")
-    composite = P0 + x*P0
-    on_set = composite.to_ON_polynomial_set(cell)
 
+    on_set = P2.to_ON_polynomial_set(cell)
     assert isinstance(on_set, ONPolynomialSet)
+
+
+def test_unscaled_construction():    
+    cell = n_sided_polygon(3)
+    composite = P0 + P1
+    on_set = composite.to_ON_polynomial_set(cell)
+    assert isinstance(on_set, polynomial_set.PolynomialSet)
 
 
 def test_restriction():
     cell = n_sided_polygon(3)
+    ref_el = CellComplexToFiat(cell)
     restricted = P3.restrict(2, 3)
 
     # doesn't contain constants
@@ -28,15 +34,40 @@ def test_restriction():
 
     x = sp.Symbol("x")
     composite = P2 + x*restricted
+
+    P2set = P2.to_ON_polynomial_set(cell)
+    restricted_set = (restricted).to_ON_polynomial_set(cell)
+
+    print(P2set.degree)
+    print(restricted_set.degree)
+
+    print(construct_new_coeffs(ref_el, P2set, restricted_set))
     assert isinstance(composite, ConstructedPolynomialSpace)
     res_on_set = restricted.to_ON_polynomial_set(cell)
     P3_on_set = P3.to_ON_polynomial_set(cell)
+    # composite_set = composite.to_ON_polynomial_set(cell)
     assert res_on_set.get_num_members() < P3_on_set.get_num_members()
     print(composite.spaces)
 
     not_restricted = P3.restrict(0, 3)
     assert isinstance(not_restricted, PolynomialSpace)
     assert not isinstance(not_restricted, RestrictedPolynomialSpace)
+
+
+def test_embedding():
+    cell = n_sided_polygon(3)
+    ref_el = CellComplexToFiat(cell)
+    sd = ref_el.get_spatial_dimension()
+
+    A = P2.to_ON_polynomial_set(cell)
+    B = P3.to_ON_polynomial_set(cell)
+    print(sd)
+
+    print(A.degree)
+    print(B.degree)
+
+    new_coeffs = polynomial_set.construct_new_coeffs(ref_el, A, B)
+    print(len(new_coeffs))
 
 
 def test_compare_pk_pkp1():
@@ -74,10 +105,13 @@ def test_compare_pk_pkp1():
     Pkp1_at_Qpts = Pkp1.tabulate(Qpts)[(0,) * sd]
 
     x = Qpts.T
-    print(PkH_at_Qpts.shape)
-    print(x.shape)
-    print(PkH_at_Qpts[:, None, :])
+    print(PkH_at_Qpts)
+    print(x)
+
     PkHx_at_Qpts = PkH_at_Qpts[:, None, :] * x[None, :, :]
+    print(PkHx_at_Qpts)
+    PkHx_coeffs = np.dot(np.multiply(PkHx_at_Qpts, Qwts), Pkp1_at_Qpts.T)
+    print(PkHx_coeffs.shape)
     assert np.allclose(project(func, vec_Pk, Q), project(func, vec_Pk_from_Pkp1, Q))
 
 
