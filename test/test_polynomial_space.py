@@ -22,36 +22,52 @@ def test_unscaled_construction():
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
+    vec_P0 = PolynomialSpace(0, 0, vec=True)
+    vec_P1 = PolynomialSpace(1, 1, vec=True)
+
+    composite = vec_P0 + vec_P1
+    on_set = composite.to_ON_polynomial_set(cell)
+    assert isinstance(on_set, polynomial_set.PolynomialSet)
+
 
 def test_restriction():
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
     restricted = P3.restrict(2, 3)
 
     # doesn't contain constants
     assert restricted.subdegree == -1
     assert restricted.superdegree == 3
 
-    x = sp.Symbol("x")
-    composite = P2 + x*restricted
-
-    P2set = P2.to_ON_polynomial_set(cell)
-    restricted_set = (restricted).to_ON_polynomial_set(cell)
-
-    print(P2set.degree)
-    print(restricted_set.degree)
-
-    print(polynomial_set.construct_new_coeffs(ref_el, P2set, restricted_set))
-    assert isinstance(composite, ConstructedPolynomialSpace)
     res_on_set = restricted.to_ON_polynomial_set(cell)
     P3_on_set = P3.to_ON_polynomial_set(cell)
-    # composite_set = composite.to_ON_polynomial_set(cell)
     assert res_on_set.get_num_members() < P3_on_set.get_num_members()
-    print(composite.spaces)
 
     not_restricted = P3.restrict(0, 3)
     assert isinstance(not_restricted, PolynomialSpace)
     assert not isinstance(not_restricted, RestrictedPolynomialSpace)
+
+
+def test_scaled_construction():
+    cell = n_sided_polygon(3)
+    ref_el = CellComplexToFiat(cell)
+    x = sp.Symbol("x")
+
+    vec_P3 = PolynomialSpace(3, 3, vec=True)
+    composite = vec_P3 + x*P3
+    print(composite.spaces)
+    assert isinstance(composite, ConstructedPolynomialSpace)
+    on_set = composite.to_ON_polynomial_set(cell)
+
+    from FIAT.raviart_thomas import RTSpace
+    rt_space = RTSpace(ref_el, 4)
+    rt_coeffs = rt_space.get_coeffs()
+    print(rt_coeffs.shape)
+    print(on_set.coeffs.shape)
+    # Q = create_quadrature(ref_el, 2)
+    # Qpts, Qwts = Q.get_points(), Q.get_weights()
+    # print(rt_space.tabulate(Qpts))
+    # print(on_set.tabulate(Qpts))
+    # assert np.allclose(rt_space.tabulate(Qpts), on_set.tabulate(Qpts))
 
 
 def test_embedding():
@@ -105,13 +121,11 @@ def test_compare_pk_pkp1():
     Pkp1_at_Qpts = Pkp1.tabulate(Qpts)[(0,) * sd]
 
     x = Qpts.T
-    print(PkH_at_Qpts)
-    print(x)
-
     PkHx_at_Qpts = PkH_at_Qpts[:, None, :] * x[None, :, :]
-    print(PkHx_at_Qpts)
+    print(PkHx_at_Qpts.shape)
     PkHx_coeffs = np.dot(np.multiply(PkHx_at_Qpts, Qwts), Pkp1_at_Qpts.T)
     print(PkHx_coeffs.shape)
+    print(vec_Pk_from_Pkp1.coeffs.shape)
     assert np.allclose(project(func, vec_Pk, Q), project(func, vec_Pk_from_Pkp1, Q))
 
 
