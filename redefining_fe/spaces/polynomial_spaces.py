@@ -63,7 +63,7 @@ class PolynomialSpace(object):
         return ConstructedPolynomialSpace([1, 1], [self, x])
 
     def restrict(self, min_degree, max_degree):
-        return RestrictedPolynomialSpace(min_degree, max_degree)
+        return RestrictedPolynomialSpace(min_degree, max_degree, self.vec)
 
 
 class RestrictedPolynomialSpace(PolynomialSpace):
@@ -74,7 +74,7 @@ class RestrictedPolynomialSpace(PolynomialSpace):
     :param: max_degree: highest degree polynomials required
     """
 
-    def __new__(cls, min_degree, max_degree, vec=True):
+    def __new__(cls, min_degree, max_degree, vec=False):
         if min_degree == 0:
             # if the restriction is trivial return the original space
             return PolynomialSpace(max_degree, max_degree, vec)
@@ -101,7 +101,10 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         dimPmin = expansions.polynomial_dimension(ref_el, self.min_degree)
         dimPmax = expansions.polynomial_dimension(ref_el, self.max_degree)
 
-        base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, (sd,))
+        if self.vec:
+            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, (sd,))
+        else:
+            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree)
 
         indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
         restricted_ON = base_ON.take(indices)
@@ -137,7 +140,6 @@ class ConstructedPolynomialSpace(PolynomialSpace):
             weighted_sets = space_poly_sets
 
         # otherwise have to work on this through tabulation
-        print([s.superdegree for s in self.spaces])
         k = max([s.superdegree for s in self.spaces])
         Q = create_quadrature(ref_el, 2 * (k + 1))
         Qpts, Qwts = Q.get_points(), Q.get_weights()
@@ -160,7 +162,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
                 PkHw_coeffs = np.dot(np.multiply(scaled_at_Qpts, Qwts), Pkpw_at_Qpts.T)
 
                 weighted_sets.append(polynomial_set.PolynomialSet(ref_el,
-                                                                  space.degree,
+                                                                  space.degree + w_deg,
                                                                   space.degree + w_deg,
                                                                   vec_Pkpw.get_expansion_set(),
                                                                   PkHw_coeffs))

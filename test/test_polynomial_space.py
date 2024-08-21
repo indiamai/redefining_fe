@@ -50,24 +50,26 @@ def test_restriction():
 def test_scaled_construction():
     cell = n_sided_polygon(3)
     ref_el = CellComplexToFiat(cell)
+    sd = ref_el.get_spatial_dimension()
+    deg = 4
     x = sp.Symbol("x")
 
-    vec_P3 = PolynomialSpace(3, 3, vec=True)
-    composite = vec_P3 + x*P3
-    print(composite.spaces)
+    vec_Pd = PolynomialSpace(deg - 1, deg - 1, vec=True)
+    Pd = PolynomialSpace(deg - 1, deg - 1)
+    composite = vec_Pd + x*(Pd.restrict(deg - 2, deg - 1))
+
     assert isinstance(composite, ConstructedPolynomialSpace)
     on_set = composite.to_ON_polynomial_set(cell)
 
     from FIAT.raviart_thomas import RTSpace
-    rt_space = RTSpace(ref_el, 4)
-    rt_coeffs = rt_space.get_coeffs()
-    print(rt_coeffs.shape)
-    print(on_set.coeffs.shape)
-    # Q = create_quadrature(ref_el, 2)
-    # Qpts, Qwts = Q.get_points(), Q.get_weights()
-    # print(rt_space.tabulate(Qpts))
-    # print(on_set.tabulate(Qpts))
-    # assert np.allclose(rt_space.tabulate(Qpts), on_set.tabulate(Qpts))
+    rt_space = RTSpace(ref_el, deg)
+
+    Q = create_quadrature(ref_el, deg)
+    Qpts, _ = Q.get_points(), Q.get_weights()
+    rt_vals = rt_space.tabulate(Qpts)[(0,) * sd]
+    on_vals = on_set.tabulate(Qpts)[(0,) * sd]
+    assert np.allclose(rt_vals, on_vals)
+
 
 
 def test_embedding():
