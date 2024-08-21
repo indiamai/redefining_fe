@@ -37,11 +37,16 @@ def sympy_to_numpy(array, symbols, values):
 
 
 def tabulate_sympy(expr, pts):
+    # expr: expression in x where x in R^d
+    # pts: n values in R^d
+    # returns: evaluation of expr at pts
     res = []
-    syms = ["x", "y", "z"]
     for pt in pts:
         if not hasattr(pt, "__iter__"):
             pt = (pt,)
-        res.append(expr.subs({syms[i]: pt[i] for i in range(len(pt))}))
-
-    return np.array(res).astype(np.float64)
+        pt_eval = []
+        for val in pt:
+            pt_eval.append(expr.subs({"x": val}))
+        res.append(pt_eval)
+    final = np.array(res).astype(np.float64)
+    return final
