@@ -71,7 +71,6 @@ def test_scaled_construction():
     assert np.allclose(rt_vals, on_vals)
 
 
-
 def test_embedding():
     cell = n_sided_polygon(3)
     ref_el = CellComplexToFiat(cell)
