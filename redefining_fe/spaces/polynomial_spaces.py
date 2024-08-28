@@ -173,15 +173,11 @@ class ConstructedPolynomialSpace(PolynomialSpace):
                 vec_Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, (sd,), scale="orthonormal")
 
                 space_at_Qpts = space.tabulate(Qpts)[(0,) * sd]
-                print(space.degree)
-                print("my", space_at_Qpts.shape)
                 Pkpw_at_Qpts = Pkpw.tabulate(Qpts)[(0,) * sd]
 
                 tabulated_expr = tabulate_sympy(w, Qpts).T
-                print('my', tabulated_expr.shape)
                 scaled_at_Qpts = space_at_Qpts[:, None, :] * tabulated_expr[None, :, :]
                 PkHw_coeffs = np.dot(np.multiply(scaled_at_Qpts, Qwts), Pkpw_at_Qpts.T)
-                print("my", space_at_Qpts)
                 weighted_sets.append(polynomial_set.PolynomialSet(ref_el,
                                                                   space.degree + w_deg,
                                                                   space.degree + w_deg,
