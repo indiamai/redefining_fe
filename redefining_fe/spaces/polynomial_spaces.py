@@ -3,7 +3,7 @@ from FIAT.quadrature_schemes import create_quadrature
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
 from redefining_fe.cells import CellComplexToFiat
-from redefining_fe.utils import tabulate_sympy
+from redefining_fe.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
 
@@ -31,15 +31,26 @@ class PolynomialSpace(object):
     def complete(self):
         return self.subdegree == self.superdegree
 
-    def to_ON_polynomial_set(self, ref_el):
+    def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = CellComplexToFiat(ref_el)
+        sd = ref_el.get_spatial_dimension()
         if self.vec:
-            sd = ref_el.get_spatial_dimension()
-            return ONPolynomialSet(ref_el, self.subdegree, (sd,))
+            shape = (sd,)
         else:
-            return ONPolynomialSet(ref_el, self.subdegree)
+            shape = tuple()
+
+        # if k:
+        #     dimPkp1 = expansions.polynomial_dimension(ref_el, k + 1)
+        #     dimPk = expansions.polynomial_dimension(ref_el, k)
+
+        #     Pkp1 = polynomial_set.ONPolynomialSet(ref_el, k + 1, shape)
+        #     vec_Pk_indices = list(chain(*(range(i * dimPkp1, i * dimPkp1 + dimPk)
+        #                           for i in range(sd))))
+        #     Pk_from_Pkp1 = Pkp1.take(vec_Pk_indices)
+        #     return Pk_from_Pkp1
+        return ONPolynomialSet(ref_el, self.subdegree, shape, scale="orthonormal")
 
     def __repr__(self):
         res = ""
@@ -52,7 +63,14 @@ class PolynomialSpace(object):
         return res
 
     def __mul__(self, x):
+        """
+        When multiplying a Polynomial Space by a sympy object, you need to multiply with
+        the sympy object on the right. This is due to Sympy's implementation of __mul__ not
+        passing to this handler as it should.
+        """
         if isinstance(x, sp.Symbol):
+            return ConstructedPolynomialSpace([x], [self])
+        elif isinstance(x, sp.Matrix):
             return ConstructedPolynomialSpace([x], [self])
         else:
             raise TypeError(f'Cannot multiply a PolySpace with {type(x)}')
@@ -70,12 +88,12 @@ class RestrictedPolynomialSpace(PolynomialSpace):
     """
     Represents a polynomial space of all polynomials between two degrees.
 
-    :param: min_degree: lowest degree polynomials required
+    :param: min_degree: lowest degree polynomials required (-1 to include constants)
     :param: max_degree: highest degree polynomials required
     """
 
     def __new__(cls, min_degree, max_degree, vec=False):
-        if min_degree == 0:
+        if min_degree == -1:
             # if the restriction is trivial return the original space
             return PolynomialSpace(max_degree, max_degree, vec)
         else:
@@ -102,9 +120,9 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         dimPmax = expansions.polynomial_dimension(ref_el, self.max_degree)
 
         if self.vec:
-            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, (sd,))
+            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, (sd,), scale="orthonormal")
         else:
-            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree)
+            base_ON = polynomial_set.ONPolynomialSet(ref_el, self.max_degree, scale="orthonormal")
 
         indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
         restricted_ON = base_ON.take(indices)
@@ -133,6 +151,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
             ref_el = CellComplexToFiat(ref_el)
+        k = max([s.superdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()
 
@@ -140,33 +159,34 @@ class ConstructedPolynomialSpace(PolynomialSpace):
             weighted_sets = space_poly_sets
 
         # otherwise have to work on this through tabulation
-        k = max([s.superdegree for s in self.spaces])
+
         Q = create_quadrature(ref_el, 2 * (k + 1))
         Qpts, Qwts = Q.get_points(), Q.get_weights()
         weighted_sets = []
 
         for (space, w) in zip(space_poly_sets, self.weights):
-            if not isinstance(w, sp.Expr):
+            if not (isinstance(w, sp.Expr) or isinstance(w, sp.Matrix)):
                 weighted_sets.append(space)
             else:
-                w_deg = w.as_poly().degree()
-                Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg)
-                vec_Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, (sd,))
+                w_deg = max_deg_sp_mat(w)
+                Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, scale="orthonormal")
+                vec_Pkpw = polynomial_set.ONPolynomialSet(ref_el, space.degree + w_deg, (sd,), scale="orthonormal")
 
                 space_at_Qpts = space.tabulate(Qpts)[(0,) * sd]
+                print(space.degree)
+                print("my", space_at_Qpts.shape)
                 Pkpw_at_Qpts = Pkpw.tabulate(Qpts)[(0,) * sd]
 
                 tabulated_expr = tabulate_sympy(w, Qpts).T
-
+                print('my', tabulated_expr.shape)
                 scaled_at_Qpts = space_at_Qpts[:, None, :] * tabulated_expr[None, :, :]
                 PkHw_coeffs = np.dot(np.multiply(scaled_at_Qpts, Qwts), Pkpw_at_Qpts.T)
-
+                print("my", space_at_Qpts)
                 weighted_sets.append(polynomial_set.PolynomialSet(ref_el,
                                                                   space.degree + w_deg,
                                                                   space.degree + w_deg,
                                                                   vec_Pkpw.get_expansion_set(),
                                                                   PkHw_coeffs))
-
         combined_sets = weighted_sets[0]
         for i in range(1, len(weighted_sets)):
             combined_sets = polynomial_set.polynomial_set_union_normalized(combined_sets, weighted_sets[i])
@@ -175,6 +195,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
     def __mul__(self, x):
         return ConstructedPolynomialSpace([x*w for w in self.weights],
                                           self.spaces)
+    __rmul__ = __mul__
 
     def __add__(self, x):
         return ConstructedPolynomialSpace(self.weights.extend([1]),
