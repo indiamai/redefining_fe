@@ -1,9 +1,12 @@
-from redefining_fe.cells import Point
+from redefining_fe.cells import Point, CellComplexToFiat
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
+from FIAT.dual_set import DualSet
+from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
 import inspect
+import math
 
 
 class ElementTriple():
@@ -64,6 +67,41 @@ class ElementTriple():
             center = None
 
         return center, color
+
+    def to_fiat_elem(self):
+        ref_el = CellComplexToFiat(self.cell)
+        dofs = self.generate()
+        degree = self.spaces[0].degree()
+        entity_ids = {}
+        entity_perms = {}
+        nodes = []
+        top = ref_el.get_topology()
+        min_ids = self.cell.get_starter_ids()
+
+        for dim in sorted(top):
+            entity_ids[dim] = {i: [] for i in top[dim]}
+            entity_perms[dim] = {}
+            perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
+            for entity in sorted(top[dim]):
+                entity_perms[dim][entity] = perms
+
+        for i in range(len(dofs)):
+            entity = dofs[i].trace_entity
+            dim = entity.dim()
+            entity_ids[dim][entity.id - min_ids[dim]].append(i)
+            nodes.append(dofs[i].convert_to_fiat(ref_el))
+
+        form_degree = 1 if self.spaces[0].vec else 0
+        dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
+        poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
+
+        return CiarletElement(poly_set, dual, degree, form_degree)
+
+    def make_entity_permutations(self, dim, npoints):
+        # TODO: make this do the right thing
+        if npoints <= 0:
+            return {o: [] for o in range(math.factorial(dim + 1))}
+        raise NotImplementedError("TODO work out orientations")
 
     def plot(self):
         # point evaluation nodes only

@@ -1,4 +1,5 @@
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.functional import PointEvaluation
 from redefining_fe.cells import CellComplexToFiat
 import numpy as np
 
@@ -30,6 +31,10 @@ class DeltaPairing(Pairing):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
+    def convert_to_fiat(self, ref_el, pt):
+        # assert isinstance(kernel, PointKernel)
+        return PointEvaluation(ref_el, pt)
+
     def __repr__(self):
         return "{fn}({kernel})"
 
@@ -48,6 +53,9 @@ class L2InnerProd(Pairing):
         def kernel_dot(x):
             return np.dot(kernel(*x), v(*x))
         return quadrature.integrate(kernel_dot)
+
+    def convert_to_fiat(self, ref_el, kernel):
+        raise NotImplementedError("L2 functionals not yet fiat convertible")
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
@@ -127,6 +135,12 @@ class DOF():
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
+
+    def convert_to_fiat(self, ref_el):
+        if isinstance(self.kernel, PointKernel):
+            pt = self.eval(MyTestFunction(lambda *x: x))
+            return self.pairing.convert_to_fiat(ref_el, pt)
+        raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
     def __repr__(self):
         if self.immersed:

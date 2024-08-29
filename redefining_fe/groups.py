@@ -235,6 +235,14 @@ def g2(xs):
     return rot(xs, - 2*np.pi / 3)
 
 
+def get_sym_group(n):
+    return GroupRepresentation(SymmetricGroup(n))
+
+
+def get_cyc_group(n):
+    return GroupRepresentation(CyclicGroup(n))
+
+
 S1 = GroupRepresentation(SymmetricGroup(1))
 S2 = GroupRepresentation(SymmetricGroup(2))
 S3 = GroupRepresentation(SymmetricGroup(3))

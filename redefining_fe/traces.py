@@ -27,6 +27,9 @@ class TrH1(Trace):
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         ax.scatter(*coord, **kwargs)
 
+    def __repr__(self):
+        return "H1"
+
 
 class TrHDiv(Trace):
 
@@ -121,7 +124,7 @@ class TrGrad(Trace):
         ax.add_patch(circle1)
 
     def __repr__(self):
-        return "H2"
+        return "Grad"
 
 
 class TrHess(Trace):
@@ -151,4 +154,4 @@ class TrHess(Trace):
         ax.add_patch(circle1)
 
     def __repr__(self):
-        return "H3"
+        return "Hess"
