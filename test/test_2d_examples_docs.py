@@ -151,7 +151,10 @@ def test_cg_examples():
 
 def test_nd_example():
     tri = n_sided_polygon(3)
+    deg = 1
     edge = tri.edges(get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
     xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
@@ -159,11 +162,14 @@ def test_nd_example():
 
     xs = [immerse(tri, int_ned, TrHCurl)]
     tri_dofs = DOFGenerator(xs, S3, S3)
-    vecP3 = VectorPolynomialSpace(P3, P3)
-    ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 
-    x = sp.Symbol("x")
-    y = sp.Symbol("y")
+    M = sp.Matrix([[y, -x]])
+    vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
+    Pk = PolynomialSpace(deg - 1, deg - 1)
+    nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
+
+    ned = ElementTriple(tri, (nd, CellHCurl, C0), [tri_dofs])
+
     phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
@@ -177,14 +183,16 @@ def test_nd_example():
 
 def test_rt_example():
     tri = n_sided_polygon(3)
+    deg = 1
     edge = tri.edges(get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
     xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
+
     int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
-    x = sp.Symbol("x")
-    y = sp.Symbol("y")
     phi_2 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6)*x,
                                       -1/3 + (np.sqrt(3)/6)*y]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([(-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
@@ -194,8 +202,11 @@ def test_rt_example():
 
     xs = [immerse(tri, int_rt, TrHDiv)]
     tri_dofs = DOFGenerator(xs, S3, S3)
-    vecP3 = VectorPolynomialSpace(P3, P3)
-    rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
+    M = sp.Matrix([[x, y]])
+    vec_Pd = PolynomialSpace(deg - 1, deg - 1, vec=True)
+    Pd = PolynomialSpace(deg - 1, deg - 1)
+    rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+    rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
 
     basis_funcs = [phi_0, phi_1, phi_2]
 
