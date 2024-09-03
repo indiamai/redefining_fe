@@ -31,6 +31,7 @@ jobs:
       - name: Checkout correct FIAT branch
         run: |
           . /home/firedrake/firedrake/bin/activate
+          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/
           cd /home/firedrake/firedrake/src/fiat
           git checkout indiamai/union_different_coeff_size
       - name: Install networkx 
