@@ -48,5 +48,7 @@ jobs:
       - name: Run tests
         run: |
           . /home/firedrake/firedrake/bin/activate
-          pwd
+          cd /home/firedrake/firedrake/src/fiat
+          git status
+          cd /__w/redefining_fe/redefining_fe
           make tests
