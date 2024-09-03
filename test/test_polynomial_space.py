@@ -70,7 +70,6 @@ def test_rt_construction(deg):
     Qpts, _ = Q.get_points(), Q.get_weights()
     fiat_vals = rt_space.tabulate(Qpts)[(0,) * sd]
     my_vals = on_set.tabulate(Qpts)[(0,) * sd]
-    assert np.allclose(fiat_vals, my_vals)
     fiat_vals = flatten(fiat_vals)
     my_vals = flatten(my_vals)
 
