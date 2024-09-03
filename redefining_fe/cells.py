@@ -612,3 +612,6 @@ class CellComplexToFiat(Simplex):
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiat, self).__init__(shape, verts, topology)
+
+    def cellname(self):
+        return "India Def Cell"
