@@ -1,5 +1,5 @@
-from FIAT.quadrature import GaussLegendreQuadratureLineRule
-from FIAT.reference_element import DefaultLine
+from FIAT.quadrature_schemes import create_quadrature
+from redefining_fe.cells import CellComplexToFiat
 import numpy as np
 
 
@@ -42,19 +42,12 @@ class L2InnerProd(Pairing):
         super(L2InnerProd, self).__init__()
 
     def __call__(self, kernel, v):
-        # evaluates integral on generic edge only
         # print("evaluating", kernel, v, "on", self.entity)
-        if self.entity.dim() == 1:
-            quadrature = GaussLegendreQuadratureLineRule(DefaultLine(), 5)
+        quadrature = create_quadrature(CellComplexToFiat(self.entity), 5)
 
-            def kernel_dot(x):
-                return np.dot(kernel(*x), v(*x))
-            return quadrature.integrate(kernel_dot)
-        elif self.entity.dim() == 2 and len(self.entity.vertices(return_coords=True)[0]) == 2:
-            # ("evaluating at origin")
-            return np.dot(kernel(0, 0), v(0, 0))
-        else:
-            raise NotImplementedError("L2 Inner product evaluation not implemented for this dimension")
+        def kernel_dot(x):
+            return np.dot(kernel(*x), v(*x))
+        return quadrature.integrate(kernel_dot)
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))

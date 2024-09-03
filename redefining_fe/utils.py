@@ -1,4 +1,5 @@
 import numpy as np
+import sympy as sp
 
 
 def fold_reduce(func_list, *prev):
@@ -29,4 +30,35 @@ def sympy_to_numpy(array, symbols, values):
 
     if len(nparray.shape) > 1:
         return nparray.squeeze()
+
+    if len(nparray.shape) == 0:
+        return nparray.item()
+
     return nparray
+
+
+def tabulate_sympy(expr, pts):
+    # expr: sp matrix expression in x,y,z for components of R^d
+    # pts: n values in R^d
+    # returns: evaluation of expr at pts
+    res = np.array(pts)
+    i = 0
+    syms = ["x", "y", "z"]
+    for pt in pts:
+        if not hasattr(pt, "__iter__"):
+            pt = (pt,)
+        subbed = expr.evalf(subs={syms[i]: pt[i] for i in range(len(pt))})
+        subbed = np.array(subbed).astype(np.float64)
+        res[i] = subbed[0]
+        i += 1
+    final = res.squeeze()
+    return final
+
+
+def max_deg_sp_mat(sp_mat):
+    degs = []
+    for comp in sp_mat:
+        # only compute degree if component is a polynomial
+        if sp.sympify(comp).as_poly():
+            degs += [sp.sympify(comp).as_poly().degree()]
+    return max(degs)
