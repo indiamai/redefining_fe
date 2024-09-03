@@ -28,6 +28,11 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           python -m pip install -e .
+      - name: Checkout correct FIAT branch
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          cd /home/firedrake/firedrake/src/fiat
+          git checkout indiamai/union_different_coeff_size
       - name: Install networkx 
         run: |
           . /home/firedrake/firedrake/bin/activate
