@@ -33,6 +33,7 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
           cd /home/firedrake/firedrake/src/fiat
+          git status
           git checkout indiamai/union_different_coeff_size
       - name: Install networkx 
         run: |
