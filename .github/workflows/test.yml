@@ -48,4 +48,5 @@ jobs:
       - name: Run tests
         run: |
           . /home/firedrake/firedrake/bin/activate
+          pwd
           make tests
