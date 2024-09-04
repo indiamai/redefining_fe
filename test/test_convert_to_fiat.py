@@ -1,9 +1,9 @@
 import pytest
 import numpy as np
 from redefining_fe import *
-from redefining_fe.cells import CellComplexToFiat
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
+from ufl.cell import simplex
 # from firedrake import functionspaceimpl as impl
 # import finat
 # from FInAT.fiat_elements import FiatElement
@@ -31,7 +31,7 @@ def test_create_cg1(cell):
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
 
     from FIAT.lagrange import Lagrange
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
     fiat_elem = Lagrange(ref_el, deg)
@@ -58,3 +58,13 @@ def test_create_cg1(cell):
     print(my_elem)
     # my_finat = finat.IndiaDefElement(cg)
     # print(impl.WithGeometry.make_function_space(mesh, my_finat, name=None))
+
+
+@pytest.mark.parametrize("cell", [vert, edge, tri])
+def test_ufl_cell_conversion(cell):
+    existing_cell = simplex(len(cell.vertices()))
+    print(type(existing_cell))
+    ufl_cell = cell.to_ufl()
+    print(isinstance(ufl_cell, ufl.Cell))
+    print(ufl_cell.fe_cell)
+    print(ufl_cell.cellname())

@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex
+from ufl.cell import Cell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -561,6 +562,12 @@ class Point():
     def copy(self):
         return copy.deepcopy(self)
 
+    def to_fiat(self):
+        return CellComplexToFiat(self)
+
+    def to_ufl(self):
+        return CellComplexToUFL(self)
+
 
 class Edge():
     """
@@ -615,3 +622,42 @@ class CellComplexToFiat(Simplex):
 
     def cellname(self):
         return "India Def Cell"
+
+
+class CellComplexToUFL(Cell):
+    """
+    Convert cell complex to UFL
+
+    :param: cell: a redefining_fe cell complex
+
+    Currently just maps to a subset of existing UFL cells
+    TODO work out generic way around the naming issue
+    """
+
+    def __init__(self, cell):
+        self.fe_cell = cell
+
+        # TODO work out generic way around the naming issue
+        num_verts = len(cell.vertices())
+        if num_verts == 1:
+            # Point
+            name = "vertex"
+        elif num_verts == 2:
+            # Line
+            name = "interval"
+        elif num_verts == 3:
+            # Triangle
+            name = "triangle"
+        elif num_verts == 4:
+            if self.dimension == 2:
+                # quadrilateral
+                name = "quadrilateral"
+            elif self.dimension == 3:
+                # tetrahedron
+                name = "tetrahedron"
+        elif num_verts == 8:
+            # hexahedron
+            name = "hexahedron"
+        else:
+            raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
+        super(CellComplexToUFL, self).__init__(name, geometric_dimension=None)

@@ -2,7 +2,6 @@ from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
-from redefining_fe.cells import CellComplexToFiat
 from redefining_fe.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
@@ -37,22 +36,13 @@ class PolynomialSpace(object):
     def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
         if self.vec:
             shape = (sd,)
         else:
             shape = tuple()
 
-        # if k:
-        #     dimPkp1 = expansions.polynomial_dimension(ref_el, k + 1)
-        #     dimPk = expansions.polynomial_dimension(ref_el, k)
-
-        #     Pkp1 = polynomial_set.ONPolynomialSet(ref_el, k + 1, shape)
-        #     vec_Pk_indices = list(chain(*(range(i * dimPkp1, i * dimPkp1 + dimPk)
-        #                           for i in range(sd))))
-        #     Pk_from_Pkp1 = Pkp1.take(vec_Pk_indices)
-        #     return Pk_from_Pkp1
         return ONPolynomialSet(ref_el, self.subdegree, shape, scale="orthonormal")
 
     def __repr__(self):
@@ -116,7 +106,7 @@ class RestrictedPolynomialSpace(PolynomialSpace):
 
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
 
         dimPmin = expansions.polynomial_dimension(ref_el, self.min_degree)
@@ -153,7 +143,7 @@ class ConstructedPolynomialSpace(PolynomialSpace):
 
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         k = max([s.superdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()

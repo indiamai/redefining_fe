@@ -3,7 +3,6 @@ import sympy as sp
 from redefining_fe.spaces.polynomial_spaces import PolynomialSpace, RestrictedPolynomialSpace, ConstructedPolynomialSpace
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT import polynomial_set
-from redefining_fe.cells import CellComplexToFiat
 from FIAT.quadrature_schemes import create_quadrature
 import numpy as np
 import pytest
@@ -50,7 +49,7 @@ def test_restriction():
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_complete_space(deg):
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
     Pd = PolynomialSpace(deg, deg)
@@ -77,7 +76,7 @@ def test_complete_space(deg):
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_rt_construction(deg):
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
     x = sp.Symbol("x")
     y = sp.Symbol("y")
@@ -110,7 +109,7 @@ def test_rt_construction(deg):
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_nedelec_construction(deg):
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
     x = sp.Symbol("x")
