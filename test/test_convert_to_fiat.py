@@ -4,8 +4,8 @@ from redefining_fe import *
 from redefining_fe.cells import CellComplexToFiat
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
-from firedrake import functionspaceimpl as impl
-import finat
+# from firedrake import functionspaceimpl as impl
+# import finat
 # from FInAT.fiat_elements import FiatElement
 
 vert = Point(0)
@@ -49,16 +49,12 @@ def test_create_cg1(cell):
     # mesh = UnitSquareMesh(5, 5, quadrilateral=True)
     V = FunctionSpace(mesh, "CG", 1)
     finat_elem = V.finat_element
- 
+
     fiat_elem = finat_elem.fiat_equivalent
- 
+
     f = Function(V)
     x, y = SpatialCoordinate(mesh)
     f.interpolate(x**3 + 2*y)
     print(my_elem)
-    my_finat = finat.IndiaDefElement(cg)
+    # my_finat = finat.IndiaDefElement(cg)
     # print(impl.WithGeometry.make_function_space(mesh, my_finat, name=None))
-
-
-
-    
