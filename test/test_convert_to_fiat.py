@@ -4,7 +4,7 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from firedrake import functionspaceimpl as impl
+# from firedrake import functionspaceimpl as impl
 # import finat
 # from FInAT.fiat_elements import FiatElement
 
