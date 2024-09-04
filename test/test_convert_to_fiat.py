@@ -4,7 +4,7 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-# from firedrake import functionspaceimpl as impl
+from firedrake import functionspaceimpl as impl
 # import finat
 # from FInAT.fiat_elements import FiatElement
 
@@ -57,7 +57,10 @@ def test_create_cg1(cell):
     f.interpolate(x**3 + 2*y)
     print(my_elem)
     # my_finat = finat.IndiaDefElement(cg)
-    # print(impl.WithGeometry.make_function_space(mesh, my_finat, name=None))
+    # print(impl.WithGeometry.make_function_space(mesh, cell.to_ufl(), name=None))
+    print(cg.to_ufl_elem())
+    # V = FunctionSpace(mesh, cg.to_ufl_elem())
+    # print(V)
 
 
 @pytest.mark.parametrize("cell", [vert, edge, tri])

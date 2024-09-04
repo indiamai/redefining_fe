@@ -1,5 +1,5 @@
-from redefining_fe.cells import Point, CellComplexToFiat
-from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
+from redefining_fe.cells import Point
+from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
 from FIAT.dual_set import DualSet
@@ -7,6 +7,7 @@ from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
 import inspect
 import math
+import finat.ufl
 
 
 class ElementTriple():
@@ -68,8 +69,18 @@ class ElementTriple():
 
         return center, color
 
+    def get_value_shape(self):
+        # TODO Shape should be specificed somewhere else probably
+        if self.spaces[0].vec:
+            return (self.cell.get_spatial_dimension(),)
+        else:
+            return ()
+
+    def to_ufl_elem(self):
+        return IndiaTripleUFL(self)
+
     def to_fiat_elem(self):
-        ref_el = CellComplexToFiat(self.cell)
+        ref_el = self.cell.to_fiat()
         dofs = self.generate()
         degree = self.spaces[0].degree()
         entity_ids = {}
@@ -240,3 +251,32 @@ class ImmersedDOF():
 
 def immerse(target_cell, triple, target_space, node=0):
     return ImmersedDOF(target_cell, triple, target_space, node)
+
+
+class IndiaTripleUFL(finat.ufl.FiniteElementBase):
+    """
+    TODO: Need to deal with cases where value shape and reference value shape are different
+    """
+
+    def __init__(self, triple):
+        self.triple = triple
+
+        super(IndiaTripleUFL, self).__init__("IT", triple.cell.to_ufl(), None, None, triple.get_value_shape(), triple.get_value_shape())
+
+    def __repr__(self):
+        return "FiniteElement(%s, (%s, %s, %s), %s)" % (
+            repr(self.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
+
+    def __str__(self):
+        return "<Custom%sElem on %s>" % (self.triple.spaces[0], self.triple.cell)
+
+    def mapping(self):
+        if isinstance(self.sobolev_space, CellHCurl):
+            return "covariant Piola"
+        elif isinstance(self.sobolev_space, CellHDiv):
+            return "contravariant Piola"
+        else:
+            return "identity"
+
+    def sobolev_space(self):
+        return self.triple.spaces[1]
