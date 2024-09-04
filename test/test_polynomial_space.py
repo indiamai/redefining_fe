@@ -18,6 +18,7 @@ def test_instantiation():
 def test_unscaled_construction():
     cell = n_sided_polygon(3)
     composite = P0 + P1
+    assert not composite.vec
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
@@ -25,8 +26,10 @@ def test_unscaled_construction():
     vec_P1 = PolynomialSpace(1, 1, vec=True)
 
     composite = vec_P0 + vec_P1
+    assert composite.vec
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
+    
 
 
 def test_restriction():
@@ -86,6 +89,7 @@ def test_rt_construction(deg):
     Pd = PolynomialSpace(deg - 1, deg - 1)
     composite = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
+    assert composite.vec
     assert isinstance(composite, ConstructedPolynomialSpace)
     on_set = composite.to_ON_polynomial_set(cell)
 
@@ -119,6 +123,7 @@ def test_nedelec_construction(deg):
     vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
     Pk = PolynomialSpace(deg - 1, deg - 1)
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
+    assert nd.vec
     assert isinstance(nd, ConstructedPolynomialSpace)
 
     from FIAT.nedelec import NedelecSpace2D

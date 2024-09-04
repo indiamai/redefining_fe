@@ -92,7 +92,7 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         else:
             return super(RestrictedPolynomialSpace, cls).__new__(cls)
 
-    def __init__(self, min_degree, max_degree, vec=True):
+    def __init__(self, min_degree, max_degree, vec=False):
         self.min_degree = min_degree
         self.max_degree = max_degree
 
@@ -135,8 +135,9 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         self.spaces = spaces
 
         subdegree = max([space.subdegree for space in spaces])
+        vec = any([s.vec for s in spaces])
 
-        super(ConstructedPolynomialSpace, self).__init__(subdegree, -1)
+        super(ConstructedPolynomialSpace, self).__init__(subdegree, -1, vec=vec)
 
     def __repr__(self):
         return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
