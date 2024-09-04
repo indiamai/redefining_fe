@@ -297,7 +297,7 @@ def test_rt_second_order():
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
-    vecP3 = VectorPolynomialSpace(P3, P3)
+    vecP3 = PolynomialSpace(3, 3, vec=True)
     rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 
     x = sp.Symbol("x")

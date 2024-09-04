@@ -29,7 +29,6 @@ def test_unscaled_construction():
     assert composite.vec
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
-    
 
 
 def test_restriction():
