@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import inspect
 import math
 import finat.ufl
+import warnings
 
 
 class ElementTriple():
@@ -258,14 +259,19 @@ class IndiaTripleUFL(finat.ufl.FiniteElementBase):
     TODO: Need to deal with cases where value shape and reference value shape are different
     """
 
-    def __init__(self, triple):
+    def __init__(self, triple, cell=None):
         self.triple = triple
+        if not cell:
+            cell = self.triple.cell.to_ufl()
 
-        super(IndiaTripleUFL, self).__init__("IT", triple.cell.to_ufl(), None, None, triple.get_value_shape(), triple.get_value_shape())
+        # this isn't really correct
+        degree = self.triple.spaces[0].degree()
+
+        super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape(), triple.get_value_shape())
 
     def __repr__(self):
         return "FiniteElement(%s, (%s, %s, %s), %s)" % (
-            repr(self.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
+            repr(self.triple.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
 
     def __str__(self):
         return "<Custom%sElem on %s>" % (self.triple.spaces[0], self.triple.cell)
@@ -280,3 +286,7 @@ class IndiaTripleUFL(finat.ufl.FiniteElementBase):
 
     def sobolev_space(self):
         return self.triple.spaces[1]
+
+    def reconstruct(self, family=None, cell=None, degree=None, quad_scheme=None, variant=None):
+        warnings.warn("Modifying FE triple")
+        return IndiaTripleUFL(self.triple, cell=cell)
