@@ -166,6 +166,31 @@ def n_sided_polygon(n):
 
     return Point(2, edges, vertex_num=n)
 
+def make_tetrahedron():
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[0], vertices[1]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[2]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[3], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[3]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[3]]))
+
+    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
+    face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
+    face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
+    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
+
+    return Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
+
 
 class Point():
     """
@@ -565,8 +590,8 @@ class Point():
     def to_fiat(self):
         return CellComplexToFiat(self)
 
-    def to_ufl(self):
-        return CellComplexToUFL(self)
+    def to_ufl(self, name=None, geo_dim=None):
+        return CellComplexToUFL(self, name, geo_dim)
 
 
 class Edge():
@@ -623,6 +648,14 @@ class CellComplexToFiat(Simplex):
     def cellname(self):
         return "India Def Cell"
 
+    def construct_subelement(self, dimension):
+        """Constructs the reference element of a cell 
+        specified by subelement dimension.
+
+        :arg dimension: subentity dimension (integer)
+        """
+        return self.fe_cell.d_entities(dimension, get_class=True)[0].to_fiat()
+
 
 class CellComplexToUFL(Cell):
     """
@@ -634,30 +667,68 @@ class CellComplexToUFL(Cell):
     TODO work out generic way around the naming issue
     """
 
-    def __init__(self, cell):
-        self.fe_cell = cell
+    def __init__(self, cell, name=None, geo_dim=None):
+        self.cell_complex = cell
 
         # TODO work out generic way around the naming issue
-        num_verts = len(cell.vertices())
-        if num_verts == 1:
-            # Point
-            name = "vertex"
-        elif num_verts == 2:
-            # Line
-            name = "interval"
-        elif num_verts == 3:
-            # Triangle
-            name = "triangle"
-        elif num_verts == 4:
-            if self.dimension == 2:
-                # quadrilateral
-                name = "quadrilateral"
-            elif self.dimension == 3:
-                # tetrahedron
-                name = "tetrahedron"
-        elif num_verts == 8:
-            # hexahedron
-            name = "hexahedron"
-        else:
-            raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
-        super(CellComplexToUFL, self).__init__(name, geometric_dimension=None)
+        if not name:
+            num_verts = len(cell.vertices())
+            if num_verts == 1:
+                # Point
+                name = "vertex"
+            elif num_verts == 2:
+                # Line
+                name = "interval"
+            elif num_verts == 3:
+                # Triangle
+                name = "triangle"
+            elif num_verts == 4:
+                if self.dimension == 2:
+                    # quadrilateral
+                    name = "quadrilateral"
+                elif self.dimension == 3:
+                    # tetrahedron
+                    name = "tetrahedron"
+            elif num_verts == 8:
+                # hexahedron
+                name = "hexahedron"
+            else:
+                raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
+        super(CellComplexToUFL, self).__init__(name, geometric_dimension=geo_dim)
+
+    def to_fiat(self):
+        return self.cell_complex.to_fiat()
+
+    def __repr__(self):
+        return super(CellComplexToUFL, self).__repr__() + " Complex"
+    
+    def reconstruct(self, **kwargs):
+        """Reconstruct this cell, overwriting properties by those in kwargs."""
+        gdim = self._gdim
+        cell = self.cell_complex
+        for key, value in kwargs.items():
+            if key == "geometric_dimension":
+                gdim = value
+            elif key == "cell":
+                cell = value
+            else:
+                raise TypeError(f"reconstruct() got unexpected keyword argument '{key}'")
+        return CellComplexToUFL(cell, self._cellname, geo_dim=gdim)
+
+
+def constructCellComplex(name, geo_dim=None):
+    print("CONSTRUCTING")
+    if name == "vertex":
+        return Point(0).to_ufl(name, geo_dim)
+    elif name == "interval":
+        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name, geo_dim)
+    elif name == "triangle":
+        return n_sided_polygon(3).to_ufl(name, geo_dim)
+    elif name == "quadrilateral":
+        return n_sided_polygon(4).to_ufl(name, geo_dim)
+    elif name == "tetrahedron":
+        return make_tetrahedron().to_ufl(name, geo_dim)
+    else:
+        raise TypeError("Cell complex construction undefined for {}".format(str(self)))
+
+

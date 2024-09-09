@@ -185,14 +185,14 @@ def test_rt_example():
     tri = n_sided_polygon(3)
     deg = 1
     edge = tri.edges(get_class=True)[0]
-    x = sp.Symbol("x")
-    y = sp.Symbol("y")
 
     xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
 
     int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
     phi_2 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6)*x,
                                       -1/3 + (np.sqrt(3)/6)*y]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([(-np.sqrt(3)/6) + (np.sqrt(3)/6)*x,

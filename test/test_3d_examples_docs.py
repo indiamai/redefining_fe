@@ -3,32 +3,6 @@ import sympy as sp
 import numpy as np
 
 
-def make_tetrahedron():
-    vertices = []
-    for i in range(4):
-        vertices.append(Point(0))
-    edges = []
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[0], vertices[1]]))
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[1], vertices[2]]))
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[2], vertices[0]]))
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[3], vertices[0]]))
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[1], vertices[3]]))
-    edges.append(
-        Point(1, vertex_num=2, edges=[vertices[2], vertices[3]]))
-
-    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
-    face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
-    face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
-    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
-
-    return Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
-
-
 def test_dg1():
     tetra = make_tetrahedron()
 
