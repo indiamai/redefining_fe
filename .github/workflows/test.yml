@@ -35,6 +35,24 @@ jobs:
           cd /home/firedrake/firedrake/src/fiat
           git checkout indiamai/union_different_coeff_size
           git status
+      - name: Checkout correct tsfc branch
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/tsfc
+          cd /home/firedrake/firedrake/src/tsfc
+          git checkout indiamai/new_def_integration
+      - name: Checkout correct firedrake branch
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/firedrake
+          cd /home/firedrake/firedrake/src/firedrake
+          git checkout indiamai/new_def_integration
+      - name: Checkout correct FInAT branch
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/FInAT
+          cd /home/firedrake/firedrake/src/FInAT
+          git checkout indiamai/new_def_integration
       - name: Install networkx 
         run: |
           . /home/firedrake/firedrake/bin/activate
@@ -43,6 +61,10 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           pip list
+      - name: Firedrake status
+        run: |
+          . /home/firedrake/firedrake/bin/activate
+          firedrake-status
       - name: Run tests
         run: |
           . /home/firedrake/firedrake/bin/activate
