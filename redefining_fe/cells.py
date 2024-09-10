@@ -166,7 +166,9 @@ def n_sided_polygon(n):
 
     return Point(2, edges, vertex_num=n)
 
+
 def make_tetrahedron():
+    r = fe_groups.r
     vertices = []
     for i in range(4):
         vertices.append(Point(0))
@@ -649,7 +651,7 @@ class CellComplexToFiat(Simplex):
         return "India Def Cell"
 
     def construct_subelement(self, dimension):
-        """Constructs the reference element of a cell 
+        """Constructs the reference element of a cell
         specified by subelement dimension.
 
         :arg dimension: subentity dimension (integer)
@@ -701,7 +703,7 @@ class CellComplexToUFL(Cell):
 
     def __repr__(self):
         return super(CellComplexToUFL, self).__repr__() + " Complex"
-    
+
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
         gdim = self._gdim
@@ -717,7 +719,6 @@ class CellComplexToUFL(Cell):
 
 
 def constructCellComplex(name, geo_dim=None):
-    print("CONSTRUCTING")
     if name == "vertex":
         return Point(0).to_ufl(name, geo_dim)
     elif name == "interval":
@@ -729,6 +730,4 @@ def constructCellComplex(name, geo_dim=None):
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name, geo_dim)
     else:
-        raise TypeError("Cell complex construction undefined for {}".format(str(self)))
-
-
+        raise TypeError("Cell complex construction undefined for {}".format(str(name)))
