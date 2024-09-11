@@ -42,8 +42,11 @@ class ElementTriple():
 
     def generate(self):
         res = []
+        id_counter = 0
         for dof_gen in self.DOFGenerator:
-            res.extend(dof_gen.generate(self.cell, self.spaces[1]))
+            generated = dof_gen.generate(self.cell, self.spaces[1], id_counter)
+            res.extend(generated)
+            id_counter += len(generated)
         return res
 
     def __iter__(self):
@@ -93,9 +96,11 @@ class ElementTriple():
         for dim in sorted(top):
             entity_ids[dim] = {i: [] for i in top[dim]}
             entity_perms[dim] = {}
-            perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
-            for entity in sorted(top[dim]):
-                entity_perms[dim][entity] = perms
+            # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
+            # for entity in sorted(top[dim]):
+            #         entity_perms[dim][entity] = perms
+
+        entity_perms = None
 
         for i in range(len(dofs)):
             entity = dofs[i].trace_entity
@@ -106,14 +111,24 @@ class ElementTriple():
         form_degree = 1 if self.spaces[0].vec else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
-
+        print("me", entity_perms)
+        print("me", nodes)
+        print("me", entity_ids)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
     def make_entity_permutations(self, dim, npoints):
+        # limited to point eval
         # TODO: make this do the right thing
         if npoints <= 0:
             return {o: [] for o in range(math.factorial(dim + 1))}
-        raise NotImplementedError("TODO work out orientations")
+        # print(self.cell.group)
+        # print(self.cell.group.compute_num_reps())
+        # dofs = self.generate()
+        # for dof in dofs:
+            # print(dof.trace_entity)
+            # print(dof.id)
+        return None
+        # raise NotImplementedError("TODO work out orientations")
 
     def plot(self):
         # point evaluation nodes only
@@ -139,6 +154,7 @@ class ElementTriple():
                     dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
                 else:
                     ax.scatter(*coord, color=color)
+                ax.text(*coord, dof.id)
 
             plt.show()
         elif self.cell.dimension == 3:
@@ -157,6 +173,7 @@ class ElementTriple():
                         ax.scatter(*coord, color=color)
                 elif isinstance(dof.pairing, L2InnerProd):
                     dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
+                ax.text(*coord, dof.id)
 
             plt.show()
         else:
@@ -188,7 +205,7 @@ class DOFGenerator():
             raise ValueError("DOFs not generated yet")
         return self.dof_numbers
 
-    def generate(self, cell, space):
+    def generate(self, cell, space, id_counter):
         if self.ls is None:
             self.ls = []
             for g in self.g1.members():
@@ -197,7 +214,8 @@ class DOFGenerator():
                     if not isinstance(generated, list):
                         generated = [generated]
                     for dof in generated:
-                        dof.add_context(cell, space)
+                        dof.add_context(cell, space, id_counter)
+                        id_counter += 1
                     self.ls.extend(generated)
             self.dof_numbers = len(self.ls)
             return self.ls

@@ -90,7 +90,7 @@ def plot_cg1():
     cg1.plot()
 
 
-def construct_cg3():
+def construct_cg3(cell=None):
     # [test_cg3 0]
     tri = n_sided_polygon(3)
     edge = tri.edges(get_class=True)[0]

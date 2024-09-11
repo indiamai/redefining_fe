@@ -3,6 +3,7 @@ from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 import sympy as sp
+import math
 from redefining_fe.utils import fold_reduce
 
 
@@ -127,6 +128,29 @@ class GroupRepresentation(object):
         # assert list(perm2) in [m.array_form for m in member_perms]
         return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
 
+    def compute_num_reps(self):
+        """ Computed the numerical represention of each member as compared to the identity.
+        Where the numerical rep is:
+
+        M.index(id[0]) = a; M.remove(id[0])
+        M.index(id[1]) = b; M.remove(id[1])
+        M.index(id[2]) = c; M.remove(id[2])
+
+        o = (a * 2!) + (b * 1!) + (c * 0!)
+        """
+        member_perms = self.members(perm=True)
+        identity = self.identity.perm.array_form
+        res = {}
+        for m in member_perms:
+            m_array = m.array_form
+            val = 0
+            for i in range(len(identity)):
+                loc = m_array.index(identity[i])
+                m_array.remove(identity[i])
+                val += loc * math.factorial(len(identity) - i - 1)
+            res[val] = m.array_form
+        return res
+
     def compute_reps(self, g, path, remaining_members):
         # breadth first search to find generator representations of all members
         if len(remaining_members) == 0:
@@ -186,7 +210,7 @@ class GroupRepresentation(object):
         return GroupRepresentation(PermutationGroup(remaining_perms))
 
     def __repr__(self):
-        return "group"
+        return str(self.base_group)
 
 # Function Representation of the coordinate transforms that make up the groups.
 

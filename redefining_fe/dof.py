@@ -108,6 +108,7 @@ class DOF():
         self.attachment = attachment
         self.target_space = target_space
         self.g = g
+        self.id = None
         if entity is not None:
             self.pairing.add_entity(entity)
 
@@ -128,13 +129,15 @@ class DOF():
                                                   self.g))
         return self.pairing(self.kernel, fn)
 
-    def add_context(self, cell, space):
+    def add_context(self, cell, space, id_num):
         # We only want to store the first instance of each
         if self.trace_entity is None:
             self.trace_entity = cell
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
+        if self.id is None:
+            self.id = id_num
 
     def convert_to_fiat(self, ref_el):
         if isinstance(self.kernel, PointKernel):
