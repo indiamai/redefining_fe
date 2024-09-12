@@ -95,7 +95,7 @@ class ElementTriple():
 
         for dim in sorted(top):
             entity_ids[dim] = {i: [] for i in top[dim]}
-            entity_perms[dim] = {}
+            # entity_perms[dim] = {}
             # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
             # for entity in sorted(top[dim]):
             #         entity_perms[dim][entity] = perms
@@ -108,15 +108,22 @@ class ElementTriple():
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             nodes.append(dofs[i].convert_to_fiat(ref_el))
 
+        # for dim in sorted(top):
+        #     for ent in entity_ids[dim].keys():
+        #         num_dof_per_ent = len(entity_ids[dim][ent])
+        #         if num_dof_per_ent > 0:
+        #             group = dofs[entity_ids[dim][ent][0]].g.group
+
+        #             group = entity.group
+        #         print(num_dof_per_ent)
+
+        # self.make_entity_permutations(dim, degree - dim, entity_ids)
         form_degree = 1 if self.spaces[0].vec else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
-        print("me", entity_perms)
-        print("me", nodes)
-        print("me", entity_ids)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
-    def make_entity_permutations(self, dim, npoints):
+    def make_entity_permutations(self, dim, npoints, entity_ids):
         # limited to point eval
         # TODO: make this do the right thing
         if npoints <= 0:
@@ -127,6 +134,14 @@ class ElementTriple():
         # for dof in dofs:
             # print(dof.trace_entity)
             # print(dof.id)
+        id_counter = 0
+        print(entity_ids)
+        for x_gen in self.DOFGenerator:
+            sub_dofs = x_gen.generate(self.cell, self.spaces[1], id_counter)
+            dim = sub_dofs[0].trace_entity.id()
+            num_dofs = len(sub_dofs)
+            id_counter += num_dofs
+            print(num_dofs)
         return None
         # raise NotImplementedError("TODO work out orientations")
 

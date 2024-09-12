@@ -52,6 +52,8 @@ def test_create_fiat_cg1(cell):
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
                                                     (construct_cg3, "CG", 3)])
+# ,
+#                                                     (lambda x:x, "CG", 4)
 def test_helmholtz(elem_gen, elem_code, deg):
     cell = n_sided_polygon(3)
     elem = elem_gen(cell)
