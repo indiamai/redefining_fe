@@ -95,35 +95,30 @@ class ElementTriple():
 
         for dim in sorted(top):
             entity_ids[dim] = {i: [] for i in top[dim]}
-            # entity_perms[dim] = {}
+            entity_perms[dim] = {}
             # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
             # for entity in sorted(top[dim]):
             #         entity_perms[dim][entity] = perms
 
         entity_perms = None
-
+        print("DOFs", len(dofs))
         for i in range(len(dofs)):
             entity = dofs[i].trace_entity
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
+            print(dofs[i].id)
             nodes.append(dofs[i].convert_to_fiat(ref_el))
+            print(nodes[i].pt_dict)
 
-        # for dim in sorted(top):
-        #     for ent in entity_ids[dim].keys():
-        #         num_dof_per_ent = len(entity_ids[dim][ent])
-        #         if num_dof_per_ent > 0:
-        #             group = dofs[entity_ids[dim][ent][0]].g.group
+        for dim in sorted(top):
+            self.make_entity_permutations(dim, degree - dim, entity_ids, min_ids)
 
-        #             group = entity.group
-        #         print(num_dof_per_ent)
-
-        # self.make_entity_permutations(dim, degree - dim, entity_ids)
         form_degree = 1 if self.spaces[0].vec else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
-    def make_entity_permutations(self, dim, npoints, entity_ids):
+    def make_entity_permutations(self, dim, npoints, entity_ids, min_ids):
         # limited to point eval
         # TODO: make this do the right thing
         if npoints <= 0:
@@ -135,13 +130,52 @@ class ElementTriple():
             # print(dof.trace_entity)
             # print(dof.id)
         id_counter = 0
-        print(entity_ids)
-        for x_gen in self.DOFGenerator:
-            sub_dofs = x_gen.generate(self.cell, self.spaces[1], id_counter)
-            dim = sub_dofs[0].trace_entity.id()
-            num_dofs = len(sub_dofs)
-            id_counter += num_dofs
-            print(num_dofs)
+        # for ent in entity_ids[dim].keys():
+        #     num_dof_per_ent = len(entity_ids[dim][ent])
+        #     if num_dof_per_ent > 0:
+        #         group = dofs[entity_ids[dim][ent][0]].g.group
+        #         cell_group = entity.group
+        #     else:
+        #         entity = self.cell.get_node(ent + min_ids[dim])
+        #         group = S1.add_cell(entity)
+        #         cell_group = entity.group
+        #     print(num_dof_per_ent)
+        #     print(group.members())
+        #     print(cell_group.members())
+        # print(entity_ids)
+        dof_info = {i: {"group": None, "ids": [], "dim": 0} for i in range(len(self.DOFGenerator))}
+        for i in range(len(self.DOFGenerator)):
+            sub_dofs = self.DOFGenerator[i].generate(self.cell, self.spaces[1], id_counter)
+            dof_info[i]["dim"] = sub_dofs[0].trace_entity.dim()
+            dof_info[i]["ent"] = sub_dofs[0].trace_entity.id - min_ids[sub_dofs[0].trace_entity.dim()]
+            dof_info[i]["group"] = self.DOFGenerator[i].g1
+            dof_info[i]["ids"] = list(range(id_counter, id_counter + len(sub_dofs)))
+            id_counter += len(sub_dofs)
+        print(dof_info)
+        res = {}
+
+        for ent in entity_ids[dim].keys():
+            ent_dofs = entity_ids[dim][ent]
+            max_o = math.factorial(dim + 1)
+            print(ent_dofs)
+            res[ent] = {o: ent_dofs for o in range(math.factorial(dim + 1))}
+            print("res befre", res)
+            for i in range(len(self.DOFGenerator)):
+                if dof_info[i]["dim"] == dim and dof_info[i]["ent"] == ent:
+                    indices = [ent_dofs.index(dof_id) for dof_id in dof_info[i]["ids"]]
+                    print(indices)
+                    orientation_reps = dof_info[i]["group"].compute_num_reps(base_val=min(dof_info[i]["ids"]))
+                    print(orientation_reps)
+                    for o in range(max_o):
+                        if o in orientation_reps.keys():
+                            for j in range(len(indices)):
+                                print(o, ",", j, "ori", orientation_reps[o][j])
+                                print(res[ent][o])
+                                res[ent][o][indices[j]] = orientation_reps[o][j]
+                                print("ent", ent, "o", o, " ", res[ent][o])
+
+        # need to correctly pull entity associated with dof, looping structure probably wrong
+        print(res)
         return None
         # raise NotImplementedError("TODO work out orientations")
 

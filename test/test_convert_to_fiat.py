@@ -18,6 +18,15 @@ def create_dg1(cell):
     return dg
 
 
+def create_dg2(cell):
+    xs = [DOF(DeltaPairing(), PointKernel(cell.vertices(return_coords=True)[0]))]
+    center = [DOF(DeltaPairing(), PointKernel((0,)))]
+    Pk = PolynomialSpace(2, 2)
+    dg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
+                                                DOFGenerator(center, S1, S1)])
+    return dg
+
+
 def create_cg1(cell):
     deg = 1
     vert_dg = create_dg1(cell.vertices(get_class=True)[0])
@@ -51,6 +60,40 @@ def test_create_fiat_cg1(cell):
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
+                                                    (create_dg2, "DG", 2)])
+def test_2d(elem_gen, elem_code, deg):
+    cell = edge
+    elem = elem_gen(cell)
+
+    mesh = UnitIntervalMesh(5)
+    V = FunctionSpace(mesh, elem_code, deg)
+    u = TrialFunction(V)
+    v = TestFunction(V)
+    f = Function(V)
+    x, = SpatialCoordinate(mesh)
+    f.interpolate(cos(x*pi*2))
+    a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
+    L = inner(f, v) * dx
+    u1 = Function(V)
+    solve(a == L, u1)
+
+    V = FunctionSpace(mesh, elem.to_ufl_elem())
+    u = TrialFunction(V)
+    v = TestFunction(V)
+    f = Function(V)
+    x, = SpatialCoordinate(mesh)
+    f.interpolate((1+8*pi*pi)*cos(x*pi*2))
+    a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
+    L = inner(f, v) * dx
+    u2 = Function(V)
+    solve(a == L, u2)
+
+    res = sqrt(assemble(dot(u1 - u1, u1 - u2) * dx))
+    assert np.allclose(res, 0)
+
+
+@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
+                                                    (create_dg1, "DG", 1),
                                                     (construct_cg3, "CG", 3)])
 # ,
 #                                                     (lambda x:x, "CG", 4)
@@ -66,8 +109,8 @@ def test_helmholtz(elem_gen, elem_code, deg):
     V = FunctionSpace(mesh, elem.to_ufl_elem())
     res2 = helmholtz_solve(mesh, V)
 
-    print(res1, " ", res2)
-    # assert np.allclose(res1, res2)
+    res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
+    assert np.allclose(res, 0)
 
 
 def helmholtz_solve(mesh, V):
@@ -79,10 +122,8 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
-    solve(a == L, u, solver_parameters={'ksp_type': 'cg', 'pc_type': 'none'})
-    f.interpolate(cos(x*pi*2)*cos(y*pi*2))
-    res = sqrt(assemble(dot(u - f, u - f) * dx))
-    return res
+    solve(a == L, u)
+    return u
 
 
 @pytest.mark.parametrize("cell", [vert, edge, tri])

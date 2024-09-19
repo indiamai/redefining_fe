@@ -8,6 +8,13 @@ from redefining_fe.utils import fold_reduce
 
 
 def construct_rep_func(M):
+    """
+    Convert a matrix to a representation function
+
+    Args:
+        M: a numpy matrix
+
+    Returns a function that applies the matrix to the arguments (which can be symbolic or numeric) """
     def rep(*x):
         if isinstance(x, sp.Expr):
             x_ones = sp.r_[sp.array(x), sp.ones(1)]
@@ -56,6 +63,14 @@ class GroupMemberRep(object):
 
 
 class GroupRepresentation(object):
+    """
+    A representation of a group by its matrix operations.
+
+    Args:
+        base_group: the sympy group that is being represented
+        cell (optional): the cell the group is representing the operations on
+
+    """
 
     def __init__(self, base_group, cell=None):
         assert isinstance(base_group, PermutationGroup)
@@ -128,7 +143,7 @@ class GroupRepresentation(object):
         # assert list(perm2) in [m.array_form for m in member_perms]
         return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
 
-    def compute_num_reps(self):
+    def compute_num_reps(self, base_val=0):
         """ Computed the numerical represention of each member as compared to the identity.
         Where the numerical rep is:
 
@@ -148,7 +163,7 @@ class GroupRepresentation(object):
                 loc = m_array.index(identity[i])
                 m_array.remove(identity[i])
                 val += loc * math.factorial(len(identity) - i - 1)
-            res[val] = m.array_form
+            res[val] = [m.array_form[i] + base_val for i in range(len(m.array_form))]
         return res
 
     def compute_reps(self, g, path, remaining_members):
