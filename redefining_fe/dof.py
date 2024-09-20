@@ -129,7 +129,7 @@ class DOF():
                                                   self.g))
         return self.pairing(self.kernel, fn)
 
-    def add_context(self, cell, space, id_num):
+    def add_context(self, cell, space,):
         # We only want to store the first instance of each
         if self.trace_entity is None:
             self.trace_entity = cell
@@ -137,7 +137,7 @@ class DOF():
         if self.target_space is None:
             self.target_space = space
         if self.id is None:
-            self.id = id_num
+            self.id = id
 
     def convert_to_fiat(self, ref_el):
         if isinstance(self.kernel, PointKernel):

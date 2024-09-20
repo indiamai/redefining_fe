@@ -110,73 +110,46 @@ class ElementTriple():
             nodes.append(dofs[i].convert_to_fiat(ref_el))
             print(nodes[i].pt_dict)
 
-        for dim in sorted(top):
-            self.make_entity_permutations(dim, degree - dim, entity_ids, min_ids)
+        entity_perms = self.make_entity_permutations(self.cell.dim(), entity_ids, min_ids)
 
         form_degree = 1 if self.spaces[0].vec else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
-    def make_entity_permutations(self, dim, npoints, entity_ids, min_ids):
+    def make_entity_permutations(self, dim, entity_ids, min_ids):
         # limited to point eval
         # TODO: make this do the right thing
-        if npoints <= 0:
-            return {o: [] for o in range(math.factorial(dim + 1))}
-        # print(self.cell.group)
-        # print(self.cell.group.compute_num_reps())
-        # dofs = self.generate()
-        # for dof in dofs:
-            # print(dof.trace_entity)
-            # print(dof.id)
+        # if npoints <= 0:
+        #     return {o: [] for o in range(math.factorial(dim + 1))}
         id_counter = 0
-        # for ent in entity_ids[dim].keys():
-        #     num_dof_per_ent = len(entity_ids[dim][ent])
-        #     if num_dof_per_ent > 0:
-        #         group = dofs[entity_ids[dim][ent][0]].g.group
-        #         cell_group = entity.group
-        #     else:
-        #         entity = self.cell.get_node(ent + min_ids[dim])
-        #         group = S1.add_cell(entity)
-        #         cell_group = entity.group
-        #     print(num_dof_per_ent)
-        #     print(group.members())
-        #     print(cell_group.members())
-        # print(entity_ids)
+
         dof_info = {i: {"group": None, "ids": [], "dim": 0} for i in range(len(self.DOFGenerator))}
         for i in range(len(self.DOFGenerator)):
             sub_dofs = self.DOFGenerator[i].generate(self.cell, self.spaces[1], id_counter)
-            dof_info[i]["dim"] = sub_dofs[0].trace_entity.dim()
-            dof_info[i]["ent"] = sub_dofs[0].trace_entity.id - min_ids[sub_dofs[0].trace_entity.dim()]
-            dof_info[i]["group"] = self.DOFGenerator[i].g1
+            dof_info[i]["dims"] = [sub_dofs[j].trace_entity.dim() for j in range(len(sub_dofs))]
+            dof_info[i]["ents"] = [sub_dofs[j].trace_entity.id - min_ids[sub_dofs[j].trace_entity.dim()] for j in range(len(sub_dofs))]
+            dof_info[i]["group"] = [sub_dofs[j].triple.g1 if sub_dofs[j].immersed else self.DOFGenerator[i].g1 for j in range(len(sub_dofs))]
             dof_info[i]["ids"] = list(range(id_counter, id_counter + len(sub_dofs)))
             id_counter += len(sub_dofs)
+
+        res = {d: {} for d in range(dim + 1)}
+        for d in range(dim + 1):
+            for ent in entity_ids[d].keys():
+                ent_dofs = entity_ids[d][ent]
+                res[d][ent] = {o: ent_dofs[:] for o in range(math.factorial(d + 1))}
         print(dof_info)
-        res = {}
-
-        for ent in entity_ids[dim].keys():
-            ent_dofs = entity_ids[dim][ent]
-            max_o = math.factorial(dim + 1)
-            print(ent_dofs)
-            res[ent] = {o: ent_dofs for o in range(math.factorial(dim + 1))}
-            print("res befre", res)
-            for i in range(len(self.DOFGenerator)):
-                if dof_info[i]["dim"] == dim and dof_info[i]["ent"] == ent:
-                    indices = [ent_dofs.index(dof_id) for dof_id in dof_info[i]["ids"]]
-                    print(indices)
-                    orientation_reps = dof_info[i]["group"].compute_num_reps(base_val=min(dof_info[i]["ids"]))
-                    print(orientation_reps)
-                    for o in range(max_o):
-                        if o in orientation_reps.keys():
-                            for j in range(len(indices)):
-                                print(o, ",", j, "ori", orientation_reps[o][j])
-                                print(res[ent][o])
-                                res[ent][o][indices[j]] = orientation_reps[o][j]
-                                print("ent", ent, "o", o, " ", res[ent][o])
-
-        # need to correctly pull entity associated with dof, looping structure probably wrong
+        for i in range(len(self.DOFGenerator)):
+            for j in range(len(dof_info[i]["ids"])):
+                orientation_reps = dof_info[i]["group"][j].compute_num_reps(base_val=min(dof_info[i]["ids"]))
+                dof_dim = dof_info[i]["dims"][j]
+                dof_ent = dof_info[i]["ents"][j]
+                dof_id = dof_info[i]["ids"][j]
+                index = entity_ids[dof_dim][dof_ent].index(dof_id)
+                for o in orientation_reps.keys():
+                    res[dof_dim][dof_ent][o][index] = orientation_reps[o][j]
         print(res)
-        return None
+        return res
         # raise NotImplementedError("TODO work out orientations")
 
     def plot(self):
@@ -277,41 +250,7 @@ class DOFGenerator():
         return repr_str
 
 
-class ImmersedDOF():
 
-    def __init__(self, target_cell, triple, target_space, start_node=0):
-        self.target_cell = target_cell
-        self.triple = triple
-        self.C, self.V, self.E = triple
-        self.target_space = target_space(target_cell)
-        self.start_node = start_node
-
-    def __call__(self, g):
-        target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
-        if self.C.dim() > 0 and o != o.group.identity:
-            return []
-        attachment = self.target_cell.cell_attachment(target_node)
-        new_dofs = []
-
-        def oriented_attachment(*x):
-            return attachment(*o(x))
-
-        for generated_dof in self.triple.generate():
-            new_dof = generated_dof.immerse(self.target_cell.get_node(target_node),
-                                            oriented_attachment,
-                                            self.target_space, g)
-            new_dofs.append(new_dof)
-        return new_dofs
-
-    def __repr__(self):
-        repr_str = ""
-        for dof_gen in self.E:
-            repr_str += "Im_" + str(self.target_space) + "_" + str(self.target_cell) + "(" + str(dof_gen) + ")"
-        return repr_str
-
-
-def immerse(target_cell, triple, target_space, node=0):
-    return ImmersedDOF(target_cell, triple, target_space, node)
 
 
 class IndiaTripleUFL(finat.ufl.FiniteElementBase):
