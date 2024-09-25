@@ -50,6 +50,16 @@ class GroupMemberRep(object):
             return temp_perm(lst)
         return self.perm(lst)
 
+    def compute_num_rep(self, base_val=0):
+        m_array = self.perm.array_form
+        identity = self.group.identity.perm.array_form
+        val = 0
+        for i in range(len(identity)):
+            loc = m_array.index(identity[i])
+            m_array.remove(identity[i])
+            val += loc * math.factorial(len(identity) - i - 1)
+        return val, [self.perm.array_form[i] + base_val for i in range(len(self.perm.array_form))]
+
     def __mul__(self, x):
         assert isinstance(x, GroupMemberRep)
         return self.group.get_member(self.perm * x.perm)
@@ -153,17 +163,11 @@ class GroupRepresentation(object):
 
         o = (a * 2!) + (b * 1!) + (c * 0!)
         """
-        member_perms = self.members(perm=True)
-        identity = self.identity.perm.array_form
+        members = self.members()
         res = {}
-        for m in member_perms:
-            m_array = m.array_form
-            val = 0
-            for i in range(len(identity)):
-                loc = m_array.index(identity[i])
-                m_array.remove(identity[i])
-                val += loc * math.factorial(len(identity) - i - 1)
-            res[val] = [m.array_form[i] + base_val for i in range(len(m.array_form))]
+        for m in members:
+            val, perm = m.compute_num_rep(base_val)
+            res[val] = perm
         return res
 
     def compute_reps(self, g, path, remaining_members):

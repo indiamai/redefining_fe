@@ -12,3 +12,6 @@ def test_numerical_orientations():
     cell = n_sided_polygon(3)
     # group = S3.add_cell(cell)
     print(cell.group.compute_num_reps())
+    mems = cell.group.members()
+    for m in mems:
+        print(m.compute_num_rep())

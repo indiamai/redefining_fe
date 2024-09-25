@@ -2,6 +2,8 @@ from redefining_fe import *
 import sympy as sp
 import numpy as np
 
+np.set_printoptions(legacy="1.25")
+
 
 def construct_dg0():
     # [test_dg0 0]
@@ -109,6 +111,7 @@ def construct_cg3(cell=None):
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
+    print([d.generation for d in dg0_int.generate()])
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, S3, S1)
@@ -151,6 +154,8 @@ def test_cg_examples():
                          [0, 0]])
 
     for dof in cg3.generate():
+        print(dof)
+        print(dof.sub_id)
         assert any([np.allclose(val, dof.eval(test_func).flatten()) for val in dof_vals])
 
 

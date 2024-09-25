@@ -99,8 +99,7 @@ class PolynomialKernel():
 
 class DOF():
 
-    def __init__(self, pairing, kernel, immersed=False,
-                 entity=None, attachment=None, target_space=None, g=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=dict({}), sub_id=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -109,35 +108,30 @@ class DOF():
         self.target_space = target_space
         self.g = g
         self.id = None
+        self.sub_id = sub_id
+        self.generation = generation
         if entity is not None:
             self.pairing.add_entity(entity)
 
     def __call__(self, g):
-        return DOF(self.pairing, self.kernel.permute(g), self.immersed,
-                   self.trace_entity, self.attachment, self.target_space, g)
+        new_generation = self.generation.copy()
+        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id)
 
     def eval(self, fn, pullback=True):
-        if self.immersed:
-            attached_fn = fn.attach(self.attachment)
-
-            if not pullback:
-                return self.pairing(self.kernel, attached_fn)
-
-            return self.pairing(self.kernel,
-                                self.target_space(attached_fn,
-                                                  self.trace_entity,
-                                                  self.g))
         return self.pairing(self.kernel, fn)
 
-    def add_context(self, cell, space,):
+    def add_context(self, cell, space, g, overall_id=None, generator_id=None):
         # We only want to store the first instance of each
         if self.trace_entity is None:
             self.trace_entity = cell
+            self.generation[self.trace_entity.dim()] = g
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
-        if self.id is None:
-            self.id = id
+        if self.id is None and overall_id is not None:
+            self.id = overall_id
+        if self.sub_id is None and generator_id is not None:
+            self.sub_id = generator_id
 
     def convert_to_fiat(self, ref_el):
         if isinstance(self.kernel, PointKernel):
@@ -145,20 +139,40 @@ class DOF():
             return self.pairing.convert_to_fiat(ref_el, pt)
         raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
-    def __repr__(self):
-        if self.immersed:
-            fn = "tr_{1}_{0}(v)".format(str(self.trace_entity),
-                                        str(self.target_space))
-        else:
-            fn = "v"
+    def __repr__(self, fn="v"):
         return str(self.pairing).format(fn=fn, kernel=self.kernel)
 
-    def immerse(self, entity, attachment, target_space, g):
-        if not self.immersed:
-            return DOF(self.pairing, self.kernel,
-                       True, entity, attachment, target_space, g)
-        else:
-            raise RuntimeError("Error: Immersing twice not supported")
+    def immerse(self, entity, attachment, target_space, g, triple):
+        new_generation = self.generation.copy()
+        new_generation[target_space.domain.dim()] = g
+        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+
+
+class ImmersedDOF(DOF):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation={}, sub_id=None):
+        self.immersed = True
+        self.triple = triple
+        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id)
+
+    def eval(self, fn, pullback=True):
+        attached_fn = fn.attach(self.attachment)
+
+        if not pullback:
+            return self.pairing(self.kernel, attached_fn)
+
+        return self.pairing(self.kernel,
+                            self.target_space(attached_fn, self.trace_entity, self.g))
+
+    def __call__(self, g):
+        return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
+                           self.attachment, self.target_space, g, self.immersed, self.sub_id)
+
+    def __repr__(self):
+        fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))
+        return super(ImmersedDOF, self).__repr__(fn)
+
+    def immerse(self, entity, attachment, trace, g):
+        raise RuntimeError("Error: Immersing twice not supported")
 
 
 class MyTestFunction():
