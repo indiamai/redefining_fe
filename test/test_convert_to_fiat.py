@@ -91,29 +91,29 @@ def test_2d(elem_gen, elem_code, deg):
 
     mesh = UnitIntervalMesh(5)
     V = FunctionSpace(mesh, elem_code, deg)
-    # u = TrialFunction(V)
-    # v = TestFunction(V)
+    u = TrialFunction(V)
+    v = TestFunction(V)
     f = Function(V)
     x, = SpatialCoordinate(mesh)
     f.interpolate(cos(x*pi*2))
-    # a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
-    # L = inner(f, v) * dx
-    # u1 = Function(V)
-    # solve(a == L, u1)
+    a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
+    L = inner(f, v) * dx
+    u1 = Function(V)
+    solve(a == L, u1)
 
     V = FunctionSpace(mesh, elem.to_ufl_elem())
-    # u = TrialFunction(V)
-    # v = TestFunction(V)
+    u = TrialFunction(V)
+    v = TestFunction(V)
     f = Function(V)
     x, = SpatialCoordinate(mesh)
     f.interpolate((1+8*pi*pi)*cos(x*pi*2))
-    # a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
-    # L = inner(f, v) * dx
-    # u2 = Function(V)
-    # solve(a == L, u2)
+    a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
+    L = inner(f, v) * dx
+    u2 = Function(V)
+    solve(a == L, u2)
 
-    # res = sqrt(assemble(dot(u1 - u1, u1 - u2) * dx))
-    # assert np.allclose(res, 0)
+    res = sqrt(assemble(dot(u1 - u1, u1 - u2) * dx))
+    assert np.allclose(res, 0)
 
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),

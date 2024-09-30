@@ -50,15 +50,19 @@ class GroupMemberRep(object):
             return temp_perm(lst)
         return self.perm(lst)
 
-    def compute_num_rep(self, base_val=0):
+    def compute_num_rep(self,  val_list=None):
         m_array = self.perm.array_form
         identity = self.group.identity.perm.array_form
+        if not val_list:
+            val_list = self.perm.array_form
+        else:
+            val_list = self.permute(val_list)
         val = 0
         for i in range(len(identity)):
             loc = m_array.index(identity[i])
             m_array.remove(identity[i])
             val += loc * math.factorial(len(identity) - i - 1)
-        return val, [self.perm.array_form[i] + base_val for i in range(len(self.perm.array_form))]
+        return val, val_list
 
     def __mul__(self, x):
         assert isinstance(x, GroupMemberRep)

@@ -9,6 +9,7 @@ import inspect
 import math
 import finat.ufl
 import warnings
+import jsonpickle
 
 
 class ElementTriple():
@@ -110,14 +111,14 @@ class ElementTriple():
             nodes.append(dofs[i].convert_to_fiat(ref_el))
             # print(nodes[i].pt_dict)
         print("my ent ids", entity_ids)
-        entity_perms = self.make_entity_permutations_two(self.cell.dim(), entity_ids, min_ids, dofs)
+        entity_perms = self.make_entity_permutations(self.cell.dim(), entity_ids, min_ids, dofs)
 
         form_degree = 1 if self.spaces[0].vec else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
-    def make_entity_permutations(self, dim, entity_ids, min_ids):
+    def make_entity_permutations_old(self, dim, entity_ids, min_ids):
         # limited to point eval
         # TODO: make this do the right thing
         # if npoints <= 0:
@@ -157,7 +158,7 @@ class ElementTriple():
         return res
         # raise NotImplementedError("TODO work out orientations")
 
-    def make_entity_permutations_two(self, dim, entity_ids, min_ids, dofs):
+    def make_entity_permutations(self, dim, entity_ids, min_ids, dofs):
         res = {d: {} for d in range(dim + 1)}
         for d in range(dim + 1):
             for ent in entity_ids[d].keys():
@@ -170,8 +171,13 @@ class ElementTriple():
             dof_dim = dof.trace_entity.dim()
             dof_ent = dof.trace_entity.id - min_ids[dof_dim]
             group = dof.generation[dof_dim].group
-            orientation_reps = group.compute_num_reps()
             dof_index = entity_ids[dof_dim][dof_ent].index(dof.id)
+            dof_group = None
+            for gen in self.DOFGenerator:
+                if dof.id in gen.dof_ids:
+                    dof_group = gen.dof_ids
+            assert dof_group is not None
+            orientation_reps = group.compute_num_reps(dof_group)
             for o in orientation_reps.keys():
                 res[dof_dim][dof_ent][o][dof_index] = orientation_reps[o][dof.sub_id]
             # need to maintain structure of group generation \
@@ -227,6 +233,14 @@ class ElementTriple():
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")
+        
+    def to_json(self, filename="triple.json"):
+        encoded = jsonpickle.encode(self)
+        with open(filename, "w+") as f:
+            f.write(encoded)
+            
+
+
 
 
 class DOFGenerator():
@@ -269,6 +283,7 @@ class DOFGenerator():
                         i += 1
                     self.ls.extend(generated)
             self.dof_numbers = len(self.ls)
+            self.dof_ids = [dof.id for dof in self.ls]
             return self.ls
         return self.ls
 
@@ -293,6 +308,7 @@ class DOFGenerator():
         for x_elem in self.x:
             repr_str += "g(" + str(x_elem) + ")"
         return repr_str
+
 
 
 class ImmersedDOFs():
