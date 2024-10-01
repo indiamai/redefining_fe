@@ -1,6 +1,7 @@
 import redefining_fe.cells as cells
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
+from sympy.matrices.expressions import PermutationMatrix
 import numpy as np
 import sympy as sp
 import math
@@ -50,7 +51,7 @@ class GroupMemberRep(object):
             return temp_perm(lst)
         return self.perm(lst)
 
-    def compute_num_rep(self,  val_list=None):
+    def compute_num_rep(self, val_list=None):
         m_array = self.perm.array_form
         identity = self.group.identity.perm.array_form
         if not val_list:
@@ -74,6 +75,9 @@ class GroupMemberRep(object):
             string += rep.__name__
             string += " "
         return string
+
+    def matrix_form(self):
+        return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
 
 class GroupRepresentation(object):

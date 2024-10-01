@@ -10,6 +10,7 @@ import math
 import finat.ufl
 import warnings
 import jsonpickle
+import numpy as np
 
 
 class ElementTriple():
@@ -233,14 +234,44 @@ class ElementTriple():
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")
-        
+
+    def make_basix_style_perms(self):
+        dofs = self.generate()
+        entity_associations = {dim: {str(e): [] for e in self.cell.d_entities(dim, get_class=True)}
+                               for dim in range(self.cell.dim() + 1)}
+        for d in dofs:
+            print(d.id)
+            entity_associations[d.trace_entity.dim()][str(d.trace_entity)] += [d]
+
+        print(entity_associations)
+        dof_id_mat = np.eye(len(dofs))
+        print("overall mat", dof_id_mat.shape)
+        oriented_mats = {}
+
+        for dim in range(self.cell.dim() + 1):
+            print("dimension", dim)
+            oriented_mats[dim] = {}
+            ents = self.cell.d_entities(dim, get_class=True)
+            for e in ents:
+                ent_dofs = entity_associations[dim][str(e)]
+                ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
+                generators = e.group.generators
+                # need to incorporate g1 into this
+                for g in generators:
+                    val, _ = g.compute_num_rep()
+                    g_mat = dof_id_mat.copy()
+                    sub_mat = g.matrix_form()
+                    # surely this can be done with slicing
+                    for i in range(len(ent_dofs_ids)):
+                        for j in range(len(ent_dofs_ids)):
+                            g_mat[ent_dofs_ids[i]][ent_dofs_ids[j]] = sub_mat[i][j]
+                    oriented_mats[dim][val] = g_mat
+        print(oriented_mats)
+
     def to_json(self, filename="triple.json"):
         encoded = jsonpickle.encode(self)
         with open(filename, "w+") as f:
             f.write(encoded)
-            
-
-
 
 
 class DOFGenerator():
@@ -308,7 +339,6 @@ class DOFGenerator():
         for x_elem in self.x:
             repr_str += "g(" + str(x_elem) + ")"
         return repr_str
-
 
 
 class ImmersedDOFs():
