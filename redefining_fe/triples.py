@@ -2,6 +2,7 @@ from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
+# from redefining_fe.serialisation import FETripleEncoder
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
@@ -9,7 +10,7 @@ import inspect
 import math
 import finat.ufl
 import warnings
-import jsonpickle
+import json
 
 
 class ElementTriple():
@@ -234,11 +235,12 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
         
-    def to_json(self, filename="triple.json"):
-        encoded = jsonpickle.encode(self)
-        with open(filename, "w+") as f:
-            f.write(encoded)
-            
+    # def to_json(self, filename="triple.json"):
+        # encoded = json.dumps(self, cls=FETripleEncoder)
+        # print(encoded)
+        # with open(filename, "w+") as f:
+        #     f.write(encoded)
+
 
 
 
