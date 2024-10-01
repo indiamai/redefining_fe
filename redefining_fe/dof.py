@@ -120,11 +120,11 @@ class DOF():
     def eval(self, fn, pullback=True):
         return self.pairing(self.kernel, fn)
 
-    def add_context(self, cell, space, g, overall_id=None, generator_id=None):
-        # We only want to store the first instance of each
+    def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
+        # For some of these, we only want to store the first instance of each
+        self.generation[cell.dim()] = dof_gen
         if self.trace_entity is None:
             self.trace_entity = cell
-            self.generation[self.trace_entity.dim()] = g
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
@@ -144,7 +144,7 @@ class DOF():
 
     def immerse(self, entity, attachment, target_space, g, triple):
         new_generation = self.generation.copy()
-        new_generation[target_space.domain.dim()] = g
+        # new_generation[target_space.domain.dim()] = triple.DOFGenerator
         return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
 
 

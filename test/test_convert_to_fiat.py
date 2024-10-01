@@ -44,6 +44,7 @@ def create_cg2(cell):
     center = [DOF(DeltaPairing(), PointKernel((0,)))]
 
     Pk = PolynomialSpace(deg, deg)
+    print(get_cyc_group(len(cell.vertices())))
     cg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
                                                 DOFGenerator(center, S1, S1)])
     return cg

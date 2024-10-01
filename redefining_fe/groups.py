@@ -65,6 +65,10 @@ class GroupMemberRep(object):
             val += loc * math.factorial(len(identity) - i - 1)
         return val, val_list
 
+    def __eq__(self, x):
+        assert isinstance(x, GroupMemberRep)
+        return self.perm == x.perm and self.group.cell.dim() == x.group.cell.dim()
+
     def __mul__(self, x):
         assert isinstance(x, GroupMemberRep)
         return self.group.get_member(self.perm * x.perm)
@@ -74,6 +78,7 @@ class GroupMemberRep(object):
         for rep in self.rep:
             string += rep.__name__
             string += " "
+        string += str(self.perm.array_form)
         return string
 
     def matrix_form(self):
@@ -148,7 +153,8 @@ class GroupRepresentation(object):
         return self._members
 
     def size(self):
-        assert len(self._members) == self.base_group.order()
+        if hasattr(self, "_members"):
+            assert len(self._members) == self.base_group.order()
         return self.base_group.order()
 
     def transform_between_perms(self, perm1, perm2):
@@ -237,7 +243,7 @@ class GroupRepresentation(object):
         return GroupRepresentation(PermutationGroup(remaining_perms))
 
     def __repr__(self):
-        return str(self.base_group)
+        return "GR" + str(self.size())
 
 # Function Representation of the coordinate transforms that make up the groups.
 
