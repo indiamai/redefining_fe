@@ -57,6 +57,7 @@ def test_tet_cg3():
     test_func = MyTestFunction(sp.Matrix([10*x, 3*y/np.sqrt(3), z*4]), symbols=(x, y, z))
 
     for dof in cg3.generate():
+        print(dof)
         dof.eval(test_func)
 
 
