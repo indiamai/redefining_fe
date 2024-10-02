@@ -31,8 +31,8 @@ class DeltaPairing(Pairing):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
-    def convert_to_fiat(self, ref_el, pt):
-        # assert isinstance(kernel, PointKernel)
+    def convert_to_fiat(self, ref_el, dof):
+        pt = dof.eval(MyTestFunction(lambda *x: x))
         return PointEvaluation(ref_el, pt)
 
     def __repr__(self):
@@ -54,7 +54,11 @@ class L2InnerProd(Pairing):
             return np.dot(kernel(*x), v(*x))
         return quadrature.integrate(kernel_dot)
 
-    def convert_to_fiat(self, ref_el, kernel):
+    def convert_to_fiat(self, ref_el, dof):
+        print(self.entity)
+        print(ref_el)
+        # need quadrature - for that need information from triple.
+        # also will need to convert entity to fiat - or can we get the entity from the ref_el
         raise NotImplementedError("L2 functionals not yet fiat convertible")
 
     def __repr__(self):
@@ -135,8 +139,7 @@ class DOF():
 
     def convert_to_fiat(self, ref_el):
         if isinstance(self.kernel, PointKernel):
-            pt = self.eval(MyTestFunction(lambda *x: x))
-            return self.pairing.convert_to_fiat(ref_el, pt)
+            return self.pairing.convert_to_fiat(ref_el, self)
         raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
     def __repr__(self, fn="v"):
@@ -149,6 +152,7 @@ class DOF():
 
 
 class ImmersedDOF(DOF):
+    # probably need to add a convert to fiat method here to capture derivatives from immersion
     def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation={}, sub_id=None):
         self.immersed = True
         self.triple = triple

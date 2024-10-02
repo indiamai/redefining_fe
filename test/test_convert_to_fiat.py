@@ -4,7 +4,7 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from test_2d_examples_docs import construct_cg3
+from test_2d_examples_docs import construct_cg3, construct_nd
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -49,6 +49,11 @@ def create_cg2(cell):
                                                 DOFGenerator(center, S1, S1)])
     return cg
 
+@pytest.mark.parametrize("cell", [tri])
+def test_create_fiat_nd(cell):
+    nd = construct_nd(cell)
+
+    nd.to_fiat_elem()
 
 @pytest.mark.parametrize("cell", [tri, edge])
 def test_create_fiat_cg1(cell):

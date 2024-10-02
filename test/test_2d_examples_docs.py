@@ -159,8 +159,7 @@ def test_cg_examples():
         assert any([np.allclose(val, dof.eval(test_func).flatten()) for val in dof_vals])
 
 
-def test_nd_example():
-    tri = n_sided_polygon(3)
+def construct_nd(tri):
     deg = 1
     edge = tri.edges(get_class=True)[0]
     x = sp.Symbol("x")
@@ -179,7 +178,15 @@ def test_nd_example():
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
 
     ned = ElementTriple(tri, (nd, CellHCurl, C0), [tri_dofs])
+    return ned
 
+
+def test_nd_example():
+    tri = n_sided_polygon(3)
+    ned = construct_nd(tri)
+
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
     phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
