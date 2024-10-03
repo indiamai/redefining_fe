@@ -302,8 +302,10 @@ def test_square_cg():
 def test_rt_second_order():
     tri = n_sided_polygon(3)
     edge = tri.d_entities(1, get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
-    xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: (1/2)*(1 + x)))]
+    xs = [DOF(L2InnerProd(), PolynomialKernel((1/2)*(1 + x), (x,)))]
     dofs = DOFGenerator(xs, S2, S2)
     int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
@@ -317,8 +319,6 @@ def test_rt_second_order():
     vecP3 = PolynomialSpace(3, 3, vec=True)
     rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 
-    x = sp.Symbol("x")
-    y = sp.Symbol("y")
     phi = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
                                     1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
 

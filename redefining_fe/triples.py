@@ -6,7 +6,6 @@ from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
 import inspect
-import math
 import finat.ufl
 import warnings
 import jsonpickle
@@ -109,7 +108,7 @@ class ElementTriple():
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             # print(dofs[i].id)
-            nodes.append(dofs[i].convert_to_fiat(ref_el))
+            nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
             # print(nodes[i].pt_dict)
         print("my ent ids", entity_ids)
 

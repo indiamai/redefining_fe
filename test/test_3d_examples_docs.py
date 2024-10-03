@@ -64,8 +64,10 @@ def test_tet_cg3():
 def test_tet_rt():
     tetra = make_tetrahedron()
     face = tetra.d_entities(2, get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
-    xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: 1))]
+    xs = [DOF(L2InnerProd(), PolynomialKernel(1, (x, y)))]
     dofs = DOFGenerator(xs, S1, S2)
     face_vec = ElementTriple(face, (P1, CellHDiv, "C0"), dofs)
     ls = face_vec.generate()
@@ -84,8 +86,9 @@ def test_tet_rt():
 def test_tet_ned():
     tetra = make_tetrahedron()
     edge = tetra.edges(get_class=True)[0]
+    x = sp.Symbol("x")
 
-    xs = [DOF(L2InnerProd(), PolynomialKernel(lambda x: 1))]
+    xs = [DOF(L2InnerProd(), PolynomialKernel(1, (x,)))]
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, "C0"), dofs)
     ls = int_ned.generate()

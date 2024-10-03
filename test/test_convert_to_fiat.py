@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import sympy as sp
 from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
@@ -49,11 +50,19 @@ def create_cg2(cell):
                                                 DOFGenerator(center, S1, S1)])
     return cg
 
+
 @pytest.mark.parametrize("cell", [tri])
 def test_create_fiat_nd(cell):
     nd = construct_nd(cell)
-
+    ref_el = cell.to_fiat()
+    print(ref_el.get_topology())
+    print(cell.d_entities(1))
+    x = sp.Symbol("x")
+    ker = PolynomialKernel((1/2)*(1 + x), (x,))
+    print(ker(2))
+    ker.degree()
     nd.to_fiat_elem()
+
 
 @pytest.mark.parametrize("cell", [tri, edge])
 def test_create_fiat_cg1(cell):

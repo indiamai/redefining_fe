@@ -1,7 +1,9 @@
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.quadrature import FacetQuadratureRule
 from FIAT.functional import PointEvaluation
 from redefining_fe.cells import CellComplexToFiat
 import numpy as np
+import sympy as sp
 
 
 class Pairing():
@@ -31,7 +33,7 @@ class DeltaPairing(Pairing):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
-    def convert_to_fiat(self, ref_el, dof):
+    def convert_to_fiat(self, ref_el, dof, interpolant_deg):
         pt = dof.eval(MyTestFunction(lambda *x: x))
         return PointEvaluation(ref_el, pt)
 
@@ -54,10 +56,19 @@ class L2InnerProd(Pairing):
             return np.dot(kernel(*x), v(*x))
         return quadrature.integrate(kernel_dot)
 
-    def convert_to_fiat(self, ref_el, dof):
+    def convert_to_fiat(self, ref_el, dof, interpolant_degree):
+        total_deg = interpolant_degree + dof.kernel.degree()
         print(self.entity)
-        print(ref_el)
+        print(self.entity.id)
+        print(ref_el.fe_cell.get_topology())
+        ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        print(ent_id)
+        entity = ref_el.construct_subelement(self.entity.dim())
+        Q_ref = create_quadrature(entity, total_deg)
+        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        print(Q)
         # need quadrature - for that need information from triple.
+        # need polynomial degree and kernel degree
         # also will need to convert entity to fiat - or can we get the entity from the ref_el
         raise NotImplementedError("L2 functionals not yet fiat convertible")
 
@@ -65,16 +76,35 @@ class L2InnerProd(Pairing):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
 
 
-class PointKernel():
+class BaseKernel():
+
+    def __init__(self):
+        self.attachment = False
+
+    def permute(self, g):
+        raise NotImplementedError("This method should be implemented by the subclass")
+
+    def __repr__(self):
+        return "BaseKernel"
+
+    def __call__(self, *args):
+        raise NotImplementedError("This method should be implemented by the subclass")
+
+
+class PointKernel(BaseKernel):
 
     def __init__(self, x):
         if not isinstance(x, tuple):
             x = (x,)
         self.pt = x
+        super(PointKernel, self).__init__()
 
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
+
+    def degree(self):
+        return 1
 
     def permute(self, g):
         return PointKernel(g(self.pt))
@@ -83,21 +113,30 @@ class PointKernel():
         return self.pt
 
 
-class PolynomialKernel():
+class PolynomialKernel(BaseKernel):
 
-    def __init__(self, fn):
-        self.fn = fn
+    def __init__(self, fn, symbols):
+        if not sp.sympify(fn).as_poly() and not len(sp.sympify(fn).free_symbols) == 0:
+            raise ValueError("Function argument must be able to be interpreted as a sympy polynomial")
+        self.fn = sp.sympify(fn)
+        self.syms = symbols
+        super(PolynomialKernel, self).__init__()
 
     def __repr__(self):
         return str(self.fn)
 
+    def degree(self):
+        if len(self.fn.free_symbols()) == 0:
+            return 1
+        return self.fn.as_poly().total_degree()
+
     def permute(self, g):
-        def permuting(*x):
-            return self.fn(*g(x))
-        return PolynomialKernel(permuting)
+        new_fn = self.fn.subs({self.syms[i]: g(self.syms)[i] for i in range(len(self.syms))})
+        return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        res = self.fn(*args)
+        # res = self.fn.eval(*args)
+        res = self.fn.subs({self.syms[i]: args[i] for i in range(len(args))})
         return res
 
 
@@ -137,9 +176,9 @@ class DOF():
         if self.sub_id is None and generator_id is not None:
             self.sub_id = generator_id
 
-    def convert_to_fiat(self, ref_el):
+    def convert_to_fiat(self, ref_el, interpolant_degree):
         if isinstance(self.kernel, PointKernel):
-            return self.pairing.convert_to_fiat(ref_el, self)
+            return self.pairing.convert_to_fiat(ref_el, self, interpolant_degree)
         raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
     def __repr__(self, fn="v"):
@@ -147,7 +186,6 @@ class DOF():
 
     def immerse(self, entity, attachment, target_space, g, triple):
         new_generation = self.generation.copy()
-        # new_generation[target_space.domain.dim()] = triple.DOFGenerator
         return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
 
 
