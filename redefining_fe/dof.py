@@ -66,6 +66,7 @@ class L2InnerProd(Pairing):
         entity = ref_el.construct_subelement(self.entity.dim())
         Q_ref = create_quadrature(entity, total_deg)
         Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+
         print(Q)
         # need quadrature - for that need information from triple.
         # need polynomial degree and kernel degree
@@ -135,7 +136,6 @@ class PolynomialKernel(BaseKernel):
         return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        # res = self.fn.eval(*args)
         res = self.fn.subs({self.syms[i]: args[i] for i in range(len(args))})
         return res
 

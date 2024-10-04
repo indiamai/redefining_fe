@@ -223,10 +223,9 @@ class ElementTriple():
 
                         if g in dof_gen_class.g1.generators:
                             sub_mat = g.matrix_form()
-                            # surely this can be done with slicing
-                            for i in range(len(ent_dofs_ids)):
-                                for j in range(len(ent_dofs_ids)):
-                                    oriented_mats[dim][str(e)][val][ent_dofs_ids[i]][ent_dofs_ids[j]] = sub_mat[i][j]
+
+                            # here, need to modify submat in accordance with g2
+                            oriented_mats[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
         print(oriented_mats)
 
     def to_json(self, filename="triple.json"):
