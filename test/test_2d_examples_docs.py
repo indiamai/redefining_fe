@@ -170,7 +170,7 @@ def construct_nd(tri):
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
     xs = [immerse(tri, int_ned, TrHCurl)]
-    tri_dofs = DOFGenerator(xs, S3, S3)
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
 
     M = sp.Matrix([[y, -x]])
     vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
@@ -218,7 +218,7 @@ def test_rt_example():
                                       1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
 
     xs = [immerse(tri, int_rt, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, S3, S3)
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
     M = sp.Matrix([[x, y]])
     vec_Pd = PolynomialSpace(deg - 1, deg - 1, vec=True)
     Pd = PolynomialSpace(deg - 1, deg - 1)
@@ -283,7 +283,7 @@ def test_square_cg():
     v_dofs = DOFGenerator(v_xs, C4, S1)
 
     e_xs = [immerse(square, dg0_int, TrH1)]
-    e_dofs = DOFGenerator(e_xs, D4, S1)
+    e_dofs = DOFGenerator(e_xs, sq_edges, S1)
 
     i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
@@ -310,7 +310,7 @@ def test_rt_second_order():
     int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
     xs = [immerse(tri, int_rt2, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, S3, S3)
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
 
     i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]

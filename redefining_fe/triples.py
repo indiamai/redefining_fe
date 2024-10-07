@@ -201,9 +201,9 @@ class ElementTriple():
             oriented_mats[dim] = {}
             ents = self.cell.d_entities(dim, get_class=True)
             for e in ents:
-                generators = e.group.generators
+                members = e.group.members()
                 oriented_mats[dim][str(e)] = {0: dof_id_mat.copy()}
-                for g in generators:
+                for g in members:
                     val, _ = g.compute_num_rep()
                     oriented_mats[dim][str(e)][val] = dof_id_mat.copy()
                     for dof_gen in entity_associations[dim][str(e)].keys():
@@ -218,12 +218,12 @@ class ElementTriple():
                         # for ent, ent_id in zip(ent_dofs, ent_dofs_ids):
                         #     print(ent_id, ent.g.perm)
                         #     print(ent.g.matrix_form())
-                        print(dof_gen_class.g1.generators)
-                        print(g in dof_gen_class.g1.generators)
+                        print(dof_gen_class.g1.members())
+                        print(g in dof_gen_class.g1.members())
 
-                        if g in dof_gen_class.g1.generators:
+                        if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
-
+                            print(ent_dofs_ids)
                             # here, need to modify submat in accordance with g2
                             oriented_mats[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
         print(oriented_mats)
@@ -298,14 +298,7 @@ class ImmersedDOFs():
     def __call__(self, g):
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
         if self.C.dim() > 0 and o != o.group.identity:
-            print("incorrect")
-            print(g)
-            print(o)
-            # print(g * o)
-            print("Not matching orientation")
-            return []
-        print("correct")
-        print(g)
+            raise ValueError("Not matching orientation - groups incorrect")
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []
 

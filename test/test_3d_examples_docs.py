@@ -43,10 +43,10 @@ def test_tet_cg3():
     cgverts = DOFGenerator(v_xs, Z4, S1)
 
     e_xs = [immerse(tetra, dg1_int, TrH1)]
-    cgedges = DOFGenerator(e_xs, A4, S1)
+    cgedges = DOFGenerator(e_xs, tet_edges, S1)
 
     f_xs = [immerse(tetra, dg0_face, TrH1)]
-    cgfaces = DOFGenerator(f_xs, S4, S1)
+    cgfaces = DOFGenerator(f_xs, tet_faces, S1)
 
     cg3 = ElementTriple(tetra, (P1, CellH1, "C0"),
                         [cgverts, cgedges, cgfaces])
@@ -73,7 +73,7 @@ def test_tet_rt():
     ls = face_vec.generate()
 
     im_xs = [immerse(tetra, face_vec, TrHDiv)]
-    face = DOFGenerator(im_xs, S4, S4)
+    face = DOFGenerator(im_xs, tet_faces, S4)
 
     rt1 = ElementTriple(tetra, (P1, CellHDiv, "C0"),
                         [face])
@@ -94,7 +94,7 @@ def test_tet_ned():
     ls = int_ned.generate()
 
     im_xs = [immerse(tetra, int_ned, TrHCurl)]
-    edge = DOFGenerator(im_xs, A4, Z4)
+    edge = DOFGenerator(im_xs, tet_edges, Z4)
 
     ned = ElementTriple(tetra, (P1, CellHCurl, "C0"),
                         [edge])
