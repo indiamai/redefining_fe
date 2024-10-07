@@ -76,6 +76,14 @@ class PolynomialSpace(object):
     def restrict(self, min_degree, max_degree):
         return RestrictedPolynomialSpace(min_degree, max_degree, self.vec)
 
+    def _to_dict(self):
+        return {self.dict_id(): {"vec": self.vec,
+                                 "sub": self.subdegree,
+                                 "super": self.superdegree}}
+
+    def dict_id(self):
+        return "PolynomialSpace" + str(id(self))
+
 
 class RestrictedPolynomialSpace(PolynomialSpace):
     """
@@ -120,6 +128,15 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
         restricted_ON = base_ON.take(indices)
         return restricted_ON
+
+    def _to_dict(self):
+        super_dict = super(RestrictedPolynomialSpace, self)._to_dict()
+        super_dict[self.dict_id()]["min_degree"] = self.min_degree
+        super_dict[self.dict_id()]["max_degree"] = self.max_degree
+        return super_dict
+
+    def dict_id(self):
+        return "RestrictedPolynomialSpace" + str(id(self))
 
 
 class ConstructedPolynomialSpace(PolynomialSpace):
@@ -190,6 +207,15 @@ class ConstructedPolynomialSpace(PolynomialSpace):
     def __add__(self, x):
         return ConstructedPolynomialSpace(self.weights.extend([1]),
                                           self.spaces.extend(x))
+
+    def _to_dict(self):
+        super_dict = super(ConstructedPolynomialSpace, self)._to_dict()
+        super_dict[self.dict_id()]["spaces"] = self.spaces
+        super_dict[self.dict_id()]["weights"] = self.weights
+        return super_dict
+
+    def dict_id(self):
+        return "ConstructedPolynomialSpace" + str(id(self))
 
 
 P0 = PolynomialSpace(0, 0)

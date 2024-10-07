@@ -46,6 +46,12 @@ class InterpolationSpace(object):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return other in self.parents
 
+    def _to_dict(self):
+        return self.dict_id()
+
+    def dict_id(self):
+        return str(self)
+
 
 class Sobolev(InterpolationSpace):
     """

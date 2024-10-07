@@ -15,6 +15,12 @@ class ElementSobolevSpace(object):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return any([isinstance(other, p) for p in self.parents])
 
+    def dict_id(self):
+        return str(self)
+
+    def _to_dict(self):
+        return self.dict_id()
+
 
 class CellH1(ElementSobolevSpace):
 

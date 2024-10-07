@@ -50,7 +50,7 @@ class GroupMemberRep(object):
             return temp_perm(lst)
         return self.perm(lst)
 
-    def compute_num_rep(self,  val_list=None):
+    def compute_num_rep(self, val_list=None):
         m_array = self.perm.array_form
         identity = self.group.identity.perm.array_form
         if not val_list:

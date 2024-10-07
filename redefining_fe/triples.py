@@ -234,9 +234,8 @@ class ElementTriple():
             plt.show()
         else:
             raise ValueError("Plotting not supported in this dimension")
-        
+
     def to_json(self, filename="triple.json"):
-        FETripleEncoder.seen_objects = {}
         encoded = json.dumps(self, cls=FETripleEncoder)
         print(encoded)
         # with open(filename, "w+") as f:
@@ -244,14 +243,12 @@ class ElementTriple():
 
     def _to_dict(self):
         o_dict = {self.dict_id(): {"cell": self.cell,
-                                   "spaces": "temp_spaces",
+                                   "spaces": self.spaces,
                                    "dofs": self.DOFGenerator}}
         return o_dict
 
     def dict_id(self):
         return "Triple" + str(id(self))
-
-
 
 
 class DOFGenerator():
@@ -330,8 +327,6 @@ class DOFGenerator():
         return "Triple" + str(id(self))
 
 
-
-
 class ImmersedDOFs():
 
     def __init__(self, target_cell, triple, trace, start_node=0):
@@ -367,7 +362,7 @@ class ImmersedDOFs():
     def _to_dict(self):
         o_dict = {self.dict_id(): {"target_cell": self.target_cell,
                                    "triple": self.triple,
-                                   "trace": self.trace}}
+                                   "trace": str(self.trace)}}
         return o_dict
 
     def dict_id(self):

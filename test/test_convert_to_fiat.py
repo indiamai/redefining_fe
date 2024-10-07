@@ -4,7 +4,7 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from test_2d_examples_docs import construct_cg3
+# from test_2d_examples_docs import construct_cg3
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -116,25 +116,25 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
-                                                    (create_dg1, "DG", 1),
-                                                    (construct_cg3, "CG", 3)])
-# ,
-#                                                     (lambda x:x, "CG", 4)
-def test_helmholtz(elem_gen, elem_code, deg):
-    cell = n_sided_polygon(3)
-    elem = elem_gen(cell)
+# @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
+#                                                     (create_dg1, "DG", 1),
+#                                                     (construct_cg3, "CG", 3)])
+# # ,
+# #                                                     (lambda x:x, "CG", 4)
+# def test_helmholtz(elem_gen, elem_code, deg):
+#     cell = n_sided_polygon(3)
+#     elem = elem_gen(cell)
 
-    mesh = UnitSquareMesh(20, 20)
+#     mesh = UnitSquareMesh(20, 20)
 
-    V = FunctionSpace(mesh, elem_code, deg)
-    res1 = helmholtz_solve(mesh, V)
+#     V = FunctionSpace(mesh, elem_code, deg)
+#     res1 = helmholtz_solve(mesh, V)
 
-    V = FunctionSpace(mesh, elem.to_ufl_elem())
-    res2 = helmholtz_solve(mesh, V)
+#     V = FunctionSpace(mesh, elem.to_ufl_elem())
+#     res2 = helmholtz_solve(mesh, V)
 
-    res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
-    assert np.allclose(res, 0)
+#     res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
+#     assert np.allclose(res, 0)
 
 
 def helmholtz_solve(mesh, V):

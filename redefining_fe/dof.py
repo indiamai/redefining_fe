@@ -91,7 +91,7 @@ class PointKernel():
 
     def __call__(self, *args):
         return self.pt
-    
+
     def _to_dict(self):
         o_dict = {self.dict_id(): {"pt": self.pt}}
         return o_dict
@@ -174,9 +174,9 @@ class DOF():
         new_generation = self.generation.copy()
         new_generation[target_space.domain.dim()] = g
         return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
-    
+
     def _to_dict(self):
-        # almost certainly needs more things
+        """ almost certainly needs more things"""
         o_dict = {self.dict_id(): {"pairing": self.pairing,
                                    "kernel": self.kernel}}
         return o_dict
@@ -254,3 +254,9 @@ class MyTestFunction():
             return "v(G(x))"
         else:
             return "v(x)"
+
+    def _to_dict(self):
+        return {"eq": self.eq}
+
+    def dict_id(self):
+        return "Function" + str(id(self))
