@@ -75,6 +75,13 @@ class GroupMemberRep(object):
             string += " "
         return string
 
+    def _to_dict(self):
+        o_dict = {self.dict_id(): self.perm}
+        return o_dict
+
+    def dict_id(self):
+        return "GroupMemberRep" + str(id(self))
+
 
 class GroupRepresentation(object):
     """
@@ -234,6 +241,12 @@ class GroupRepresentation(object):
 
     def __repr__(self):
         return str(self.base_group)
+
+    def _to_dict(self):
+        return {self.dict_id(): self.__repr__()}
+
+    def dict_id(self):
+        return "GroupRep" + str(id(self))
 
 # Function Representation of the coordinate transforms that make up the groups.
 

@@ -38,6 +38,13 @@ class DeltaPairing(Pairing):
     def __repr__(self):
         return "{fn}({kernel})"
 
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"entity": self.entity}}
+        return o_dict
+
+    def dict_id(self):
+        return "Delta" + str(id(self))
+
 
 class L2InnerProd(Pairing):
     """ need to think about the abstraction level here -
@@ -60,6 +67,13 @@ class L2InnerProd(Pairing):
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
 
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"entity": self.entity}}
+        return o_dict
+
+    def dict_id(self):
+        return "L2InnerProd" + str(id(self))
+
 
 class PointKernel():
 
@@ -77,6 +91,13 @@ class PointKernel():
 
     def __call__(self, *args):
         return self.pt
+    
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"pt": self.pt}}
+        return o_dict
+
+    def dict_id(self):
+        return "PointKernel" + str(id(self))
 
 
 class PolynomialKernel():
@@ -95,6 +116,13 @@ class PolynomialKernel():
     def __call__(self, *args):
         res = self.fn(*args)
         return res
+
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"fn": self.fn}}
+        return o_dict
+
+    def dict_id(self):
+        return "PolynomialKernel" + str(id(self))
 
 
 class DOF():
@@ -146,6 +174,15 @@ class DOF():
         new_generation = self.generation.copy()
         new_generation[target_space.domain.dim()] = g
         return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+    
+    def _to_dict(self):
+        # almost certainly needs more things
+        o_dict = {self.dict_id(): {"pairing": self.pairing,
+                                   "kernel": self.kernel}}
+        return o_dict
+
+    def dict_id(self):
+        return "DOF" + str(id(self))
 
 
 class ImmersedDOF(DOF):

@@ -2,7 +2,7 @@ from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
-# from redefining_fe.serialisation import FETripleEncoder
+from redefining_fe.serialisation import FETripleEncoder
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
@@ -235,12 +235,21 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
         
-    # def to_json(self, filename="triple.json"):
-        # encoded = json.dumps(self, cls=FETripleEncoder)
-        # print(encoded)
+    def to_json(self, filename="triple.json"):
+        FETripleEncoder.seen_objects = {}
+        encoded = json.dumps(self, cls=FETripleEncoder)
+        print(encoded)
         # with open(filename, "w+") as f:
         #     f.write(encoded)
 
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"cell": self.cell,
+                                   "spaces": "temp_spaces",
+                                   "dofs": self.DOFGenerator}}
+        return o_dict
+
+    def dict_id(self):
+        return "Triple" + str(id(self))
 
 
 
@@ -311,6 +320,16 @@ class DOFGenerator():
             repr_str += "g(" + str(x_elem) + ")"
         return repr_str
 
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"x": self.x,
+                                   "g1": self.g1,
+                                   "g2": self.g2}}
+        return o_dict
+
+    def dict_id(self):
+        return "Triple" + str(id(self))
+
+
 
 
 class ImmersedDOFs():
@@ -344,6 +363,15 @@ class ImmersedDOFs():
         for dof_gen in self.E:
             repr_str += "Im_" + str(self.trace) + "_" + str(self.target_cell) + "(" + str(dof_gen) + ")"
         return repr_str
+
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"target_cell": self.target_cell,
+                                   "triple": self.triple,
+                                   "trace": self.trace}}
+        return o_dict
+
+    def dict_id(self):
+        return "ImmersedDofs" + str(id(self))
 
 
 def immerse(target_cell, triple, target_space, node=0):

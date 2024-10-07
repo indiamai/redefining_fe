@@ -5,12 +5,14 @@ import networkx as nx
 import redefining_fe.groups as fe_groups
 import copy
 import sympy as sp
+import json
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex
 from ufl.cell import Cell
+from redefining_fe.serialisation import FETripleEncoder
 
 
 class Arrow3D(FancyArrowPatch):
@@ -594,6 +596,16 @@ class Point():
 
     def to_ufl(self, name=None, geo_dim=None):
         return CellComplexToUFL(self, name, geo_dim)
+    
+    def _to_dict(self):
+        # think this is probably missing stuf
+        o_dict = {self.dict_id(): {"dim": self.dimension,
+                                   "group": self.group,
+                                   "edges": [c for c in self.connections]}}
+        return o_dict
+    
+    def dict_id(self):
+        return "Point" + str(id(self))
 
 
 class Edge():
@@ -605,29 +617,41 @@ class Edge():
     :param: o: orientation function (optional)
     """
 
-    def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
+    def __init__(self, point, attachment=None, o=None):
         self.attachment = attachment
         self.point = point
         self.o = o
 
     def __call__(self, *x):
-        oriented = self.o(x)
-        syms = ["x", "y", "z"]
-        if hasattr(self.attachment, '__iter__'):
-            res = []
-            for attach_comp in self.attachment:
-                if len(attach_comp.atoms(sp.Symbol)) == len(oriented):
-                    res.append(sympy_to_numpy(attach_comp, syms, oriented))
-                else:
-                    res.append(attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))}))
-            return tuple(res)
-        return sympy_to_numpy(self.attachment, syms, oriented)
+        if self.o:
+            x = self.o(x)
+        if self.attachment:
+            syms = ["x", "y", "z"]
+            if hasattr(self.attachment, '__iter__'):
+                res = []
+                for attach_comp in self.attachment:
+                    if len(attach_comp.atoms(sp.Symbol)) == len(x):
+                        res.append(sympy_to_numpy(attach_comp, syms, x))
+                    else:
+                        res.append(attach_comp.subs({syms[i]: x[i] for i in range(len(x))}))
+                return tuple(res)
+            return sympy_to_numpy(self.attachment, syms, x)
+        return x
 
     def lower_dim(self):
         return self.point.dim()
 
     def __repr__(self):
         return str(self.point)
+
+    def _to_dict(self):
+        o_dict = {self.dict_id(): {"attachment": self.attachment,
+                                   "point": self.point,
+                                   "orientation": self.o}}
+        return o_dict
+
+    def dict_id(self):
+        return "Edge" + str(id(self))
 
 
 class CellComplexToFiat(Simplex):
