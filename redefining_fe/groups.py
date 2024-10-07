@@ -85,7 +85,84 @@ class GroupMemberRep(object):
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
 
-class GroupRepresentation(object):
+class PermutationSetRepresentation():
+    """
+        A representation of a set of permutations (can be a full group) on a cell.
+
+        Args:
+            [permutations]: the list of permutations in the set
+            cell (optional): the cell the group is representing the operations on
+
+    """
+    def __init__(self, perm_list, cell=None):
+        assert len(perm_list) > 0
+        self.perm_list = perm_list
+
+        if not any([p.is_Identity for p in self.perm_list]):
+            p = self.perm_list[0]
+            self.perm_list.append(Permutation([i for i in range(0, p.size)]))
+
+        print(self.perm_list)
+        if cell is not None:
+            self.cell = cell
+            vertices = cell.vertices(return_coords=True)
+            self._members = []
+            counter = 0
+
+            for p in self.perm_list:
+                if len(vertices) > p.size:
+                    temp_perm = Permutation(p, size=len(vertices))
+                    reordered = temp_perm(vertices)
+                else:
+                    reordered = p(vertices)
+                A = np.c_[np.array(vertices, dtype=float), np.ones(len(vertices))]
+                b = np.array(reordered, dtype=float)
+
+                M, _, _, _ = np.linalg.lstsq(A, b, rcond=None)
+                rep = construct_rep_func(M)
+                rep.__name__ = "m"
+                p_rep = GroupMemberRep(p, rep, self)
+                if p.is_Identity:
+                    self.identity = p_rep
+                self._members.append(p_rep)
+                counter += 1
+
+    def add_cell(self, cell):
+        return PermutationSetRepresentation(self.perm_list, cell=cell)
+
+    def members(self, perm=False):
+        if self.cell is None:
+            raise ValueError("Group does not have a domain - members have not been calculated")
+        if perm:
+            return [m.perm for m in self._members]
+        return self._members
+
+    def transform_between_perms(self, perm1, perm2):
+        member_perms = self.members(perm=True)
+        perm1 = Permutation.from_sequence(perm1)
+        perm2 = Permutation.from_sequence(perm2)
+        assert perm1 in member_perms
+        assert perm2 in member_perms
+        return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
+
+    def get_member(self, perm):
+        for m in self.members():
+            if m.perm == perm:
+                return m
+        raise ValueError("Permutation not a member of group")
+
+    def size(self):
+        return len(self.perm_list)
+
+    def __mul__(self, other_group):
+        # convert to set to remove duplicates
+        return PermutationSetRepresentation(list(set(self.perm_list + other_group.perm_list)))
+
+    def __repr__(self):
+        return "GS" + str(self.size())
+
+
+class GroupRepresentation(PermutationSetRepresentation):
     """
     A representation of a group by its matrix operations.
 
@@ -145,6 +222,11 @@ class GroupRepresentation(object):
     def add_cell(self, cell):
         return GroupRepresentation(self.base_group, cell=cell)
 
+    def size(self):
+        if hasattr(self, "_members"):
+            assert len(self._members) == self.base_group.order()
+        return self.base_group.order()
+
     def members(self, perm=False):
         if self.cell is None:
             raise ValueError("Group does not have a domain - members have not been calculated")
@@ -152,20 +234,19 @@ class GroupRepresentation(object):
             return [m.perm for m in self._members]
         return self._members
 
-    def size(self):
-        if hasattr(self, "_members"):
-            assert len(self._members) == self.base_group.order()
-        return self.base_group.order()
-
     def transform_between_perms(self, perm1, perm2):
         member_perms = self.members(perm=True)
-        # breakpoint()
         perm1 = Permutation.from_sequence(perm1)
         perm2 = Permutation.from_sequence(perm2)
         assert perm1 in member_perms
         assert perm2 in member_perms
-        # assert list(perm2) in [m.array_form for m in member_perms]
         return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
+
+    def get_member(self, perm):
+        for m in self.members():
+            if m.perm == perm:
+                return m
+        raise ValueError("Permutation not a member of group")
 
     def compute_num_reps(self, base_val=0):
         """ Computed the numerical represention of each member as compared to the identity.
@@ -211,12 +292,6 @@ class GroupRepresentation(object):
                                                   new_path,
                                                   remaining_members)
         return remaining_members
-
-    def get_member(self, perm):
-        for m in self.members():
-            if m.perm == perm:
-                return m
-        raise ValueError("Permutation not a member of group")
 
     def __mul__(self, other_group):
         return GroupRepresentation(PermutationGroup(self.base_group.generators + other_group.base_group.generators))
@@ -318,3 +393,5 @@ Z4 = GroupRepresentation(CyclicGroup(4))
 D2 = GroupRepresentation(DihedralGroup(2))
 A4 = GroupRepresentation(AlternatingGroup(4))
 A3 = GroupRepresentation(AlternatingGroup(3))
+
+tri_C3 = PermutationSetRepresentation([Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 0, 2])])

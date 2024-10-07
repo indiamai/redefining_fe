@@ -1,5 +1,7 @@
 from pytest import *
 from redefining_fe import *
+from sympy.combinatorics import Permutation
+from test_convert_to_fiat import create_dg1
 
 
 def test_numerical_orientations():
@@ -15,3 +17,51 @@ def test_numerical_orientations():
     mems = cell.group.members()
     for m in mems:
         print(m.compute_num_rep())
+
+
+def test_permsets():
+
+    cell = n_sided_polygon(3)
+    p = Permutation([0, 2, 1])
+    print(p.size)
+    print(p.is_Identity)
+    c3 = C3.add_cell(cell)
+
+    c3_reps = PermutationSetRepresentation([Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 0, 2])], cell)
+
+    deg = 1
+    vert_dg = create_dg1(cell.vertices(get_class=True)[0])
+    xs = [immerse(cell, vert_dg, TrH1)]
+
+    Pk = PolynomialSpace(deg, deg)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, c3, S1))
+
+    dofs = cg.generate()
+
+    for d in dofs:
+        print(d)
+
+    tri = cell
+    edge = tri.edges(get_class=True)[0]
+    vert = tri.vertices(get_class=True)[0]
+
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+
+    v_xs = [immerse(tri, dg0, TrH1)]
+    v_dofs = DOFGenerator(v_xs, c3_reps, S1)
+
+    xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
+    dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
+    print([d.generation for d in dg0_int.generate()])
+
+    e_xs = [immerse(tri, dg0_int, TrH1)]
+    e_dofs = DOFGenerator(e_xs, c3_reps, S1)
+
+    i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    cg3 = ElementTriple(tri, (P3, CellH1, C0), [v_dofs, e_dofs, i_dofs])
+
+    for d in cg3.generate():
+        print(d)

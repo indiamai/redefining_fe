@@ -298,8 +298,14 @@ class ImmersedDOFs():
     def __call__(self, g):
         target_node, o = self.target_cell.permute_entities(g, self.C.dim())[self.start_node]
         if self.C.dim() > 0 and o != o.group.identity:
+            print("incorrect")
+            print(g)
+            print(o)
+            # print(g * o)
             print("Not matching orientation")
             return []
+        print("correct")
+        print(g)
         attachment = self.target_cell.cell_attachment(target_node)
         new_dofs = []
 

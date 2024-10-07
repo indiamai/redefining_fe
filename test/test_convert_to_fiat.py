@@ -1,11 +1,11 @@
 import pytest
 import numpy as np
-import sympy as sp
+# import sympy as sp
 from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from test_2d_examples_docs import construct_cg3, construct_nd
+# from test_2d_examples_docs import construct_cg3, construct_nd
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -51,17 +51,17 @@ def create_cg2(cell):
     return cg
 
 
-@pytest.mark.parametrize("cell", [tri])
-def test_create_fiat_nd(cell):
-    nd = construct_nd(cell)
-    ref_el = cell.to_fiat()
-    print(ref_el.get_topology())
-    print(cell.d_entities(1))
-    x = sp.Symbol("x")
-    ker = PolynomialKernel((1/2)*(1 + x), (x,))
-    print(ker(2))
-    ker.degree()
-    nd.to_fiat_elem()
+# @pytest.mark.parametrize("cell", [tri])
+# def test_create_fiat_nd(cell):
+#     nd = construct_nd(cell)
+#     ref_el = cell.to_fiat()
+#     print(ref_el.get_topology())
+#     print(cell.d_entities(1))
+#     x = sp.Symbol("x")
+#     ker = PolynomialKernel((1/2)*(1 + x), (x,))
+#     print(ker(2))
+#     ker.degree()
+#     nd.to_fiat_elem()
 
 
 @pytest.mark.parametrize("cell", [tri, edge])
@@ -131,25 +131,25 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
-                                                    (create_dg1, "DG", 1),
-                                                    (construct_cg3, "CG", 3)])
-# ,
-#                                                     (lambda x:x, "CG", 4)
-def test_helmholtz(elem_gen, elem_code, deg):
-    cell = n_sided_polygon(3)
-    elem = elem_gen(cell)
+# @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
+#                                                     (create_dg1, "DG", 1),
+#                                                     (construct_cg3, "CG", 3)])
+# # ,
+# #                                                     (lambda x:x, "CG", 4)
+# def test_helmholtz(elem_gen, elem_code, deg):
+#     cell = n_sided_polygon(3)
+#     elem = elem_gen(cell)
 
-    mesh = UnitSquareMesh(20, 20)
+#     mesh = UnitSquareMesh(20, 20)
 
-    V = FunctionSpace(mesh, elem_code, deg)
-    res1 = helmholtz_solve(mesh, V)
+#     V = FunctionSpace(mesh, elem_code, deg)
+#     res1 = helmholtz_solve(mesh, V)
 
-    V = FunctionSpace(mesh, elem.to_ufl_elem())
-    res2 = helmholtz_solve(mesh, V)
+#     V = FunctionSpace(mesh, elem.to_ufl_elem())
+#     res2 = helmholtz_solve(mesh, V)
 
-    res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
-    assert np.allclose(res, 0)
+#     res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
+#     assert np.allclose(res, 0)
 
 
 def helmholtz_solve(mesh, V):

@@ -107,14 +107,14 @@ def construct_cg3(cell=None):
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
     v_xs = [immerse(tri, dg0, TrH1)]
-    v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+    v_dofs = DOFGenerator(v_xs, tri_C3, S1)
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
     print([d.generation for d in dg0_int.generate()])
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
-    e_dofs = DOFGenerator(e_xs, S3, S1)
+    e_dofs = DOFGenerator(e_xs, tri_C3, S1)
 
     i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
