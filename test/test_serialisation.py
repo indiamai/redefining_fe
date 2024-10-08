@@ -1,5 +1,5 @@
 from redefining_fe import *
-from redefining_fe.serialisation import FETripleEncoder
+from redefining_fe.serialisation import FETripleEncoder, FETripleDecoder
 from test_convert_to_fiat import create_cg1
 import json
 
@@ -21,7 +21,9 @@ def test_serialisation():
     for cell in cells:
         triple = create_cg1(cell)
         encoded = json.dumps(triple, cls=FETripleEncoder, indent=2)
-        print(encoded)
+        # print(encoded)
+        decoded = json.loads(encoded, cls=FETripleDecoder)
+        print(type(decoded))
 
 
 def test_brackets():

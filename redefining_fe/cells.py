@@ -599,11 +599,15 @@ class Point():
         # think this is probably missing stuf
         o_dict = {self.dict_id(): {"dim": self.dimension,
                                    "group": self.group,
-                                   "edges": [c for c in self.connections]}}
+                                   "edges": [c for c in self.connections],
+                                   "oriented": self.oriented}}
         return o_dict
 
     def dict_id(self):
         return "Point" + str(id(self))
+
+    def _from_dict(o_dict):
+        return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"])
 
 
 class Edge():
@@ -650,6 +654,9 @@ class Edge():
 
     def dict_id(self):
         return "Edge" + str(id(self))
+
+    def _from_dict(o_dict):
+        return Edge(o_dict["point"], o_dict["attachement"], o_dict["orientation"])
 
 
 class CellComplexToFiat(Simplex):

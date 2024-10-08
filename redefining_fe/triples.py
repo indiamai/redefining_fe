@@ -2,7 +2,6 @@ from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
-from redefining_fe.serialisation import FETripleEncoder
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib.pyplot as plt
@@ -10,7 +9,6 @@ import inspect
 import math
 import finat.ufl
 import warnings
-import json
 
 
 class ElementTriple():
@@ -235,11 +233,11 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
 
-    def to_json(self, filename="triple.json"):
-        encoded = json.dumps(self, cls=FETripleEncoder)
-        print(encoded)
-        # with open(filename, "w+") as f:
-        #     f.write(encoded)
+    # def to_json(self, filename="triple.json"):
+    #     encoded = json.dumps(self, cls=FETripleEncoder)
+    #     print(encoded)
+    #     # with open(filename, "w+") as f:
+    #     #     f.write(encoded)
 
     def _to_dict(self):
         o_dict = {self.dict_id(): {"cell": self.cell,
@@ -249,6 +247,14 @@ class ElementTriple():
 
     def dict_id(self):
         return "Triple" + str(id(self))
+
+    def _from_dict(o_dict):
+        # from redefining_fe.serialisation import FETripleDecoder
+        # print(o_dict["cell"])
+        # cell = json.loads(o_dict["cell"], cls=FETripleDecoder)
+        # spaces = json.loads(o_dict["spaces"], cls=FETripleDecoder)
+        # dofs =  json.loads(o_dict["dofs"], cls=FETripleDecoder)
+        return ElementTriple(o_dict["cell"], o_dict["spaces"], o_dict["dofs"])
 
 
 class DOFGenerator():
@@ -324,7 +330,7 @@ class DOFGenerator():
         return o_dict
 
     def dict_id(self):
-        return "Triple" + str(id(self))
+        return "DOFGenerator" + str(id(self))
 
 
 class ImmersedDOFs():

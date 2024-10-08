@@ -243,10 +243,15 @@ class GroupRepresentation(object):
         return str(self.base_group)
 
     def _to_dict(self):
-        return {self.dict_id(): self.__repr__()}
+        return {self.dict_id(): {"base_group": self.base_group,
+                                 "cell": self.cell}}
 
     def dict_id(self):
         return "GroupRep" + str(id(self))
+
+    def _from_dict(o_dict):
+        GroupRepresentation(o_dict["base_group"], o_dict["cell"])
+
 
 # Function Representation of the coordinate transforms that make up the groups.
 
