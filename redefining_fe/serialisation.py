@@ -17,10 +17,7 @@ class FETripleEncoder(json.JSONEncoder):
         if isinstance(o, sp.core.containers.Tuple) or isinstance(o, sp.Expr):
             return sp.srepr(o)
 
-        # print(o)
-        # print(o.dict_id())
         if o.dict_id() in self.seen_objects.keys():
-            # print("Cache hit")
             return o.dict_id()
 
         if hasattr(o, "_to_dict"):
@@ -32,25 +29,25 @@ class FETripleEncoder(json.JSONEncoder):
         return super().default(o)
 
     def encode(self, o):
-        dict_str = super(FETripleEncoder, self).encode(o)
-        print("encoded")
+        dict_str = super(FETripleEncoder, self).encode(o) + ", {"
         for seen_obj in self.seen_objects.keys():
             matches = [(m.start(), m.end()) for m in re.finditer(seen_obj, dict_str)]
             if len(matches) > 1:
-                print(seen_obj)
-                # need to replace whole dict found
+                remove_s = None
                 for (s, e) in matches:
                     if dict_str[e+1] == ":":
-                        s2, e2 = self.bracket_matching(dict_str[e:])
-                        found_dict = dict_str[e+s2:e+e2+1]
-                        dict_str = dict_str[:e+s2] + seen_obj + dict_str[e+e2:] + ", {" + seen_obj + ":" + found_dict + "}"
-        dict_str = "{" + dict_str + "}"
-        return dict_str
+                        # this will only occur once
+                        remove_s = s
+                if remove_s:
+                    start_index = dict_str[:remove_s].rindex("{")
+                    s2, e2 = self.bracket_matching(dict_str[start_index:],)
+                    found_dict = dict_str[start_index+s2:start_index+e2]
+                    dict_str = dict_str[:start_index+s2] + seen_obj + dict_str[start_index+e2:] + found_dict + ","
+        new_dict_str = "{" + dict_str + "}}"
+        return new_dict_str
 
     def bracket_matching(self, dict_str):
         bracket_counter = 0
-        print(dict_str)
-        print("BRACK")
         for m in re.finditer("{|}", dict_str):
             if m.group() == "{":
                 if bracket_counter == 0:

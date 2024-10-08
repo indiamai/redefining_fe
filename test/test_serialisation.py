@@ -10,9 +10,9 @@ tri = n_sided_polygon(3)
 
 def test_repeated_objs():
     repeated_edge = Point(1, [vert, vert], vertex_num=2)
-    encoded = json.dumps(repeated_edge, cls=FETripleEncoder, indent=2)
+    repeated_tri = Point(2, [repeated_edge, repeated_edge, repeated_edge], vertex_num=3)
+    encoded = json.dumps(repeated_tri, cls=FETripleEncoder, indent=2)
     print(encoded)
-    FETripleEncoder().encode(repeated_edge)
 
 
 def test_serialisation():
@@ -21,7 +21,7 @@ def test_serialisation():
     for cell in cells:
         triple = create_cg1(cell)
         encoded = json.dumps(triple, cls=FETripleEncoder, indent=2)
-        print(type(encoded))
+        print(encoded)
 
 
 def test_brackets():
