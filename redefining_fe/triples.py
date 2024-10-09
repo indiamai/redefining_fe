@@ -166,12 +166,12 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
 
-    def make_basix_style_perms(self):
+    def make_dof_perms(self):
         dofs = self.generate()
         entity_associations = {dim: {str(e): {} for e in self.cell.d_entities(dim, get_class=True)}
                                for dim in range(self.cell.dim() + 1)}
-        cell_dim = self.cell.dim()
-        cell_dict = entity_associations[cell_dim][str(self.cell)]
+        # cell_dim = self.cell.dim()
+        # cell_dict = entity_associations[cell_dim][str(self.cell)]
 
         # construct mapping of entities to the dof generators and the dofs they generate
         for d in dofs:
@@ -182,30 +182,28 @@ class ElementTriple():
                 sub_dict[dof_gen] += [d]
             else:
                 sub_dict[dof_gen] = [d]
-            if sub_dim != cell_dim:
-                dof_gen = str(d.generation[cell_dim])
+            # if sub_dim != cell_dim:
+            #     dof_gen = str(d.generation[cell_dim])
 
-                if dof_gen in cell_dict.keys():
-                    cell_dict[dof_gen] += [d]
-                else:
-                    cell_dict[dof_gen] = [d]
+            #     if dof_gen in cell_dict.keys():
+            #         cell_dict[dof_gen] += [d]
+            #     else:
+            #         cell_dict[dof_gen] = [d]
 
-        print(entity_associations)
         dof_id_mat = np.eye(len(dofs))
-        print("overall mat", dof_id_mat.shape)
-        oriented_mats = {}
+        oriented_mats_by_entity = {}
 
         # for each entity, look up generation on that entity and permute the
         # dof mapping according to the generation
         for dim in range(self.cell.dim() + 1):
-            oriented_mats[dim] = {}
+            oriented_mats_by_entity[dim] = {}
             ents = self.cell.d_entities(dim, get_class=True)
             for e in ents:
                 members = e.group.members()
-                oriented_mats[dim][str(e)] = {0: dof_id_mat.copy()}
+                oriented_mats_by_entity[dim][str(e)] = {0: dof_id_mat.copy()}
                 for g in members:
-                    val, _ = g.compute_num_rep()
-                    oriented_mats[dim][str(e)][val] = dof_id_mat.copy()
+                    val = g.numeric_rep()
+                    oriented_mats_by_entity[dim][str(e)][val] = dof_id_mat.copy()
                     for dof_gen in entity_associations[dim][str(e)].keys():
                         ent_dofs = entity_associations[dim][str(e)][dof_gen]
                         g1_members = [ed.g for ed in ent_dofs]
@@ -223,10 +221,9 @@ class ElementTriple():
 
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
-                            print(ent_dofs_ids)
                             # here, need to modify submat in accordance with g2
-                            oriented_mats[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
-        print(oriented_mats)
+                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
+        print(oriented_mats_by_entity)
 
     def to_json(self, filename="triple.json"):
         encoded = jsonpickle.encode(self)
