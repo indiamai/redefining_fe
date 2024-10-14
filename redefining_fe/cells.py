@@ -61,10 +61,6 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     ax.add_artist(a)
 
 
-# def construct_attach_2d_old(a, b, c, d):
-#     return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
-
-
 def construct_attach_2d(a, b, c, d):
     """
     Compute polynomial attachment in x based on two points (a,b) and (c,d)
@@ -656,7 +652,7 @@ class Edge():
         return "Edge" + str(id(self))
 
     def _from_dict(o_dict):
-        return Edge(o_dict["point"], o_dict["attachement"], o_dict["orientation"])
+        return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
 
 class CellComplexToFiat(Simplex):

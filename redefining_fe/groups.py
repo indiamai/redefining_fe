@@ -21,8 +21,6 @@ def construct_rep_func(M):
             sum = sp.matmul(x_ones, M)
         else:
             x_ones = np.r_[np.array(x), np.ones(1)]
-            print(x_ones.shape)
-            print(M)
             sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
@@ -77,12 +75,12 @@ class GroupMemberRep(object):
             string += " "
         return string
 
-    def _to_dict(self):
-        o_dict = {self.dict_id(): self.perm}
-        return o_dict
+    # def _to_dict(self):
+    #     o_dict = {self.dict_id(): self.perm}
+    #     return o_dict
 
-    def dict_id(self):
-        return "GroupMemberRep" + str(id(self))
+    # def dict_id(self):
+    #     return "GroupMemberRep" + str(id(self))
 
 
 class GroupRepresentation(object):
@@ -245,14 +243,15 @@ class GroupRepresentation(object):
         return "GR"
 
     def _to_dict(self):
-        return {self.dict_id(): {"members": [m for m in self._members],
-                                 "cell": self.cell}}
+        return {self.dict_id(): {"members": [m.perm for m in self._members]}}
 
     def dict_id(self):
         return "GroupRep" + str(id(self))
 
     def _from_dict(o_dict):
-        GroupRepresentation(o_dict["base_group"], o_dict["cell"])
+        perm_group = PermutationGroup([Permutation(m) for m in o_dict["members"]])
+        # , o_dict["cell"]
+        return GroupRepresentation(perm_group)
 
 
 # Function Representation of the coordinate transforms that make up the groups.
