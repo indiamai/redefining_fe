@@ -4,6 +4,7 @@ from redefining_fe.cells import Point
 from redefining_fe.groups import GroupRepresentation
 from redefining_fe.triples import ElementTriple
 import sympy as sp
+from sympy.combinatorics import Permutation
 import re
 
 
@@ -16,9 +17,14 @@ class FETripleEncoder(json.JSONEncoder):
 
     def default(self, o):
         o_dict = {}
-
+        print(o)
+        print(self.seen_objects.keys())
         if isinstance(o, sp.core.containers.Tuple) or isinstance(o, sp.Expr):
             return sp.srepr(o)
+        # if isinstance(o, PermutationGroup):
+        #     return [g for g in o.elements]
+        if isinstance(o, Permutation):
+            return o.array_form
 
         if o.dict_id() in self.seen_objects.keys():
             return o.dict_id()

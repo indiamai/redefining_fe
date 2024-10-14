@@ -21,6 +21,8 @@ def construct_rep_func(M):
             sum = sp.matmul(x_ones, M)
         else:
             x_ones = np.r_[np.array(x), np.ones(1)]
+            print(x_ones.shape)
+            print(M)
             sum = np.matmul(x_ones, M)
         if len(sum.shape) > 1:
             return tuple(map(tuple, sum))
@@ -240,10 +242,10 @@ class GroupRepresentation(object):
         return GroupRepresentation(PermutationGroup(remaining_perms))
 
     def __repr__(self):
-        return str(self.base_group)
+        return "GR"
 
     def _to_dict(self):
-        return {self.dict_id(): {"base_group": self.base_group,
+        return {self.dict_id(): {"members": [m for m in self._members],
                                  "cell": self.cell}}
 
     def dict_id(self):
