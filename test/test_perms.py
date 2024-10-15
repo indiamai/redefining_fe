@@ -19,7 +19,11 @@ def test_cg_perms(cell):
 @pytest.mark.parametrize("cell", [edge])
 def test_cg2_perms(cell):
     cg2 = create_cg2(cell)
+
     cg2.make_dof_perms()
+    for g in cg2.generate():
+        print(g)
+        print(g.generation)
 
 
 @pytest.mark.parametrize("cell", [tri])
@@ -47,6 +51,26 @@ def test_basic_perms(cell):
     bvs = cell.basis_vectors()
     M = np.array(bvs).T
     for g in cell_group.members():
-        print(g)
         trans_bvs = np.array([g(bvs[i]) for i in range(len(bvs))]).T
         print(np.linalg.solve(M, trans_bvs))
+
+
+def test_square():
+    square = n_sided_polygon(4)
+    edge = square.d_entities(1, get_class=True)[0]
+
+    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+    dg0_int = ElementTriple(edge, (P0, CellL2, C0),
+                            DOFGenerator(xs, S1, S2))
+
+    e_xs = [immerse(square, dg0_int, TrH1)]
+    e_dofs = DOFGenerator(e_xs, sq_edges, S1)
+
+    i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    cg3 = ElementTriple(square, (P3, CellH1, C0),
+                        [e_dofs, i_dofs])
+    for dof in cg3.generate():
+        print(dof)
+    cg3.make_dof_perms()

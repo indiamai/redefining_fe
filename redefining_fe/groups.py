@@ -66,6 +66,7 @@ class GroupMemberRep(object):
         return string
 
     def matrix_form(self):
+        print(self.perm)
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
     def lin_combination_form(self):

@@ -211,6 +211,8 @@ class ElementTriple():
                         g1_members = [ed.g for ed in ent_dofs]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
+                        # print(dim)
+                        # print(ent_dofs[0].generation)
 
                         # print(val, g)
                         # print(ent_dofs_ids)
@@ -218,23 +220,25 @@ class ElementTriple():
                         # for ent, ent_id in zip(ent_dofs, ent_dofs_ids):
                         #     print(ent_id, ent.g.perm)
                         #     print(ent.g.matrix_form())
+                        # print(dof_gen_class)
                         # print(dof_gen_class.g1.members())
                         # print(g in dof_gen_class.g1.members())
                         # print(g in dof_gen_class.g2.members())
 
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
+                            
                             print(g)
                             print(sub_mat)
                             # here, need to modify submat in accordance with g2
-                            print(oriented_mats_by_entity)
-                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
-                            print(oriented_mats_by_entity)
-                        # if g in dof_gen_class.g2.members():
-                        #     sub_mat = g.lin_combination_form()
-                        #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
-                        #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, existing_mat)
-                        #     print("g2", sub_mat)
+                            # print(oriented_mats_by_entity)
+                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+                            # print(oriented_mats_by_entity)
+                        if g in dof_gen_class.g2.members():
+                            sub_mat = g.lin_combination_form()
+                            existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
+                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, existing_mat)
+                            print("g2", sub_mat)
         print(oriented_mats_by_entity)
 
     def to_json(self, filename="triple.json"):
