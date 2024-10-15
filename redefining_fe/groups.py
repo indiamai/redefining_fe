@@ -68,6 +68,16 @@ class GroupMemberRep(object):
     def matrix_form(self):
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
+    def lin_combination_form(self):
+        if self.group.cell.dimension == 0:
+            print("vertex")
+            return [1]
+        bvs = self.group.cell.basis_vectors()
+        M = np.array(bvs).T
+        trans_bvs = np.array([self(bvs[i]) for i in range(len(bvs))]).T
+        return np.linalg.solve(M, trans_bvs)
+
+
 
 class PermutationSetRepresentation():
     """

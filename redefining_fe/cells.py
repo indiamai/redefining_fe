@@ -1,3 +1,5 @@
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
@@ -451,6 +453,7 @@ class Point():
             entity = self
         vertices = entity.vertices()
         if self.dimension == 0:
+            # return [[]]
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]

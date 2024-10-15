@@ -2,6 +2,8 @@ from redefining_fe import *
 from test_convert_to_fiat import create_cg1, create_dg1, create_cg2
 from test_2d_examples_docs import construct_cg3
 import pytest
+import sympy as sp
+import numpy as np
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -30,3 +32,21 @@ def test_cg3_perms(cell):
 def test_dg_perms(cell):
     cg1 = create_dg1(cell)
     cg1.make_dof_perms()
+
+
+def test_nd_perms():
+    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+    dofs = DOFGenerator(xs, S1, S2)
+    int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
+    int_ned.make_dof_perms()
+
+
+@pytest.mark.parametrize("cell", [edge, tri])
+def test_basic_perms(cell):
+    cell_group = cell.group
+    bvs = cell.basis_vectors()
+    M = np.array(bvs).T
+    for g in cell_group.members():
+        print(g)
+        trans_bvs = np.array([g(bvs[i]) for i in range(len(bvs))]).T
+        print(np.linalg.solve(M, trans_bvs))

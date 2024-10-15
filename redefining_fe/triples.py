@@ -4,6 +4,8 @@ from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKe
 from redefining_fe.traces import Trace
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import inspect
 import finat.ufl
@@ -117,7 +119,7 @@ class ElementTriple():
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
-    def plot(self):
+    def plot(self, filename="temp.png"):
         # point evaluation nodes only
         dofs = self.generate()
         identity = MyTestFunction(lambda *x: x)
@@ -143,7 +145,7 @@ class ElementTriple():
                     ax.scatter(*coord, color=color)
                 ax.text(*coord, dof.id)
 
-            plt.show()
+            fig.savefig(filename)
         elif self.cell.dimension == 3:
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
@@ -162,7 +164,7 @@ class ElementTriple():
                     dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
                 ax.text(*coord, dof.id)
 
-            plt.show()
+            fig.savefig(filename)
         else:
             raise ValueError("Plotting not supported in this dimension")
 
@@ -210,19 +212,29 @@ class ElementTriple():
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
 
-                        print(val, g)
-                        print(ent_dofs_ids)
-                        print(g1_members)
+                        # print(val, g)
+                        # print(ent_dofs_ids)
+                        # print(g1_members)
                         # for ent, ent_id in zip(ent_dofs, ent_dofs_ids):
                         #     print(ent_id, ent.g.perm)
                         #     print(ent.g.matrix_form())
-                        print(dof_gen_class.g1.members())
-                        print(g in dof_gen_class.g1.members())
+                        # print(dof_gen_class.g1.members())
+                        # print(g in dof_gen_class.g1.members())
+                        # print(g in dof_gen_class.g2.members())
 
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
+                            print(g)
+                            print(sub_mat)
                             # here, need to modify submat in accordance with g2
+                            print(oriented_mats_by_entity)
                             oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat
+                            print(oriented_mats_by_entity)
+                        # if g in dof_gen_class.g2.members():
+                        #     sub_mat = g.lin_combination_form()
+                        #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
+                        #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, existing_mat)
+                        #     print("g2", sub_mat)
         print(oriented_mats_by_entity)
 
     def to_json(self, filename="triple.json"):

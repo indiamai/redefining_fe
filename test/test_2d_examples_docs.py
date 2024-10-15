@@ -165,7 +165,7 @@ def construct_nd(tri):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
 
-    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
@@ -314,7 +314,7 @@ def test_rt_second_order():
 
     i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
-    i_dofs = DOFGenerator(i_xs, S1, S1)
+    i_dofs = DOFGenerator(i_xs, S1, S3)
 
     vecP3 = PolynomialSpace(3, 3, vec=True)
     rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
@@ -324,3 +324,5 @@ def test_rt_second_order():
 
     for dof in rt2.generate():
         dof.eval(phi)
+    rt2.plot()
+    
