@@ -593,14 +593,14 @@ class Point():
 
     def _to_dict(self):
         # think this is probably missing stuf
-        o_dict = {self.dict_id(): {"dim": self.dimension,
-                                   "group": self.group,
-                                   "edges": [c for c in self.connections],
-                                   "oriented": self.oriented}}
+        o_dict = {"dim": self.dimension,
+                  "group": self.group,
+                  "edges": [c for c in self.connections],
+                  "oriented": self.oriented}
         return o_dict
 
     def dict_id(self):
-        return "Point" + str(id(self))
+        return "Cell"
 
     def _from_dict(o_dict):
         return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"])
@@ -643,13 +643,13 @@ class Edge():
         return str(self.point)
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"attachment": self.attachment,
-                                   "point": self.point,
-                                   "orientation": self.o}}
+        o_dict = {"attachment": self.attachment,
+                  "point": self.point,
+                  "orientation": self.o}
         return o_dict
 
     def dict_id(self):
-        return "Edge" + str(id(self))
+        return "Edge"
 
     def _from_dict(o_dict):
         return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])

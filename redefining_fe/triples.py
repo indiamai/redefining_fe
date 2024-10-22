@@ -239,13 +239,11 @@ class ElementTriple():
     #     #     f.write(encoded)
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"cell": self.cell,
-                                   "spaces": self.spaces,
-                                   "dofs": self.DOFGenerator}}
+        o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}
         return o_dict
 
     def dict_id(self):
-        return "Triple" + str(id(self))
+        return "Triple"
 
     def _from_dict(o_dict):
         # from redefining_fe.serialisation import FETripleDecoder
@@ -323,13 +321,11 @@ class DOFGenerator():
         return repr_str
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"x": self.x,
-                                   "g1": self.g1,
-                                   "g2": self.g2}}
+        o_dict = {"x": self.x, "g1": self.g1, "g2": self.g2}
         return o_dict
 
     def dict_id(self):
-        return "DOFGenerator" + str(id(self))
+        return "DOFGen"
 
 
 class ImmersedDOFs():
@@ -365,13 +361,11 @@ class ImmersedDOFs():
         return repr_str
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"target_cell": self.target_cell,
-                                   "triple": self.triple,
-                                   "trace": str(self.trace)}}
+        o_dict = {"target_cell": self.target_cell, "triple": self.triple, "trace": str(self.trace)}
         return o_dict
 
     def dict_id(self):
-        return "ImmersedDofs" + str(id(self))
+        return "ImmersedDOFs"
 
 
 def immerse(target_cell, triple, target_space, node=0):

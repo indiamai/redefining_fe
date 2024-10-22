@@ -39,11 +39,11 @@ class DeltaPairing(Pairing):
         return "{fn}({kernel})"
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"entity": self.entity}}
+        o_dict = {"entity": self.entity}
         return o_dict
 
     def dict_id(self):
-        return "Delta" + str(id(self))
+        return "Delta"
 
 
 class L2InnerProd(Pairing):
@@ -68,11 +68,11 @@ class L2InnerProd(Pairing):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"entity": self.entity}}
+        o_dict = {"entity": self.entity}
         return o_dict
 
     def dict_id(self):
-        return "L2InnerProd" + str(id(self))
+        return "L2InnerProd"
 
 
 class PointKernel():
@@ -93,11 +93,11 @@ class PointKernel():
         return self.pt
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"pt": self.pt}}
+        o_dict = {"pt": self.pt}
         return o_dict
 
     def dict_id(self):
-        return "PointKernel" + str(id(self))
+        return "PointKernel"
 
 
 class PolynomialKernel():
@@ -118,11 +118,11 @@ class PolynomialKernel():
         return res
 
     def _to_dict(self):
-        o_dict = {self.dict_id(): {"fn": self.fn}}
+        o_dict = {"fn": self.fn}
         return o_dict
 
     def dict_id(self):
-        return "PolynomialKernel" + str(id(self))
+        return "PolynomialKernel"
 
 
 class DOF():
@@ -177,12 +177,11 @@ class DOF():
 
     def _to_dict(self):
         """ almost certainly needs more things"""
-        o_dict = {self.dict_id(): {"pairing": self.pairing,
-                                   "kernel": self.kernel}}
+        o_dict = {"pairing": self.pairing, "kernel": self.kernel}
         return o_dict
 
     def dict_id(self):
-        return "DOF" + str(id(self))
+        return "DOF"
 
 
 class ImmersedDOF(DOF):
@@ -259,4 +258,4 @@ class MyTestFunction():
         return {"eq": self.eq}
 
     def dict_id(self):
-        return "Function" + str(id(self))
+        return "Function"

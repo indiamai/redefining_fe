@@ -8,6 +8,55 @@ from sympy.combinatorics import Permutation
 import re
 
 
+class ConvertToDict():
+
+    def __init__(self):
+        self.obj_id_counter = {}
+        self.seen_objs = {}
+        self.obj_storage = {}
+
+    def dfs(self, obj, path=[]):
+        obj_dict = {}
+        if isinstance(obj, list):
+            res_array = [{} for i in range(len(obj))]
+            for i in range(len(obj)):
+                dfs_res = self.dfs(obj[i], path + [i])
+                res_array[i] = dfs_res
+            return res_array
+
+        if obj in self.seen_objs.keys():
+            print("repeat hit")
+            return self.seen_objs[obj]["id"]
+
+        if hasattr(obj, "_to_dict"):
+            for (key, val) in obj._to_dict().items():
+                obj_dict[key] = self.dfs(val, path + [key])
+            obj_id = (obj.dict_id(), str(self.get_id(obj)))
+            self.store_obj(obj, obj_id, obj_dict, path)
+            return obj_id
+
+        return obj
+
+    def get_id(self, obj):
+        obj_name = obj.dict_id()
+        if obj_name in self.obj_id_counter.keys():
+            obj_id = self.obj_id_counter[obj_name]
+            self.obj_id_counter[obj_name] += 1
+        else:
+            obj_id = 0
+            self.obj_id_counter[obj_name] = 1
+        return obj_id
+    
+    def store_obj(self, obj, obj_id, obj_dict, path):
+        obj_name = obj_id[0]
+        self.seen_objs[obj] = {"id": obj_id, "path": path, "dict": obj_dict}
+        if obj_name in self.obj_storage.keys():
+            self.obj_storage[obj_name][obj_id[1]] = obj_dict
+        else:
+            self.obj_storage[obj_name] = {obj_id[1]: obj_dict}
+
+
+
 class FETripleEncoder(json.JSONEncoder):
 
     def __init__(self, *args, **kwargs):

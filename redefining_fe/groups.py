@@ -243,10 +243,10 @@ class GroupRepresentation(object):
         return "GR"
 
     def _to_dict(self):
-        return {self.dict_id(): {"members": [m.perm for m in self._members]}}
+        return {"members": [m.perm for m in self._members]}
 
     def dict_id(self):
-        return "GroupRep" + str(id(self))
+        return "Group"
 
     def _from_dict(o_dict):
         perm_group = PermutationGroup([Permutation(m) for m in o_dict["members"]])

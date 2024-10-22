@@ -1,5 +1,5 @@
 from redefining_fe import *
-from redefining_fe.serialisation import FETripleEncoder, FETripleDecoder, bracket_matching
+from redefining_fe.serialisation import FETripleEncoder, FETripleDecoder, bracket_matching, ConvertToDict
 from test_convert_to_fiat import create_cg1
 import json
 
@@ -33,10 +33,13 @@ def test_simple():
 def test_repeated_objs():
     repeated_edge = Point(1, [vert, vert], vertex_num=2)
     repeated_tri = Point(2, [repeated_edge, repeated_edge, repeated_edge], vertex_num=3)
-    encoded = json.dumps(repeated_tri, cls=FETripleEncoder, check_circular=False)
-    decoded = json.loads(encoded, cls=FETripleDecoder)
-    print(encoded)
-    print(decoded)
+    converter = ConvertToDict()
+    print("test_res", converter.dfs(repeated_edge))
+    print(converter.obj_storage)
+    # encoded = json.dumps(repeated_tri, cls=FETripleEncoder, indent=2, check_circular=False)
+    # decoded = json.loads(encoded, cls=FETripleDecoder)
+    # print(encoded)
+    # print(decoded)
 
 
 def test_serialisation():
@@ -44,10 +47,13 @@ def test_serialisation():
 
     for cell in cells:
         triple = create_cg1(cell)
-        encoded = json.dumps(triple, cls=FETripleEncoder, indent=2, check_circular=False)
+        converter = ConvertToDict()
+        print("test_res", converter.dfs(triple))
+        print(converter.obj_storage)
+        # encoded = json.dumps(triple, cls=FETripleEncoder, indent=2, check_circular=False)
         # print(encoded)
-        decoded = json.loads(encoded, cls=FETripleDecoder)
-        print(type(decoded))
+        # decoded = json.loads(encoded, cls=FETripleDecoder)
+        # print(type(decoded))
 
 
 def test_brackets():
