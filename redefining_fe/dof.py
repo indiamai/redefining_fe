@@ -20,7 +20,6 @@ class Pairing():
         return o_dict
 
 
-
 class DeltaPairing(Pairing):
     """
     The delta pairing allows the evaluation at a single points

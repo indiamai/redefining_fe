@@ -116,9 +116,6 @@ class ElementSerialiser():
         return obj
 
 
-
-
-
 class FETripleEncoder(json.JSONEncoder):
 
     def __init__(self, *args, **kwargs):

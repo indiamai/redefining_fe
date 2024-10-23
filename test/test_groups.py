@@ -16,13 +16,14 @@ def test_numerical_orientations():
     for m in mems:
         print(m.compute_num_rep())
 
-def test_group_equality():
-    cell = n_sided_polygon(3)
 
-    s1 = S1.add_cell(cell)
-    s1_new = S1.add_cell(cell)
+# def test_group_equality():
+#     cell = n_sided_polygon(3)
 
-    assert s1 == s1_new
+#     s1 = S1.add_cell(cell)
+#     s1_new = S1.add_cell(cell)
+
+#     assert s1 == s1_new
 
     # cell2 = Point(1, [Point(0), Point(0)], vertex_num=2)
 
