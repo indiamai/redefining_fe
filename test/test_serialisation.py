@@ -1,32 +1,36 @@
 from redefining_fe import *
 from redefining_fe.serialisation import bracket_matching, ElementSerialiser
 from test_convert_to_fiat import create_cg1
+import numpy as np
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
 tri = n_sided_polygon(3)
 
 
-# def test_simple():
-#     print(vert)
-#     encoded = json.dumps(vert, cls=FETripleEncoder, check_circular=False)
-#     decoded = json.loads(encoded, cls=FETripleDecoder)
-#     xs = [DOF(DeltaPairing(), PointKernel(()))]
-#     dg0 = ElementTriple(decoded, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
-#     for dof in dg0.generate():
-#         print(dof)
-#     print(decoded)
+def test_simple():
+    converter = ElementSerialiser()
+    encoded = converter.encode(vert)
+    decoded = converter.decode(encoded)
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(decoded, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
-#     encoded = json.dumps(dg0, cls=FETripleEncoder)
-# decoded = json.loads(encoded, cls=FETripleDecoder)
+    for dof in dg0.generate():
+        assert dof.eval(lambda: 1) == 1
 
-# encoded = json.dumps(edge, cls=FETripleEncoder, check_circular=False)
-# decoded = json.loads(encoded, cls=FETripleDecoder)
-# print(decoded)
-# xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
-# dg1 = ElementTriple(decoded, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
-# for dof in dg1.generate():
-#     print(dof)
+    converter = ElementSerialiser()
+    encoded = converter.encode(dg0)
+    decoded = converter.decode(encoded)
+
+    converter = ElementSerialiser()
+    encoded = converter.encode(edge)
+    decoded = converter.decode(encoded)
+
+    xs = [DOF(DeltaPairing(), PointKernel((-1,)))]
+    dg1 = ElementTriple(decoded, (P1, CellL2, C0), DOFGenerator(xs, S2, S1))
+
+    for dof in dg1.generate():
+        assert np.allclose(abs(dof.eval(lambda x: x)), 1)
 
 
 def test_repeated_objs():

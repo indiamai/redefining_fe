@@ -205,8 +205,10 @@ class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}):
-        self.id = next(self.id_iter)
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}, cell_id=None):
+        if not cell_id:
+            cell_id = next(self.id_iter)
+        self.id = cell_id
         self.dimension = d
         if d == 0:
             assert (edges == [])
@@ -595,14 +597,15 @@ class Point():
         # think this is probably missing stuf
         o_dict = {"dim": self.dimension,
                   "edges": [c for c in self.connections],
-                  "oriented": self.oriented}
+                  "oriented": self.oriented,
+                  "id": self.id}
         return o_dict
 
     def dict_id(self):
         return "Cell"
 
     def _from_dict(o_dict):
-        return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"])
+        return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"], cell_id=o_dict["id"])
 
 
 class Edge():

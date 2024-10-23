@@ -48,6 +48,7 @@ class ElementSerialiser():
 
     def encode_traverse(self, obj, path=[]):
         obj_dict = {}
+
         if isinstance(obj, list) or isinstance(obj, tuple):
             res_array = [{} for i in range(len(obj))]
             for i in range(len(obj)):
@@ -58,7 +59,6 @@ class ElementSerialiser():
             return res_array
 
         if obj in self.seen_objs.keys():
-            print("repeat hit")
             return self.seen_objs[obj]["id"]
 
         if hasattr(obj, "_to_dict"):
@@ -70,7 +70,7 @@ class ElementSerialiser():
 
         if isinstance(obj, sp.core.containers.Tuple) or isinstance(obj, sp.Expr):
             return "Sympy " + sp.srepr(obj)
-        # print(type(obj))
+
         return obj
 
     def get_id(self, obj):
@@ -91,7 +91,7 @@ class ElementSerialiser():
             self.obj_storage[name] = {obj_id: obj_dict}
 
     def decode_traverse(self, obj, obj_dict):
-        # better way to identify if soemthing is an obj string
+
         if isinstance(obj, str):
             split_str = obj.split(" ")
             if split_str[0] in self.obj_types.keys():
