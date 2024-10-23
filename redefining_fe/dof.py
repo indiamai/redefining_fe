@@ -15,6 +15,11 @@ class Pairing():
     def add_entity(self, entity):
         self.entity = entity
 
+    def _to_dict(self):
+        o_dict = {"entity": self.entity}
+        return o_dict
+
+
 
 class DeltaPairing(Pairing):
     """
@@ -38,12 +43,13 @@ class DeltaPairing(Pairing):
     def __repr__(self):
         return "{fn}({kernel})"
 
-    def _to_dict(self):
-        o_dict = {"entity": self.entity}
-        return o_dict
-
     def dict_id(self):
         return "Delta"
+
+    def _from_dict(obj_dict):
+        new_obj = DeltaPairing()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class L2InnerProd(Pairing):
@@ -67,12 +73,13 @@ class L2InnerProd(Pairing):
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
 
-    def _to_dict(self):
-        o_dict = {"entity": self.entity}
-        return o_dict
-
     def dict_id(self):
-        return "L2InnerProd"
+        return "L2Inner"
+
+    def _from_dict(obj_dict):
+        new_obj = L2InnerProd()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class PointKernel():
@@ -99,6 +106,9 @@ class PointKernel():
     def dict_id(self):
         return "PointKernel"
 
+    def _from_dict(obj_dict):
+        return PointKernel(obj_dict["pt"])
+
 
 class PolynomialKernel():
 
@@ -123,6 +133,9 @@ class PolynomialKernel():
 
     def dict_id(self):
         return "PolynomialKernel"
+
+    def _from_dict(obj_dict):
+        return PolynomialKernel(obj_dict["fn"])
 
 
 class DOF():
@@ -182,6 +195,9 @@ class DOF():
 
     def dict_id(self):
         return "DOF"
+
+    def _from_dict(obj_dict):
+        return DOF(obj_dict["pairing"], obj_dict["kernel"])
 
 
 class ImmersedDOF(DOF):

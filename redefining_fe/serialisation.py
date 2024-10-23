@@ -1,27 +1,60 @@
 import json
-# from redefining_fe import *
-from redefining_fe.cells import Point, Edge
-from redefining_fe.groups import GroupRepresentation, GroupMemberRep
-from redefining_fe.triples import ElementTriple
+from redefining_fe import *
+from redefining_fe.spaces.polynomial_spaces import RestrictedPolynomialSpace, ConstructedPolynomialSpace
+from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
+from redefining_fe.spaces.interpolation_spaces import InterpolationSpace
+from redefining_fe.traces import Trace
+from redefining_fe.triples import ImmersedDOFs
 import sympy as sp
 from sympy.combinatorics import Permutation
 import re
 
 
-class ConvertToDict():
+class ElementSerialiser():
 
     def __init__(self):
         self.obj_id_counter = {}
         self.seen_objs = {}
         self.obj_storage = {}
 
-    def dfs(self, obj, path=[]):
+        self.obj_types = {"Cell": Point,
+                          "Edge": Edge,
+                          "Triple": ElementTriple,
+                          "Group": GroupRepresentation,
+                          "SobolevSpace": ElementSobolevSpace,
+                          "InterpolationSpace": InterpolationSpace,
+                          "PolynomialSpace": PolynomialSpace,
+                          "RestrictedPolynomialSpace": RestrictedPolynomialSpace,
+                          "ConstructedPolynomialSpace": ConstructedPolynomialSpace,
+                          "DOF": DOF,
+                          "ImmersedDOF": ImmersedDOFs,
+                          "DOFGen": DOFGenerator,
+                          "Delta": DeltaPairing,
+                          "L2Inner": L2InnerProd,
+                          "PolynomialKernel": PolynomialKernel,
+                          "PointKernel": PointKernel,
+                          "Trace": Trace
+                          }
+
+    def encode(self, obj):
+        base_obj = self.encode_traverse(obj)
+        self.obj_storage["encoded_obj"] = base_obj
+        return json.dumps(self.obj_storage, indent=2)
+
+    def decode(self, obj_str):
+        obj_dict = json.loads(obj_str)
+        obj = self.decode_traverse(obj_dict["encoded_obj"], obj_dict)
+        return obj
+
+    def encode_traverse(self, obj, path=[]):
         obj_dict = {}
-        if isinstance(obj, list):
+        if isinstance(obj, list) or isinstance(obj, tuple):
             res_array = [{} for i in range(len(obj))]
             for i in range(len(obj)):
-                dfs_res = self.dfs(obj[i], path + [i])
+                dfs_res = self.encode_traverse(obj[i], path + [i])
                 res_array[i] = dfs_res
+            if isinstance(obj, tuple):
+                return tuple(res_array)
             return res_array
 
         if obj in self.seen_objs.keys():
@@ -30,11 +63,14 @@ class ConvertToDict():
 
         if hasattr(obj, "_to_dict"):
             for (key, val) in obj._to_dict().items():
-                obj_dict[key] = self.dfs(val, path + [key])
-            obj_id = (obj.dict_id(), str(self.get_id(obj)))
-            self.store_obj(obj, obj_id, obj_dict, path)
-            return obj_id
+                obj_dict[key] = self.encode_traverse(val, path + [key])
+            obj_id = self.get_id(obj)
+            self.store_obj(obj, obj.dict_id(), obj_id, obj_dict, path)
+            return obj.dict_id() + " " + str(obj_id)
 
+        if isinstance(obj, sp.core.containers.Tuple) or isinstance(obj, sp.Expr):
+            return "Sympy " + sp.srepr(obj)
+        # print(type(obj))
         return obj
 
     def get_id(self, obj):
@@ -46,14 +82,40 @@ class ConvertToDict():
             obj_id = 0
             self.obj_id_counter[obj_name] = 1
         return obj_id
-    
-    def store_obj(self, obj, obj_id, obj_dict, path):
-        obj_name = obj_id[0]
-        self.seen_objs[obj] = {"id": obj_id, "path": path, "dict": obj_dict}
-        if obj_name in self.obj_storage.keys():
-            self.obj_storage[obj_name][obj_id[1]] = obj_dict
+
+    def store_obj(self, obj, name, obj_id, obj_dict, path):
+        self.seen_objs[obj] = {"id": name + " " + str(obj_id), "path": path, "dict": obj_dict}
+        if name in self.obj_storage.keys():
+            self.obj_storage[name][obj_id] = obj_dict
         else:
-            self.obj_storage[obj_name] = {obj_id[1]: obj_dict}
+            self.obj_storage[name] = {obj_id: obj_dict}
+
+    def decode_traverse(self, obj, obj_dict):
+        # better way to identify if soemthing is an obj string
+        if isinstance(obj, str):
+            split_str = obj.split(" ")
+            if split_str[0] in self.obj_types.keys():
+                name, obj_id = split_str[0], split_str[1]
+                sub_dict = obj_dict[name][obj_id]
+                for (key, value) in sub_dict.items():
+                    sub_dict[key] = self.decode_traverse(value, obj_dict)
+                return self.obj_types[name]._from_dict(sub_dict)
+            elif split_str[0] == "Sympy":
+                return sp.parse_expr(" ".join(split_str[1:]))
+            else:
+                return obj
+        elif isinstance(obj, list) or isinstance(obj, tuple):
+            res_array = [0 for i in range(len(obj))]
+            for i in range(len(obj)):
+                dfs_res = self.decode_traverse(obj[i], obj_dict)
+                res_array[i] = dfs_res
+            if isinstance(obj, tuple):
+                return tuple(res_array)
+            return res_array
+
+        return obj
+
+
 
 
 

@@ -15,11 +15,24 @@ class ElementSobolevSpace(object):
         """In common with intrinsic Python sets, < indicates "is a proper subset of"."""
         return any([isinstance(other, p) for p in self.parents])
 
-    def dict_id(self):
-        return str(self)
-
     def _to_dict(self):
-        return self.dict_id()
+        return {"space": str(self)}
+
+    def dict_id(self):
+        return "SobolevSpace"
+
+    def _from_dict(obj_dict):
+        space_name = obj_dict["space"]
+        if space_name == "L2":
+            return CellL2
+        elif space_name == "H1":
+            return CellH1
+        elif space_name == "HDiv":
+            return CellHDiv
+        elif space_name == "HCurl":
+            return CellHCurl
+        elif space_name == "H2":
+            return CellH2
 
 
 class CellH1(ElementSobolevSpace):

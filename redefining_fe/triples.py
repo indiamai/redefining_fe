@@ -327,6 +327,9 @@ class DOFGenerator():
     def dict_id(self):
         return "DOFGen"
 
+    def _from_dict(obj_dict):
+        return DOFGenerator(obj_dict["x"], obj_dict["g1"], obj_dict["g2"])
+
 
 class ImmersedDOFs():
 
@@ -361,11 +364,14 @@ class ImmersedDOFs():
         return repr_str
 
     def _to_dict(self):
-        o_dict = {"target_cell": self.target_cell, "triple": self.triple, "trace": str(self.trace)}
+        o_dict = {"target_cell": self.target_cell, "triple": self.triple, "trace": self.trace}
         return o_dict
 
     def dict_id(self):
-        return "ImmersedDOFs"
+        return "ImmersedDOF"
+
+    def _from_dict(obj_dict):
+        return ImmersedDOFs(obj_dict["target_cell"], obj_dict["triple"], obj_dict["trace"])
 
 
 def immerse(target_cell, triple, target_space, node=0):

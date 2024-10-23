@@ -77,12 +77,13 @@ class PolynomialSpace(object):
         return RestrictedPolynomialSpace(min_degree, max_degree, self.vec)
 
     def _to_dict(self):
-        return {self.dict_id(): {"vec": self.vec,
-                                 "sub": self.subdegree,
-                                 "super": self.superdegree}}
+        return {"vec": self.vec, "sub": self.subdegree, "super": self.superdegree}
 
     def dict_id(self):
-        return "PolynomialSpace" + str(id(self))
+        return "PolynomialSpace"
+
+    def _from_dict(obj_dict):
+        return PolynomialSpace(obj_dict["sub"], obj_dict["super"], obj_dict["vec"])
 
 
 class RestrictedPolynomialSpace(PolynomialSpace):
@@ -131,12 +132,15 @@ class RestrictedPolynomialSpace(PolynomialSpace):
 
     def _to_dict(self):
         super_dict = super(RestrictedPolynomialSpace, self)._to_dict()
-        super_dict[self.dict_id()]["min_degree"] = self.min_degree
-        super_dict[self.dict_id()]["max_degree"] = self.max_degree
+        super_dict["min_degree"] = self.min_degree
+        super_dict["max_degree"] = self.max_degree
         return super_dict
 
     def dict_id(self):
-        return "RestrictedPolynomialSpace" + str(id(self))
+        return "RestrictedPolynomialSpace"
+
+    def _from_dict(obj_dict):
+        return RestrictedPolynomialSpace(obj_dict["min_degree"], obj_dict["max_degree"], obj_dict["vec"])
 
 
 class ConstructedPolynomialSpace(PolynomialSpace):
@@ -210,12 +214,15 @@ class ConstructedPolynomialSpace(PolynomialSpace):
 
     def _to_dict(self):
         super_dict = super(ConstructedPolynomialSpace, self)._to_dict()
-        super_dict[self.dict_id()]["spaces"] = self.spaces
-        super_dict[self.dict_id()]["weights"] = self.weights
+        super_dict["spaces"] = self.spaces
+        super_dict["weights"] = self.weights
         return super_dict
 
     def dict_id(self):
-        return "ConstructedPolynomialSpace" + str(id(self))
+        return "ConstructedPolynomialSpace"
+
+    def _from_dict(obj_dict):
+        return ConstructedPolynomialSpace(obj_dict["weights"], obj_dict["spaces"])
 
 
 P0 = PolynomialSpace(0, 0)

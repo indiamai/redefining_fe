@@ -594,7 +594,6 @@ class Point():
     def _to_dict(self):
         # think this is probably missing stuf
         o_dict = {"dim": self.dimension,
-                  "group": self.group,
                   "edges": [c for c in self.connections],
                   "oriented": self.oriented}
         return o_dict

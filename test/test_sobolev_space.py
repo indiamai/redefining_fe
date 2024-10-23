@@ -1,4 +1,5 @@
 from redefining_fe import *
+from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
 
 
 def test_comparison():

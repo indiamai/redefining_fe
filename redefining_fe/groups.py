@@ -73,7 +73,11 @@ class GroupMemberRep(object):
         for rep in self.rep:
             string += rep.__name__
             string += " "
-        return string
+        return str(self.perm.array_form)
+
+    def __eq__(self, value):
+        assert isinstance(value, GroupMemberRep)
+        return self.perm == value.perm
 
     # def _to_dict(self):
     #     o_dict = {self.dict_id(): self.perm}
@@ -242,8 +246,16 @@ class GroupRepresentation(object):
     def __repr__(self):
         return "GR"
 
+    # def __eq__(self, other):
+    #     # TODO work on idea of group equality
+    #     assert isinstance(other, GroupRepresentation)
+    #     res = True
+    #     for m in self.members():
+    #         res = res and m in other.members()
+    #     return res
+
     def _to_dict(self):
-        return {"members": [m.perm for m in self._members]}
+        return {"members": [m.perm.array_form for m in self._members]}
 
     def dict_id(self):
         return "Group"
