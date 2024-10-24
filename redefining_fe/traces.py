@@ -25,7 +25,6 @@ class Trace():
         # might want to actually save these as functions or something for ambiguity?
         tr_id = obj_dict["trace"]
         if tr_id == "H1":
-            print("H1", tr_id)
             return TrH1
         elif tr_id == "HDiv":
             return TrHDiv

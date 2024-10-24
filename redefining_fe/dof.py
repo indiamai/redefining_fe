@@ -106,7 +106,7 @@ class PointKernel():
         return "PointKernel"
 
     def _from_dict(obj_dict):
-        return PointKernel(obj_dict["pt"])
+        return PointKernel(tuple(obj_dict["pt"]))
 
 
 class PolynomialKernel():
