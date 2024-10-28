@@ -12,5 +12,6 @@ Welcome to RedefiningFE's documentation!
     spaces
     triples
     dof
-    examples
+    examples2d
+    examples3d
     modules

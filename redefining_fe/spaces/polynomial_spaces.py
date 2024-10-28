@@ -2,7 +2,6 @@ from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
-from redefining_fe.cells import CellComplexToFiat
 from redefining_fe.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
@@ -31,25 +30,19 @@ class PolynomialSpace(object):
     def complete(self):
         return self.subdegree == self.superdegree
 
+    def degree(self):
+        return self.subdegree
+
     def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
         if self.vec:
             shape = (sd,)
         else:
             shape = tuple()
 
-        # if k:
-        #     dimPkp1 = expansions.polynomial_dimension(ref_el, k + 1)
-        #     dimPk = expansions.polynomial_dimension(ref_el, k)
-
-        #     Pkp1 = polynomial_set.ONPolynomialSet(ref_el, k + 1, shape)
-        #     vec_Pk_indices = list(chain(*(range(i * dimPkp1, i * dimPkp1 + dimPk)
-        #                           for i in range(sd))))
-        #     Pk_from_Pkp1 = Pkp1.take(vec_Pk_indices)
-        #     return Pk_from_Pkp1
         return ONPolynomialSet(ref_el, self.subdegree, shape, scale="orthonormal")
 
     def __repr__(self):
@@ -83,6 +76,15 @@ class PolynomialSpace(object):
     def restrict(self, min_degree, max_degree):
         return RestrictedPolynomialSpace(min_degree, max_degree, self.vec)
 
+    def _to_dict(self):
+        return {"vec": self.vec, "sub": self.subdegree, "super": self.superdegree}
+
+    def dict_id(self):
+        return "PolynomialSpace"
+
+    def _from_dict(obj_dict):
+        return PolynomialSpace(obj_dict["sub"], obj_dict["super"], obj_dict["vec"])
+
 
 class RestrictedPolynomialSpace(PolynomialSpace):
     """
@@ -99,7 +101,7 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         else:
             return super(RestrictedPolynomialSpace, cls).__new__(cls)
 
-    def __init__(self, min_degree, max_degree, vec=True):
+    def __init__(self, min_degree, max_degree, vec=False):
         self.min_degree = min_degree
         self.max_degree = max_degree
 
@@ -113,7 +115,7 @@ class RestrictedPolynomialSpace(PolynomialSpace):
 
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         sd = ref_el.get_spatial_dimension()
 
         dimPmin = expansions.polynomial_dimension(ref_el, self.min_degree)
@@ -127,6 +129,18 @@ class RestrictedPolynomialSpace(PolynomialSpace):
         indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
         restricted_ON = base_ON.take(indices)
         return restricted_ON
+
+    def _to_dict(self):
+        super_dict = super(RestrictedPolynomialSpace, self)._to_dict()
+        super_dict["min_degree"] = self.min_degree
+        super_dict["max_degree"] = self.max_degree
+        return super_dict
+
+    def dict_id(self):
+        return "RestrictedPolynomialSpace"
+
+    def _from_dict(obj_dict):
+        return RestrictedPolynomialSpace(obj_dict["min_degree"], obj_dict["max_degree"], obj_dict["vec"])
 
 
 class ConstructedPolynomialSpace(PolynomialSpace):
@@ -142,15 +156,16 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         self.spaces = spaces
 
         subdegree = max([space.subdegree for space in spaces])
+        vec = any([s.vec for s in spaces])
 
-        super(ConstructedPolynomialSpace, self).__init__(subdegree, -1)
+        super(ConstructedPolynomialSpace, self).__init__(subdegree, -1, vec=vec)
 
     def __repr__(self):
         return "+".join([str(w) + "*" + str(x) for (w, x) in zip(self.weights, self.spaces)])
 
     def to_ON_polynomial_set(self, ref_el):
         if not isinstance(ref_el, reference_element.Cell):
-            ref_el = CellComplexToFiat(ref_el)
+            ref_el = ref_el.to_fiat()
         k = max([s.superdegree for s in self.spaces])
         space_poly_sets = [s.to_ON_polynomial_set(ref_el) for s in self.spaces]
         sd = ref_el.get_spatial_dimension()
@@ -197,22 +212,17 @@ class ConstructedPolynomialSpace(PolynomialSpace):
         return ConstructedPolynomialSpace(self.weights.extend([1]),
                                           self.spaces.extend(x))
 
+    def _to_dict(self):
+        super_dict = super(ConstructedPolynomialSpace, self)._to_dict()
+        super_dict["spaces"] = self.spaces
+        super_dict["weights"] = self.weights
+        return super_dict
 
-class VectorPolynomialSpace(PolynomialSpace):
+    def dict_id(self):
+        return "ConstructedPolynomialSpace"
 
-    def __init__(self, *spaces):
-        self.component_spaces = []
-        for space in spaces:
-            assert isinstance(space, PolynomialSpace)
-            self.component_spaces.append(space)
-            # if isinstance(space, VectorPolynomialSpace):
-            #     self.component_spaces.extend(space.component_spaces)
-
-    def dim(self):
-        return len(self.component_spaces)
-
-    def complete(self):
-        return all([c.complete for c in self.component_spaces])
+    def _from_dict(obj_dict):
+        return ConstructedPolynomialSpace(obj_dict["weights"], obj_dict["spaces"])
 
 
 P0 = PolynomialSpace(0, 0)

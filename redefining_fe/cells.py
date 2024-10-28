@@ -10,6 +10,7 @@ from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex
+from ufl.cell import Cell
 
 
 class Arrow3D(FancyArrowPatch):
@@ -58,10 +59,6 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     dir_x, dir_y, dir_z = edge(mid + delta)
     a = Arrow3D([x, dir_x], [y, dir_y], [z, dir_z], mutation_scale=10, arrowstyle="-|>", color="black")
     ax.add_artist(a)
-
-
-# def construct_attach_2d_old(a, b, c, d):
-#     return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
 
 
 def construct_attach_2d(a, b, c, d):
@@ -166,23 +163,60 @@ def n_sided_polygon(n):
     return Point(2, edges, vertex_num=n)
 
 
+def make_tetrahedron():
+    r = fe_groups.r
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[0], vertices[1]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[2]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[3], vertices[0]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[1], vertices[3]]))
+    edges.append(
+        Point(1, vertex_num=2, edges=[vertices[2], vertices[3]]))
+
+    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
+    face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
+    face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
+    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
+
+    return Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
+
+
 class Point():
     """
     Cell complex representation of a finite element cell
 
-    :param: d: dimension of the cell
-    :param: edges: list of subcells (either as edge or point objects)
-    :param: vertex_num: Optional argument, number of vertices
-    :param: oriented: adds orientation to the cell
-    :param: group: Symmetry group of the cell
-    :param: edge_orientations: dictionary of the orientations of the subcells
+    Attributes
+    ----------
+    d: :obj:`int`
+        dimension of the cell
+    edges: List
+        list of subcells of type:obj:`Edge` or :obj:`Point`
+    vertex_num: :obj:`int` (optional)
+        number of vertices
+    oriented: GroupMemberRep (optional)
+        Adds orientation to the cell
+    group: GroupRepresentation (optional)
+        Symmetry group of the cell
+    edge_orientations: dict
+        Dictionary of the orientations of the subcells {subcell_id: orientation}
 
     """
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}):
-        self.id = next(self.id_iter)
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}, cell_id=None):
+        if not cell_id:
+            cell_id = next(self.id_iter)
+        self.id = cell_id
         self.dimension = d
         if d == 0:
             assert (edges == [])
@@ -321,6 +355,13 @@ class Point():
                     self.topology[i][node - min_ids[i]] = (node - min_ids[i], )
         return self.topology
 
+    def get_starter_ids(self):
+        structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        structure.reverse()
+
+        min_ids = [min(dimension) for dimension in structure]
+        return min_ids
+
     def graph_dim(self):
         if self.oriented:
             dim = self.dimension + 1
@@ -342,6 +383,14 @@ class Point():
         plt.show()
 
     def d_entities(self, d, get_class=False):
+        """
+        Get all the d dimensional entities of the cell complex.
+
+        :param: d: Dimension of required entities
+        :param: get_class: (Optional) Returns Point classes
+
+        Default return value is list of id numbers of the entities in the cell complex graph.
+        """
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
         if get_class:
@@ -361,6 +410,14 @@ class Point():
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=False, return_coords=False):
+        """
+        Get vertices (0 dimensional entities) of the cell complex.
+
+        :param: get_class: (Optional) Returns Point classes
+        :param: return_coords: (Optional) returns coordinates of vertices
+
+        Default return value is list of id numbers of the vertices in the cell complex graph.
+        """
         if self.oriented:
             verts = self.oriented.permute(self.d_entities(0, get_class))
         else:
@@ -373,6 +430,13 @@ class Point():
         return verts
 
     def edges(self, get_class=False):
+        """
+        Get edges (1 dimensional entities) of the cell complex.
+
+        :param: get_class: (Optional) Returns Point classes
+
+        Default return value is list of id numbers of the 1 dimensional entities in the cell complex graph.
+        """
         if self.oriented:
             return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
@@ -554,6 +618,26 @@ class Point():
     def copy(self):
         return copy.deepcopy(self)
 
+    def to_fiat(self):
+        return CellComplexToFiat(self)
+
+    def to_ufl(self, name=None, geo_dim=None):
+        return CellComplexToUFL(self, name, geo_dim)
+
+    def _to_dict(self):
+        # think this is probably missing stuf
+        o_dict = {"dim": self.dimension,
+                  "edges": [c for c in self.connections],
+                  "oriented": self.oriented,
+                  "id": self.id}
+        return o_dict
+
+    def dict_id(self):
+        return "Cell"
+
+    def _from_dict(o_dict):
+        return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"], cell_id=o_dict["id"])
+
 
 class Edge():
     """
@@ -564,29 +648,44 @@ class Edge():
     :param: o: orientation function (optional)
     """
 
-    def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
+    def __init__(self, point, attachment=None, o=None):
         self.attachment = attachment
         self.point = point
         self.o = o
 
     def __call__(self, *x):
-        oriented = self.o(x)
-        syms = ["x", "y", "z"]
-        if hasattr(self.attachment, '__iter__'):
-            res = []
-            for attach_comp in self.attachment:
-                if len(attach_comp.atoms(sp.Symbol)) == len(oriented):
-                    res.append(sympy_to_numpy(attach_comp, syms, oriented))
-                else:
-                    res.append(attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))}))
-            return tuple(res)
-        return sympy_to_numpy(self.attachment, syms, oriented)
+        if self.o:
+            x = self.o(x)
+        if self.attachment:
+            syms = ["x", "y", "z"]
+            if hasattr(self.attachment, '__iter__'):
+                res = []
+                for attach_comp in self.attachment:
+                    if len(attach_comp.atoms(sp.Symbol)) == len(x):
+                        res.append(sympy_to_numpy(attach_comp, syms, x))
+                    else:
+                        res.append(attach_comp.subs({syms[i]: x[i] for i in range(len(x))}))
+                return tuple(res)
+            return sympy_to_numpy(self.attachment, syms, x)
+        return x
 
     def lower_dim(self):
         return self.point.dim()
 
     def __repr__(self):
         return str(self.point)
+
+    def _to_dict(self):
+        o_dict = {"attachment": self.attachment,
+                  "point": self.point,
+                  "orientation": self.o}
+        return o_dict
+
+    def dict_id(self):
+        return "Edge"
+
+    def _from_dict(o_dict):
+        return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
 
 class CellComplexToFiat(Simplex):
@@ -605,3 +704,88 @@ class CellComplexToFiat(Simplex):
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiat, self).__init__(shape, verts, topology)
+
+    def cellname(self):
+        return "India Def Cell"
+
+    def construct_subelement(self, dimension):
+        """Constructs the reference element of a cell
+        specified by subelement dimension.
+
+        :arg dimension: subentity dimension (integer)
+        """
+        return self.fe_cell.d_entities(dimension, get_class=True)[0].to_fiat()
+
+
+class CellComplexToUFL(Cell):
+    """
+    Convert cell complex to UFL
+
+    :param: cell: a redefining_fe cell complex
+
+    Currently just maps to a subset of existing UFL cells
+    TODO work out generic way around the naming issue
+    """
+
+    def __init__(self, cell, name=None, geo_dim=None):
+        self.cell_complex = cell
+
+        # TODO work out generic way around the naming issue
+        if not name:
+            num_verts = len(cell.vertices())
+            if num_verts == 1:
+                # Point
+                name = "vertex"
+            elif num_verts == 2:
+                # Line
+                name = "interval"
+            elif num_verts == 3:
+                # Triangle
+                name = "triangle"
+            elif num_verts == 4:
+                if self.dimension == 2:
+                    # quadrilateral
+                    name = "quadrilateral"
+                elif self.dimension == 3:
+                    # tetrahedron
+                    name = "tetrahedron"
+            elif num_verts == 8:
+                # hexahedron
+                name = "hexahedron"
+            else:
+                raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
+        super(CellComplexToUFL, self).__init__(name, geometric_dimension=geo_dim)
+
+    def to_fiat(self):
+        return self.cell_complex.to_fiat()
+
+    def __repr__(self):
+        return super(CellComplexToUFL, self).__repr__() + " Complex"
+
+    def reconstruct(self, **kwargs):
+        """Reconstruct this cell, overwriting properties by those in kwargs."""
+        gdim = self._gdim
+        cell = self.cell_complex
+        for key, value in kwargs.items():
+            if key == "geometric_dimension":
+                gdim = value
+            elif key == "cell":
+                cell = value
+            else:
+                raise TypeError(f"reconstruct() got unexpected keyword argument '{key}'")
+        return CellComplexToUFL(cell, self._cellname, geo_dim=gdim)
+
+
+def constructCellComplex(name, geo_dim=None):
+    if name == "vertex":
+        return Point(0).to_ufl(name, geo_dim)
+    elif name == "interval":
+        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name, geo_dim)
+    elif name == "triangle":
+        return n_sided_polygon(3).to_ufl(name, geo_dim)
+    elif name == "quadrilateral":
+        return n_sided_polygon(4).to_ufl(name, geo_dim)
+    elif name == "tetrahedron":
+        return make_tetrahedron().to_ufl(name, geo_dim)
+    else:
+        raise TypeError("Cell complex construction undefined for {}".format(str(name)))

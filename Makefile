@@ -6,7 +6,7 @@ else
 	FLAKE8_FORMAT=
 endif
 
-doc:
+docs:
 	@(cd docs/ && make html)
 
 lint:
@@ -24,4 +24,7 @@ tests:
 	@echo "    Running all tests"
 	@python -m pytest -rx -rP test
 
-prepush: lint tests doc
+clean:
+	@(cd docs/ && make clean)
+
+prepush: lint tests docs

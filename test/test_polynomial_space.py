@@ -3,7 +3,6 @@ import sympy as sp
 from redefining_fe.spaces.polynomial_spaces import PolynomialSpace, RestrictedPolynomialSpace, ConstructedPolynomialSpace
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT import polynomial_set
-from redefining_fe.cells import CellComplexToFiat
 from FIAT.quadrature_schemes import create_quadrature
 import numpy as np
 import pytest
@@ -19,6 +18,7 @@ def test_instantiation():
 def test_unscaled_construction():
     cell = n_sided_polygon(3)
     composite = P0 + P1
+    assert not composite.vec
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
@@ -26,6 +26,7 @@ def test_unscaled_construction():
     vec_P1 = PolynomialSpace(1, 1, vec=True)
 
     composite = vec_P0 + vec_P1
+    assert composite.vec
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
@@ -48,9 +49,36 @@ def test_restriction():
 
 
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
+def test_complete_space(deg):
+    cell = n_sided_polygon(3)
+    ref_el = cell.to_fiat()
+    sd = ref_el.get_spatial_dimension()
+
+    Pd = PolynomialSpace(deg, deg)
+    my_space = Pd.to_ON_polynomial_set(cell)
+
+    from FIAT.lagrange import Lagrange
+    lg_space = Lagrange(ref_el, deg).poly_set
+
+    Q = create_quadrature(ref_el, 2*(deg+1))
+    Qpts, _ = Q.get_points(), Q.get_weights()
+    fiat_vals = lg_space.tabulate(Qpts)[(0,) * sd]
+    my_vals = my_space.tabulate(Qpts)[(0,) * sd]
+    fiat_vals = flatten(fiat_vals)
+    my_vals = flatten(my_vals)
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
+
+
+@pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_rt_construction(deg):
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
     x = sp.Symbol("x")
     y = sp.Symbol("y")
@@ -60,6 +88,7 @@ def test_rt_construction(deg):
     Pd = PolynomialSpace(deg - 1, deg - 1)
     composite = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
+    assert composite.vec
     assert isinstance(composite, ConstructedPolynomialSpace)
     on_set = composite.to_ON_polynomial_set(cell)
 
@@ -83,7 +112,7 @@ def test_rt_construction(deg):
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_nedelec_construction(deg):
     cell = n_sided_polygon(3)
-    ref_el = CellComplexToFiat(cell)
+    ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
     x = sp.Symbol("x")
@@ -93,6 +122,7 @@ def test_nedelec_construction(deg):
     vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
     Pk = PolynomialSpace(deg - 1, deg - 1)
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
+    assert nd.vec
     assert isinstance(nd, ConstructedPolynomialSpace)
 
     from FIAT.nedelec import NedelecSpace2D
