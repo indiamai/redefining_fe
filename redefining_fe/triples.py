@@ -13,11 +13,30 @@ import warnings
 
 class ElementTriple():
     """
-    Class to represent the three core parts of the element
+    A finite element triple :math:`(\mathcal{C}, \mathcal{V}, \mathcal{X})`
 
-    :param: cell: CellComplex
-    :param: spaces: Triple of spaces: (PolynomialSpace, SobolovSpace, InterpolationSpace)
-    :param: dof_gen: Generator Triple to generate the degrees of freedom.
+    Attributes
+    ----------
+
+    cell: CellComplex
+        The reference cell for the element
+    spaces: Tuple
+        Triple of spaces: (:obj:`PolynomialSpace`, :obj:`SobolovSpace`, :obj:`InterpolationSpace`)
+    dof_gen: DOFGenerator
+        Generator Triple to generate the degrees of freedom.
+
+    Methods
+    -------
+    generate()
+        Generates all the degrees of freedom for this element.
+    to_ufl_elem()
+        Converts this element into an UFL representation of the element
+    to_fiat_elem()
+        Converts this element into a FIAT representation of the element.
+    plot(show=True)
+        Plots an element diagram
+
+
     """
 
     def __init__(self, cell, spaces, dof_gen):

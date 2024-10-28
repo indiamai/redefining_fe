@@ -194,12 +194,20 @@ class Point():
     """
     Cell complex representation of a finite element cell
 
-    :param: d: dimension of the cell
-    :param: edges: list of subcells (either as edge or point objects)
-    :param: vertex_num: Optional argument, number of vertices
-    :param: oriented: adds orientation to the cell
-    :param: group: Symmetry group of the cell
-    :param: edge_orientations: dictionary of the orientations of the subcells
+    Attributes
+    ----------
+    d: :obj:`int`
+        dimension of the cell
+    edges: List
+        list of subcells of type:obj:`Edge` or :obj:`Point`
+    vertex_num: :obj:`int` (optional)
+        number of vertices
+    oriented: GroupMemberRep (optional)
+        Adds orientation to the cell
+    group: GroupRepresentation (optional)
+        Symmetry group of the cell
+    edge_orientations: dict
+        Dictionary of the orientations of the subcells {subcell_id: orientation}
 
     """
 

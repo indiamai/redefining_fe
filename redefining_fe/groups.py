@@ -91,9 +91,25 @@ class GroupRepresentation(object):
     """
     A representation of a group by its matrix operations.
 
-    Args:
-        base_group: the sympy group that is being represented
-        cell (optional): the cell the group is representing the operations on
+    Attributes
+    ----------
+
+    base_group: sympy.PermutationGroup
+        The group this class represents as a permutation group
+    cell: Point (Optional)
+        The cell this group is representing operations on.
+
+    Methods
+    -------
+    members()
+        Generates all the members of the group (requires cell)
+    size()
+        Size of the underlying group
+    transform_between_perms(perm1, perm2)
+        Applies perm2 to perm1 and returns the result.
+    add_cell(cell)
+        Adds the cell to the class
+
 
     """
 
@@ -160,7 +176,7 @@ class GroupRepresentation(object):
 
     def transform_between_perms(self, perm1, perm2):
         member_perms = self.members(perm=True)
-        # breakpoint()
+
         perm1 = Permutation.from_sequence(perm1)
         perm2 = Permutation.from_sequence(perm2)
         assert perm1 in member_perms
@@ -173,7 +189,9 @@ class GroupRepresentation(object):
         Where the numerical rep is:
 
         M.index(id[0]) = a; M.remove(id[0])
+
         M.index(id[1]) = b; M.remove(id[1])
+        
         M.index(id[2]) = c; M.remove(id[2])
 
         o = (a * 2!) + (b * 1!) + (c * 0!)
