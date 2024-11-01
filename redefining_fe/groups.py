@@ -56,9 +56,15 @@ class GroupMemberRep(object):
         assert isinstance(x, GroupMemberRep)
         return self.perm == x.perm and self.group.cell.dim() == x.group.cell.dim()
 
+    def __hash__(self):
+        return hash((self.perm, self.group))
+
     def __mul__(self, x):
         assert isinstance(x, GroupMemberRep)
         return self.group.get_member(self.perm * x.perm)
+
+    def __invert__(self):
+        return self.group.get_member(~self.perm)
 
     def __repr__(self):
         string = "g"
@@ -66,12 +72,10 @@ class GroupMemberRep(object):
         return string
 
     def matrix_form(self):
-        print(self.perm)
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
     def lin_combination_form(self):
         if self.group.cell.dimension == 0:
-            print("vertex")
             return [1]
         bvs = self.group.cell.basis_vectors()
         M = np.array(bvs).T
@@ -220,6 +224,14 @@ class GroupRepresentation(PermutationSetRepresentation):
         else:
             self.cell = None
 
+    def conjugacy_class(self, g):
+        conj_class = set()
+        for x in self.members():
+            res = ~x * g * x
+            print(res)
+            conj_class.add(res)
+        return conj_class
+
     def add_cell(self, cell):
         return GroupRepresentation(self.base_group, cell=cell)
 
@@ -241,7 +253,7 @@ class GroupRepresentation(PermutationSetRepresentation):
         perm2 = Permutation.from_sequence(perm2)
         assert perm1 in member_perms
         assert perm2 in member_perms
-        return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
+        return ~self.get_member(Permutation(perm1)) * self.get_member(Permutation(perm2))
 
     def get_member(self, perm):
         for m in self.members():
@@ -283,7 +295,7 @@ class GroupRepresentation(PermutationSetRepresentation):
 
     def __mul__(self, other_group):
         return GroupRepresentation(PermutationGroup(self.base_group.generators + other_group.base_group.generators))
-
+    
     def __truediv__(self, other_frac):
         """ This isn't a mathematically accurate representation of
             what it means to be a quotient group but it works on S3/S2

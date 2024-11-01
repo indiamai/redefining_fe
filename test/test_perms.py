@@ -19,16 +19,29 @@ def test_cg_perms(cell):
 @pytest.mark.parametrize("cell", [edge])
 def test_cg2_perms(cell):
     cg2 = create_cg2(cell)
-
     cg2.make_dof_perms()
-    for g in cg2.generate():
-        print(g)
-        print(g.generation)
 
 
 @pytest.mark.parametrize("cell", [tri])
 def test_cg3_perms(cell):
     cg3 = construct_cg3(cell)
+    cg3.make_dof_perms()
+
+def test_cg_edges():
+    tri = n_sided_polygon(3)
+    edge = tri.d_entities(1, get_class=True)[0]
+# edge.basis_vectors()[0]
+    xs = [DOF(DeltaPairing(), PointKernel(-0.5))]
+    dg0_int = ElementTriple(edge, (P0, CellL2, C0),
+                            DOFGenerator(xs, S2, S1))
+
+    e_xs = [immerse(tri, dg0_int, TrH1)]
+    e_dofs = DOFGenerator(e_xs, tri_C3, S1)
+
+    cg3 = ElementTriple(tri, (P3, CellH1, C0),
+                        [e_dofs])
+    # for dof in cg3.generate():
+    #     print(dof)
     cg3.make_dof_perms()
 
 
@@ -52,25 +65,26 @@ def test_basic_perms(cell):
     M = np.array(bvs).T
     for g in cell_group.members():
         trans_bvs = np.array([g(bvs[i]) for i in range(len(bvs))]).T
+        print(g)
         print(np.linalg.solve(M, trans_bvs))
 
 
 def test_square():
     square = n_sided_polygon(4)
     edge = square.d_entities(1, get_class=True)[0]
-
-    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+# edge.basis_vectors()[0]
+    xs = [DOF(L2InnerProd(), PointKernel(-0.5))]
     dg0_int = ElementTriple(edge, (P0, CellL2, C0),
-                            DOFGenerator(xs, S1, S2))
+                            DOFGenerator(xs, S2, S2))
 
-    e_xs = [immerse(square, dg0_int, TrH1)]
+    e_xs = [immerse(square, dg0_int, TrHDiv)]
     e_dofs = DOFGenerator(e_xs, sq_edges, S1)
 
-    i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
-    i_dofs = DOFGenerator(i_xs, S1, S1)
+    # i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+    # i_dofs = DOFGenerator(i_xs, S1, S1)
 
     cg3 = ElementTriple(square, (P3, CellH1, C0),
-                        [e_dofs, i_dofs])
+                        [e_dofs])
     for dof in cg3.generate():
         print(dof)
     cg3.make_dof_perms()

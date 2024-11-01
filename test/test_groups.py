@@ -67,3 +67,31 @@ def test_permsets():
 
     for d in cg3.generate():
         print(d)
+
+
+def test_conj():
+    cell = n_sided_polygon(3)
+    g = cell.group.members()[4]
+    print("g", g)
+
+    print(cell.group.conjugacy_class(g))
+
+    for g in cell.group.members():
+        print("g", g)
+        for row in g.matrix_form():
+            print(row)
+
+    # print("tri_c3")
+    # g1 = tri_C3.add_cell(cell)
+    # for g in g1.members():
+    #     print("g", g)
+    #     print("g", g.perm.cycle_structure)
+    #     # for row in g.matrix_form():
+    #     #     print(row)
+    # print("others")
+    # for g in cell.group.members():
+    #     if g not in g1.members():
+    #         print("g", g)
+    #         print("g", g.perm.cycle_structure)
+    #         # for row in g.matrix_form():
+    #         #     print(row)

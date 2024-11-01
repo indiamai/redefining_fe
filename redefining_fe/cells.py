@@ -415,6 +415,7 @@ class Point():
         return self.d_entities(1, get_class)
 
     def permute_entities(self, g, d):
+        # TODO something is wrong here for squares it can return [()]
         verts = self.vertices()
         entities = self.d_entities(d)
         reordered = g.permute(verts)
@@ -446,6 +447,9 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
+                else:
+                    # breakpoint()
+                    pass
         return reordered_entities
 
     def basis_vectors(self, return_coords=True, entity=None):
@@ -453,7 +457,7 @@ class Point():
             entity = self
         vertices = entity.vertices()
         if self.dimension == 0:
-            # return [[]]
+            # return [[]
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]

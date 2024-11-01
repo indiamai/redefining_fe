@@ -172,8 +172,8 @@ class ElementTriple():
         dofs = self.generate()
         entity_associations = {dim: {str(e): {} for e in self.cell.d_entities(dim, get_class=True)}
                                for dim in range(self.cell.dim() + 1)}
-        # cell_dim = self.cell.dim()
-        # cell_dict = entity_associations[cell_dim][str(self.cell)]
+        cell_dim = self.cell.dim()
+        cell_dict = entity_associations[cell_dim][str(self.cell)]
 
         # construct mapping of entities to the dof generators and the dofs they generate
         for d in dofs:
@@ -184,62 +184,78 @@ class ElementTriple():
                 sub_dict[dof_gen] += [d]
             else:
                 sub_dict[dof_gen] = [d]
-            # if sub_dim != cell_dim:
-            #     dof_gen = str(d.generation[cell_dim])
+            if sub_dim != cell_dim:
+                dof_gen = str(d.generation[cell_dim])
 
-            #     if dof_gen in cell_dict.keys():
-            #         cell_dict[dof_gen] += [d]
-            #     else:
-            #         cell_dict[dof_gen] = [d]
+                if dof_gen in cell_dict.keys():
+                    cell_dict[dof_gen] += [d]
+                else:
+                    cell_dict[dof_gen] = [d]
 
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
 
         # for each entity, look up generation on that entity and permute the
         # dof mapping according to the generation
-        for dim in range(self.cell.dim() + 1):
+        for dim in range(self.cell.dim()):
             oriented_mats_by_entity[dim] = {}
             ents = self.cell.d_entities(dim, get_class=True)
             for e in ents:
                 members = e.group.members()
-                oriented_mats_by_entity[dim][str(e)] = {0: dof_id_mat.copy()}
+                oriented_mats_by_entity[dim][str(e)] = {}
                 for g in members:
                     val = g.numeric_rep()
                     oriented_mats_by_entity[dim][str(e)][val] = dof_id_mat.copy()
                     for dof_gen in entity_associations[dim][str(e)].keys():
                         ent_dofs = entity_associations[dim][str(e)][dof_gen]
-                        g1_members = [ed.g for ed in ent_dofs]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
-                        # print(dim)
-                        # print(ent_dofs[0].generation)
-
-                        # print(val, g)
-                        # print(ent_dofs_ids)
-                        # print(g1_members)
-                        # for ent, ent_id in zip(ent_dofs, ent_dofs_ids):
-                        #     print(ent_id, ent.g.perm)
-                        #     print(ent.g.matrix_form())
-                        # print(dof_gen_class)
-                        # print(dof_gen_class.g1.members())
-                        # print(g in dof_gen_class.g1.members())
-                        # print(g in dof_gen_class.g2.members())
 
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
-                            
-                            print(g)
-                            print(sub_mat)
-                            # here, need to modify submat in accordance with g2
-                            # print(oriented_mats_by_entity)
                             oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
-                            # print(oriented_mats_by_entity)
-                        if g in dof_gen_class.g2.members():
-                            sub_mat = g.lin_combination_form()
-                            existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
-                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, existing_mat)
-                            print("g2", sub_mat)
+                        # if g in dof_gen_class.g2.members():
+                        #     sub_mat = g.lin_combination_form()
+                        #     print("g2", sub_mat)
+                        #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
+                        #     print("existing", existing_mat)
+                        #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
         print(oriented_mats_by_entity)
+
+        oriented_mats_overall = {}
+        dim = self.cell.dim()
+        e = self.cell
+        members = e.group.members()
+        for g in members:
+            val = g.numeric_rep()
+            oriented_mats_overall[val] = dof_id_mat.copy()
+            for dof_gen in entity_associations[dim][str(e)].keys():
+                ent_dofs = entity_associations[dim][str(e)][dof_gen]
+                ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
+                dof_gen_class = ent_dofs[0].generation
+                for key in dof_gen_class.keys():
+                    if not key == dim:
+                        immersed_dim = key
+                        print(e.permute_entities(g, immersed_dim))
+                        for sub_e, sub_g in e.permute_entities(g, immersed_dim):
+                            sub_e = e.get_node(sub_e)
+                            sub_ent_assoc = entity_associations[immersed_dim][str(sub_e)][str(dof_gen_class[immersed_dim])]
+                            sub_mat = oriented_mats_by_entity[immersed_dim][str(sub_e)][sub_g.numeric_rep()][np.ix_(ent_dofs_ids, ent_dofs_ids)]
+ 
+                            g_sub_mat = g.matrix_form()
+                            expanded = np.kron(g_sub_mat, np.eye(len(sub_ent_assoc)))
+                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, expanded).copy()
+                    elif len(dof_gen_class.keys()) == 1:
+                        if g in dof_gen_class[dim].g1.members():
+                            sub_mat = g.matrix_form()
+                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+
+        for g in self.cell.group.members():
+            val = g.numeric_rep()
+            print(g)
+            for d in dofs:
+                print(d.id, oriented_mats_overall[val][d.id], d)
+
 
     def to_json(self, filename="triple.json"):
         encoded = jsonpickle.encode(self)
