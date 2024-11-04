@@ -171,7 +171,7 @@ def test_nd_example():
     tri_dofs = DOFGenerator(xs, S3, S3)
 
     M = sp.Matrix([[y, -x]])
-    vec_Pk = PolynomialSpace(deg - 1, deg - 1, vec=True)
+    vec_Pk = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
     Pk = PolynomialSpace(deg - 1, deg - 1)
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
 
@@ -210,7 +210,7 @@ def test_rt_example():
     xs = [immerse(tri, int_rt, TrHDiv)]
     tri_dofs = DOFGenerator(xs, S3, S3)
     M = sp.Matrix([[x, y]])
-    vec_Pd = PolynomialSpace(deg - 1, deg - 1, vec=True)
+    vec_Pd = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
     Pd = PolynomialSpace(deg - 1, deg - 1)
     rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
     rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
@@ -304,7 +304,7 @@ def test_rt_second_order():
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
-    vecP3 = PolynomialSpace(3, 3, vec=True)
+    vecP3 = PolynomialSpace(3, 3, set_shape=True)
     rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 
     x = sp.Symbol("x")

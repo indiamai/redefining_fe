@@ -13,7 +13,7 @@ tri = n_sided_polygon(3)
 
 def create_dg1(cell):
     xs = [DOF(DeltaPairing(), PointKernel(cell.vertices(return_coords=True)[0]))]
-    Pk = PolynomialSpace(1, 1)
+    Pk = PolynomialSpace(1)
     dg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return dg
 
@@ -21,7 +21,7 @@ def create_dg1(cell):
 def create_dg2(cell):
     xs = [DOF(DeltaPairing(), PointKernel(cell.vertices(return_coords=True)[0]))]
     center = [DOF(DeltaPairing(), PointKernel((0,)))]
-    Pk = PolynomialSpace(2, 2)
+    Pk = PolynomialSpace(2)
     dg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
                                                 DOFGenerator(center, S1, S1)])
     return dg
@@ -32,7 +32,7 @@ def create_cg1(cell):
     vert_dg = create_dg1(cell.vertices(get_class=True)[0])
     xs = [immerse(cell, vert_dg, TrH1)]
 
-    Pk = PolynomialSpace(deg, deg)
+    Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
     return cg
 

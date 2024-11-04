@@ -1,6 +1,6 @@
 import json
 from redefining_fe import *
-from redefining_fe.spaces.polynomial_spaces import RestrictedPolynomialSpace, ConstructedPolynomialSpace
+from redefining_fe.spaces.polynomial_spaces import ConstructedPolynomialSpace
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
 from redefining_fe.spaces.interpolation_spaces import InterpolationSpace
 from redefining_fe.traces import Trace
@@ -22,7 +22,6 @@ class ElementSerialiser():
                           "SobolevSpace": ElementSobolevSpace,
                           "InterpolationSpace": InterpolationSpace,
                           "PolynomialSpace": PolynomialSpace,
-                          "RestrictedPolynomialSpace": RestrictedPolynomialSpace,
                           "ConstructedPolynomialSpace": ConstructedPolynomialSpace,
                           "DOF": DOF,
                           "ImmersedDOF": ImmersedDOFs,

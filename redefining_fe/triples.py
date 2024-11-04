@@ -75,7 +75,7 @@ class ElementTriple():
 
     def get_value_shape(self):
         # TODO Shape should be specificed somewhere else probably
-        if self.spaces[0].vec:
+        if self.spaces[0].set_shape:
             return (self.cell.get_spatial_dimension(),)
         else:
             return ()
@@ -112,7 +112,7 @@ class ElementTriple():
         print("my ent ids", entity_ids)
         entity_perms = self.make_entity_permutations(self.cell.dim(), entity_ids, min_ids, dofs)
 
-        form_degree = 1 if self.spaces[0].vec else 0
+        form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
@@ -232,12 +232,6 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
 
-    # def to_json(self, filename="triple.json"):
-    #     encoded = json.dumps(self, cls=FETripleEncoder)
-    #     print(encoded)
-    #     # with open(filename, "w+") as f:
-    #     #     f.write(encoded)
-
     def _to_dict(self):
         o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}
         return o_dict
@@ -246,11 +240,6 @@ class ElementTriple():
         return "Triple"
 
     def _from_dict(o_dict):
-        # from redefining_fe.serialisation import FETripleDecoder
-        # print(o_dict["cell"])
-        # cell = json.loads(o_dict["cell"], cls=FETripleDecoder)
-        # spaces = json.loads(o_dict["spaces"], cls=FETripleDecoder)
-        # dofs =  json.loads(o_dict["dofs"], cls=FETripleDecoder)
         return ElementTriple(o_dict["cell"], o_dict["spaces"], o_dict["dofs"])
 
 
