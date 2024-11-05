@@ -15,6 +15,27 @@ class Trace():
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         raise NotImplementedError("Trace uninstanitated")
 
+    def _to_dict(self):
+        return {"trace": str(self)}
+
+    def dict_id(self):
+        return "Trace"
+
+    def _from_dict(obj_dict):
+        # might want to actually save these as functions or something for ambiguity?
+        tr_id = obj_dict["trace"]
+        if tr_id == "H1":
+            return TrH1
+        elif tr_id == "HDiv":
+            return TrHDiv
+        elif tr_id == "HCurl":
+            return TrHCurl
+        elif tr_id == "Grad":
+            return TrGrad
+        elif tr_id == "Hess":
+            return TrHess
+        raise ValueError("Trace not found")
+
 
 class TrH1(Trace):
 
@@ -26,6 +47,9 @@ class TrH1(Trace):
 
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         ax.scatter(*coord, **kwargs)
+
+    def __repr__(self):
+        return "H1"
 
 
 class TrHDiv(Trace):
@@ -121,7 +145,7 @@ class TrGrad(Trace):
         ax.add_patch(circle1)
 
     def __repr__(self):
-        return "H2"
+        return "Grad"
 
 
 class TrHess(Trace):
@@ -151,4 +175,4 @@ class TrHess(Trace):
         ax.add_patch(circle1)
 
     def __repr__(self):
-        return "H3"
+        return "Hess"

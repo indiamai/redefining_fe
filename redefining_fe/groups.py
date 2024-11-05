@@ -3,10 +3,18 @@ from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 import numpy as np
 import sympy as sp
+import math
 from redefining_fe.utils import fold_reduce
 
 
 def construct_rep_func(M):
+    """
+    Convert a matrix to a representation function
+
+    Args:
+        M: a numpy matrix
+
+    Returns a function that applies the matrix to the arguments (which can be symbolic or numeric) """
     def rep(*x):
         if isinstance(x, sp.Expr):
             x_ones = sp.r_[sp.array(x), sp.ones(1)]
@@ -42,6 +50,20 @@ class GroupMemberRep(object):
             return temp_perm(lst)
         return self.perm(lst)
 
+    def compute_num_rep(self, val_list=None):
+        m_array = self.perm.array_form
+        identity = self.group.identity.perm.array_form
+        if not val_list:
+            val_list = self.perm.array_form
+        else:
+            val_list = self.permute(val_list)
+        val = 0
+        for i in range(len(identity)):
+            loc = m_array.index(identity[i])
+            m_array.remove(identity[i])
+            val += loc * math.factorial(len(identity) - i - 1)
+        return val, val_list
+
     def __mul__(self, x):
         assert isinstance(x, GroupMemberRep)
         return self.group.get_member(self.perm * x.perm)
@@ -51,10 +73,29 @@ class GroupMemberRep(object):
         for rep in self.rep:
             string += rep.__name__
             string += " "
-        return string
+        return str(self.perm.array_form)
+
+    def __eq__(self, value):
+        assert isinstance(value, GroupMemberRep)
+        return self.perm == value.perm
+
+    # def _to_dict(self):
+    #     o_dict = {self.dict_id(): self.perm}
+    #     return o_dict
+
+    # def dict_id(self):
+    #     return "GroupMemberRep" + str(id(self))
 
 
 class GroupRepresentation(object):
+    """
+    A representation of a group by its matrix operations.
+
+    Args:
+        base_group: the sympy group that is being represented
+        cell (optional): the cell the group is representing the operations on
+
+    """
 
     def __init__(self, base_group, cell=None):
         assert isinstance(base_group, PermutationGroup)
@@ -127,6 +168,23 @@ class GroupRepresentation(object):
         # assert list(perm2) in [m.array_form for m in member_perms]
         return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
 
+    def compute_num_reps(self, base_val=0):
+        """ Computed the numerical represention of each member as compared to the identity.
+        Where the numerical rep is:
+
+        M.index(id[0]) = a; M.remove(id[0])
+        M.index(id[1]) = b; M.remove(id[1])
+        M.index(id[2]) = c; M.remove(id[2])
+
+        o = (a * 2!) + (b * 1!) + (c * 0!)
+        """
+        members = self.members()
+        res = {}
+        for m in members:
+            val, perm = m.compute_num_rep(base_val)
+            res[val] = perm
+        return res
+
     def compute_reps(self, g, path, remaining_members):
         # breadth first search to find generator representations of all members
         if len(remaining_members) == 0:
@@ -186,7 +244,27 @@ class GroupRepresentation(object):
         return GroupRepresentation(PermutationGroup(remaining_perms))
 
     def __repr__(self):
-        return "group"
+        return "GR"
+
+    # def __eq__(self, other):
+    #     # TODO work on idea of group equality
+    #     assert isinstance(other, GroupRepresentation)
+    #     res = True
+    #     for m in self.members():
+    #         res = res and m in other.members()
+    #     return res
+
+    def _to_dict(self):
+        return {"members": [m.perm.array_form for m in self._members]}
+
+    def dict_id(self):
+        return "Group"
+
+    def _from_dict(o_dict):
+        perm_group = PermutationGroup([Permutation(m) for m in o_dict["members"]])
+        # , o_dict["cell"]
+        return GroupRepresentation(perm_group)
+
 
 # Function Representation of the coordinate transforms that make up the groups.
 
@@ -233,6 +311,14 @@ def g2(xs):
     # 120 degree rotation clockwise
     raise NotImplementedError("Tetrahedron implementation incomplete")
     return rot(xs, - 2*np.pi / 3)
+
+
+def get_sym_group(n):
+    return GroupRepresentation(SymmetricGroup(n))
+
+
+def get_cyc_group(n):
+    return GroupRepresentation(CyclicGroup(n))
 
 
 S1 = GroupRepresentation(SymmetricGroup(1))

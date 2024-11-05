@@ -2,6 +2,8 @@ from redefining_fe import *
 import sympy as sp
 import numpy as np
 
+np.set_printoptions(legacy="1.25")
+
 
 def construct_dg0():
     # [test_dg0 0]
@@ -79,6 +81,8 @@ def construct_cg1():
 
     # [test_cg1 2]
     xs = [immerse(edge, dg0, TrH1)]
+    for x in xs:
+        print(type(x))
     cg1 = ElementTriple(edge, (P1, CellH1, C0),
                         DOFGenerator(xs, S2, S1))
     # [test_cg1 1]
@@ -90,7 +94,7 @@ def plot_cg1():
     cg1.plot()
 
 
-def construct_cg3():
+def construct_cg3(cell=None):
     # [test_cg3 0]
     tri = n_sided_polygon(3)
     edge = tri.edges(get_class=True)[0]
@@ -104,6 +108,7 @@ def construct_cg3():
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
+    print([d.generation for d in dg0_int.generate()])
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, S3, S1)
@@ -146,12 +151,17 @@ def test_cg_examples():
                          [0, 0]])
 
     for dof in cg3.generate():
+        print(dof)
+        print(dof.sub_id)
         assert any([np.allclose(val, dof.eval(test_func).flatten()) for val in dof_vals])
 
 
 def test_nd_example():
     tri = n_sided_polygon(3)
+    deg = 1
     edge = tri.edges(get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
 
     xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
@@ -159,11 +169,14 @@ def test_nd_example():
 
     xs = [immerse(tri, int_ned, TrHCurl)]
     tri_dofs = DOFGenerator(xs, S3, S3)
-    vecP3 = VectorPolynomialSpace(P3, P3)
-    ned = ElementTriple(tri, (vecP3, CellHCurl, C0), [tri_dofs])
 
-    x = sp.Symbol("x")
-    y = sp.Symbol("y")
+    M = sp.Matrix([[y, -x]])
+    vec_Pk = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
+    Pk = PolynomialSpace(deg - 1, deg - 1)
+    nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
+
+    ned = ElementTriple(tri, (nd, CellHCurl, C0), [tri_dofs])
+
     phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
     phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
@@ -177,10 +190,12 @@ def test_nd_example():
 
 def test_rt_example():
     tri = n_sided_polygon(3)
+    deg = 1
     edge = tri.edges(get_class=True)[0]
 
     xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
+
     int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
     x = sp.Symbol("x")
@@ -194,8 +209,11 @@ def test_rt_example():
 
     xs = [immerse(tri, int_rt, TrHDiv)]
     tri_dofs = DOFGenerator(xs, S3, S3)
-    vecP3 = VectorPolynomialSpace(P3, P3)
-    rt = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs])
+    M = sp.Matrix([[x, y]])
+    vec_Pd = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
+    Pd = PolynomialSpace(deg - 1, deg - 1)
+    rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+    rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
 
     basis_funcs = [phi_0, phi_1, phi_2]
 
@@ -286,7 +304,7 @@ def test_rt_second_order():
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
-    vecP3 = VectorPolynomialSpace(P3, P3)
+    vecP3 = PolynomialSpace(3, 3, set_shape=True)
     rt2 = ElementTriple(tri, (vecP3, CellHDiv, C0), [tri_dofs, i_dofs])
 
     x = sp.Symbol("x")

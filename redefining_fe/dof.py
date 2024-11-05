@@ -1,4 +1,5 @@
 from FIAT.quadrature_schemes import create_quadrature
+from FIAT.functional import PointEvaluation
 from redefining_fe.cells import CellComplexToFiat
 import numpy as np
 
@@ -13,6 +14,10 @@ class Pairing():
 
     def add_entity(self, entity):
         self.entity = entity
+
+    def _to_dict(self):
+        o_dict = {"entity": self.entity}
+        return o_dict
 
 
 class DeltaPairing(Pairing):
@@ -30,8 +35,20 @@ class DeltaPairing(Pairing):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
+    def convert_to_fiat(self, ref_el, pt):
+        # assert isinstance(kernel, PointKernel)
+        return PointEvaluation(ref_el, pt)
+
     def __repr__(self):
         return "{fn}({kernel})"
+
+    def dict_id(self):
+        return "Delta"
+
+    def _from_dict(obj_dict):
+        new_obj = DeltaPairing()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class L2InnerProd(Pairing):
@@ -49,8 +66,19 @@ class L2InnerProd(Pairing):
             return np.dot(kernel(*x), v(*x))
         return quadrature.integrate(kernel_dot)
 
+    def convert_to_fiat(self, ref_el, kernel):
+        raise NotImplementedError("L2 functionals not yet fiat convertible")
+
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
+
+    def dict_id(self):
+        return "L2Inner"
+
+    def _from_dict(obj_dict):
+        new_obj = L2InnerProd()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class PointKernel():
@@ -70,6 +98,16 @@ class PointKernel():
     def __call__(self, *args):
         return self.pt
 
+    def _to_dict(self):
+        o_dict = {"pt": self.pt}
+        return o_dict
+
+    def dict_id(self):
+        return "PointKernel"
+
+    def _from_dict(obj_dict):
+        return PointKernel(tuple(obj_dict["pt"]))
+
 
 class PolynomialKernel():
 
@@ -88,11 +126,20 @@ class PolynomialKernel():
         res = self.fn(*args)
         return res
 
+    def _to_dict(self):
+        o_dict = {"fn": self.fn}
+        return o_dict
+
+    def dict_id(self):
+        return "PolynomialKernel"
+
+    def _from_dict(obj_dict):
+        return PolynomialKernel(obj_dict["fn"])
+
 
 class DOF():
 
-    def __init__(self, pairing, kernel, immersed=False,
-                 entity=None, attachment=None, target_space=None, g=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=dict({}), sub_id=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -100,48 +147,83 @@ class DOF():
         self.attachment = attachment
         self.target_space = target_space
         self.g = g
+        self.id = None
+        self.sub_id = sub_id
+        self.generation = generation
         if entity is not None:
             self.pairing.add_entity(entity)
 
     def __call__(self, g):
-        return DOF(self.pairing, self.kernel.permute(g), self.immersed,
-                   self.trace_entity, self.attachment, self.target_space, g)
+        new_generation = self.generation.copy()
+        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id)
 
     def eval(self, fn, pullback=True):
-        if self.immersed:
-            attached_fn = fn.attach(self.attachment)
-
-            if not pullback:
-                return self.pairing(self.kernel, attached_fn)
-
-            return self.pairing(self.kernel,
-                                self.target_space(attached_fn,
-                                                  self.trace_entity,
-                                                  self.g))
         return self.pairing(self.kernel, fn)
 
-    def add_context(self, cell, space):
+    def add_context(self, cell, space, g, overall_id=None, generator_id=None):
         # We only want to store the first instance of each
         if self.trace_entity is None:
             self.trace_entity = cell
+            self.generation[self.trace_entity.dim()] = g
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
+        if self.id is None and overall_id is not None:
+            self.id = overall_id
+        if self.sub_id is None and generator_id is not None:
+            self.sub_id = generator_id
 
-    def __repr__(self):
-        if self.immersed:
-            fn = "tr_{1}_{0}(v)".format(str(self.trace_entity),
-                                        str(self.target_space))
-        else:
-            fn = "v"
+    def convert_to_fiat(self, ref_el):
+        if isinstance(self.kernel, PointKernel):
+            pt = self.eval(MyTestFunction(lambda *x: x))
+            return self.pairing.convert_to_fiat(ref_el, pt)
+        raise NotImplementedError("Fiat conversion only implemented for Point eval")
+
+    def __repr__(self, fn="v"):
         return str(self.pairing).format(fn=fn, kernel=self.kernel)
 
-    def immerse(self, entity, attachment, target_space, g):
-        if not self.immersed:
-            return DOF(self.pairing, self.kernel,
-                       True, entity, attachment, target_space, g)
-        else:
-            raise RuntimeError("Error: Immersing twice not supported")
+    def immerse(self, entity, attachment, target_space, g, triple):
+        new_generation = self.generation.copy()
+        new_generation[target_space.domain.dim()] = g
+        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+
+    def _to_dict(self):
+        """ almost certainly needs more things"""
+        o_dict = {"pairing": self.pairing, "kernel": self.kernel}
+        return o_dict
+
+    def dict_id(self):
+        return "DOF"
+
+    def _from_dict(obj_dict):
+        return DOF(obj_dict["pairing"], obj_dict["kernel"])
+
+
+class ImmersedDOF(DOF):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation={}, sub_id=None):
+        self.immersed = True
+        self.triple = triple
+        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id)
+
+    def eval(self, fn, pullback=True):
+        attached_fn = fn.attach(self.attachment)
+
+        if not pullback:
+            return self.pairing(self.kernel, attached_fn)
+
+        return self.pairing(self.kernel,
+                            self.target_space(attached_fn, self.trace_entity, self.g))
+
+    def __call__(self, g):
+        return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
+                           self.attachment, self.target_space, g, self.immersed, self.sub_id)
+
+    def __repr__(self):
+        fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))
+        return super(ImmersedDOF, self).__repr__(fn)
+
+    def immerse(self, entity, attachment, trace, g):
+        raise RuntimeError("Error: Immersing twice not supported")
 
 
 class MyTestFunction():
@@ -186,3 +268,9 @@ class MyTestFunction():
             return "v(G(x))"
         else:
             return "v(x)"
+
+    def _to_dict(self):
+        return {"eq": self.eq}
+
+    def dict_id(self):
+        return "Function"
