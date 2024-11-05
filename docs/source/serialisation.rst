@@ -1,5 +1,5 @@
 Serialisation
-============
+==============
 
 .. automodule:: redefining_fe.serialisation
    :members:
