@@ -9,6 +9,18 @@ import sympy as sp
 
 
 class ElementSerialiser():
+    """
+    This class provides encoding and decoding to json for objects in the
+    redefining_fe language.
+
+    Methods
+    --------
+
+    encode: obj: Redefining_FE class
+        - converts object to a json representation
+    decode: obj_str: String
+        - converts json string to obj
+    """
 
     def __init__(self):
         self.obj_id_counter = {}

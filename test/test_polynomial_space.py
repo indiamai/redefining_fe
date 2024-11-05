@@ -85,7 +85,7 @@ def test_rt_construction(deg):
     M = sp.Matrix([[x, y]])
 
     vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
-    Pd = PolynomialSpace(deg - 1, deg - 1)
+    Pd = PolynomialSpace(deg - 1)
     composite = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
     assert composite.set_shape
@@ -119,8 +119,8 @@ def test_nedelec_construction(deg):
     y = sp.Symbol("y")
     M = sp.Matrix([[y, -x]])
 
-    vec_Pk = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
-    Pk = PolynomialSpace(deg - 1, deg - 1)
+    vec_Pk = PolynomialSpace(deg - 1, set_shape=True)
+    Pk = PolynomialSpace(deg - 1)
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
     assert nd.set_shape
     assert isinstance(nd, ConstructedPolynomialSpace)
