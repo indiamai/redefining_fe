@@ -71,6 +71,13 @@ class GroupMemberRep(object):
         string += str(self.perm.array_form)
         return string
 
+    # def _to_dict(self):
+    #     o_dict = {self.dict_id(): self.perm}
+    #     return o_dict
+
+    # def dict_id(self):
+    #     return "GroupMemberRep" + str(id(self))
+
     def matrix_form(self):
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)
 
@@ -81,7 +88,6 @@ class GroupMemberRep(object):
         M = np.array(bvs).T
         trans_bvs = np.array([self(bvs[i]) for i in range(len(bvs))]).T
         return np.linalg.solve(M, trans_bvs)
-
 
 
 class PermutationSetRepresentation():
@@ -294,7 +300,7 @@ class GroupRepresentation(PermutationSetRepresentation):
 
     def __mul__(self, other_group):
         return GroupRepresentation(PermutationGroup(self.base_group.generators + other_group.base_group.generators))
-    
+
     def __truediv__(self, other_frac):
         """ This isn't a mathematically accurate representation of
             what it means to be a quotient group but it works on S3/S2
@@ -318,6 +324,25 @@ class GroupRepresentation(PermutationSetRepresentation):
 
     def __repr__(self):
         return "GR" + str(self.size())
+
+    # def __eq__(self, other):
+    #     # TODO work on idea of group equality
+    #     assert isinstance(other, GroupRepresentation)
+    #     res = True
+    #     for m in self.members():
+    #         res = res and m in other.members()
+    #     return res
+
+    def _to_dict(self):
+        return {"members": [m.perm.array_form for m in self._members]}
+
+    def dict_id(self):
+        return "Group"
+
+    def _from_dict(o_dict):
+        perm_group = PermutationGroup([Permutation(m) for m in o_dict["members"]])
+        # , o_dict["cell"]
+        return GroupRepresentation(perm_group)
 
 
 # Function Representation of the coordinate transforms that make up the groups.

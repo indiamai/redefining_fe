@@ -14,3 +14,4 @@ Welcome to RedefiningFE's documentation!
     dof
     examples
     modules
+    serialisation

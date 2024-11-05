@@ -17,6 +17,10 @@ class Pairing():
     def add_entity(self, entity):
         self.entity = entity
 
+    def _to_dict(self):
+        o_dict = {"entity": self.entity}
+        return o_dict
+
 
 class DeltaPairing(Pairing):
     """
@@ -39,6 +43,14 @@ class DeltaPairing(Pairing):
 
     def __repr__(self):
         return "{fn}({kernel})"
+
+    def dict_id(self):
+        return "Delta"
+
+    def _from_dict(obj_dict):
+        new_obj = DeltaPairing()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class L2InnerProd(Pairing):
@@ -75,6 +87,14 @@ class L2InnerProd(Pairing):
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
+
+    def dict_id(self):
+        return "L2Inner"
+
+    def _from_dict(obj_dict):
+        new_obj = L2InnerProd()
+        new_obj.add_entity(obj_dict["entity"])
+        return new_obj
 
 
 class BaseKernel():
@@ -139,6 +159,16 @@ class PolynomialKernel(BaseKernel):
         res = self.fn.subs({self.syms[i]: args[i] for i in range(len(args))})
         return res
 
+    def _to_dict(self):
+        o_dict = {"fn": self.fn}
+        return o_dict
+
+    def dict_id(self):
+        return "PolynomialKernel"
+
+    def _from_dict(obj_dict):
+        return PolynomialKernel(obj_dict["fn"])
+
 
 class DOF():
 
@@ -168,6 +198,7 @@ class DOF():
         self.generation[cell.dim()] = dof_gen
         if self.trace_entity is None:
             self.trace_entity = cell
+            self.generation[self.trace_entity.dim()] = g
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
@@ -187,6 +218,17 @@ class DOF():
     def immerse(self, entity, attachment, target_space, g, triple):
         new_generation = self.generation.copy()
         return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+
+    def _to_dict(self):
+        """ almost certainly needs more things"""
+        o_dict = {"pairing": self.pairing, "kernel": self.kernel}
+        return o_dict
+
+    def dict_id(self):
+        return "DOF"
+
+    def _from_dict(obj_dict):
+        return DOF(obj_dict["pairing"], obj_dict["kernel"])
 
 
 class ImmersedDOF(DOF):
@@ -259,3 +301,9 @@ class MyTestFunction():
             return "v(G(x))"
         else:
             return "v(x)"
+
+    def _to_dict(self):
+        return {"eq": self.eq}
+
+    def dict_id(self):
+        return "Function"

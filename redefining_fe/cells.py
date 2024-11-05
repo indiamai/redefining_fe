@@ -63,10 +63,6 @@ def make_arrow_3d(ax, mid, edge, direction=1):
     ax.add_artist(a)
 
 
-# def construct_attach_2d_old(a, b, c, d):
-#     return lambda x: [((c-a)/2)*(x+1) + a, ((d-b)/2)*(x+1) + b]
-
-
 def construct_attach_2d(a, b, c, d):
     """
     Compute polynomial attachment in x based on two points (a,b) and (c,d)
@@ -211,8 +207,10 @@ class Point():
 
     id_iter = itertools.count()
 
-    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}):
-        self.id = next(self.id_iter)
+    def __init__(self, d, edges=[], vertex_num=None, oriented=False, group=None, edge_orientations={}, cell_id=None):
+        if not cell_id:
+            cell_id = next(self.id_iter)
+        self.id = cell_id
         self.dimension = d
         if d == 0:
             assert (edges == [])
@@ -598,6 +596,20 @@ class Point():
     def to_ufl(self, name=None, geo_dim=None):
         return CellComplexToUFL(self, name, geo_dim)
 
+    def _to_dict(self):
+        # think this is probably missing stuf
+        o_dict = {"dim": self.dimension,
+                  "edges": [c for c in self.connections],
+                  "oriented": self.oriented,
+                  "id": self.id}
+        return o_dict
+
+    def dict_id(self):
+        return "Cell"
+
+    def _from_dict(o_dict):
+        return Point(o_dict["dim"], o_dict["edges"], oriented=o_dict["oriented"], cell_id=o_dict["id"])
+
 
 class Edge():
     """
@@ -608,29 +620,44 @@ class Edge():
     :param: o: orientation function (optional)
     """
 
-    def __init__(self, point, attachment=lambda x: x, o=lambda x: x):
+    def __init__(self, point, attachment=None, o=None):
         self.attachment = attachment
         self.point = point
         self.o = o
 
     def __call__(self, *x):
-        oriented = self.o(x)
-        syms = ["x", "y", "z"]
-        if hasattr(self.attachment, '__iter__'):
-            res = []
-            for attach_comp in self.attachment:
-                if len(attach_comp.atoms(sp.Symbol)) == len(oriented):
-                    res.append(sympy_to_numpy(attach_comp, syms, oriented))
-                else:
-                    res.append(attach_comp.subs({syms[i]: oriented[i] for i in range(len(oriented))}))
-            return tuple(res)
-        return sympy_to_numpy(self.attachment, syms, oriented)
+        if self.o:
+            x = self.o(x)
+        if self.attachment:
+            syms = ["x", "y", "z"]
+            if hasattr(self.attachment, '__iter__'):
+                res = []
+                for attach_comp in self.attachment:
+                    if len(attach_comp.atoms(sp.Symbol)) == len(x):
+                        res.append(sympy_to_numpy(attach_comp, syms, x))
+                    else:
+                        res.append(attach_comp.subs({syms[i]: x[i] for i in range(len(x))}))
+                return tuple(res)
+            return sympy_to_numpy(self.attachment, syms, x)
+        return x
 
     def lower_dim(self):
         return self.point.dim()
 
     def __repr__(self):
         return str(self.point)
+
+    def _to_dict(self):
+        o_dict = {"attachment": self.attachment,
+                  "point": self.point,
+                  "orientation": self.o}
+        return o_dict
+
+    def dict_id(self):
+        return "Edge"
+
+    def _from_dict(o_dict):
+        return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
 
 class CellComplexToFiat(Simplex):

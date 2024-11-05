@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import inspect
 import finat.ufl
 import warnings
-import jsonpickle
 import numpy as np
 
 
@@ -78,7 +77,7 @@ class ElementTriple():
 
     def get_value_shape(self):
         # TODO Shape should be specificed somewhere else probably
-        if self.spaces[0].vec:
+        if self.spaces[0].set_shape:
             return (self.cell.get_spatial_dimension(),)
         else:
             return ()
@@ -258,11 +257,15 @@ class ElementTriple():
             for d in dofs:
                 print(d.id, oriented_mats_overall[val][d.id], d)
 
+    def _to_dict(self):
+        o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}
+        return o_dict
 
-    def to_json(self, filename="triple.json"):
-        encoded = jsonpickle.encode(self)
-        with open(filename, "w+") as f:
-            f.write(encoded)
+    def dict_id(self):
+        return "Triple"
+
+    def _from_dict(o_dict):
+        return ElementTriple(o_dict["cell"], o_dict["spaces"], o_dict["dofs"])
 
 
 class DOFGenerator():
@@ -309,12 +312,38 @@ class DOFGenerator():
             return self.ls
         return self.ls
 
+    def generate_by_x(self, cell, space, id_counter):
+        res_ls = []
+        for l_g in self.x:
+            ls = []
+            for g in self.g1.members():
+                generated = l_g(g)
+                if not isinstance(generated, list):
+                    generated = [generated]
+                for dof in generated:
+                    dof.add_context(cell, space, g, id=id_counter)
+                    id_counter += 1
+                ls.extend(generated)
+            res_ls.append(ls)
+
+        return res_ls
+
     def __repr__(self):
         repr_str = "DOFGen("
         for x_elem in self.x:
             repr_str += "g(" + str(x_elem) + ")"
         repr_str += str(self.g1) + str(self.g2) + ")"
         return repr_str
+
+    def _to_dict(self):
+        o_dict = {"x": self.x, "g1": self.g1, "g2": self.g2}
+        return o_dict
+
+    def dict_id(self):
+        return "DOFGen"
+
+    def _from_dict(obj_dict):
+        return DOFGenerator(obj_dict["x"], obj_dict["g1"], obj_dict["g2"])
 
 
 class ImmersedDOFs():
@@ -348,6 +377,16 @@ class ImmersedDOFs():
         for dof_gen in self.E:
             repr_str += "Im_" + str(self.trace) + "_" + str(self.target_cell) + "(" + str(dof_gen) + ")"
         return repr_str
+
+    def _to_dict(self):
+        o_dict = {"target_cell": self.target_cell, "triple": self.triple, "trace": self.trace}
+        return o_dict
+
+    def dict_id(self):
+        return "ImmersedDOF"
+
+    def _from_dict(obj_dict):
+        return ImmersedDOFs(obj_dict["target_cell"], obj_dict["triple"], obj_dict["trace"])
 
 
 def immerse(target_cell, triple, target_space, node=0):

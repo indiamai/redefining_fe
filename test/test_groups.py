@@ -95,3 +95,22 @@ def test_conj():
     #         print("g", g.perm.cycle_structure)
     #         # for row in g.matrix_form():
     #         #     print(row)
+    mems = cell.group.members()
+    for m in mems:
+        print(m.compute_num_rep())
+
+
+# def test_group_equality():
+#     cell = n_sided_polygon(3)
+
+#     s1 = S1.add_cell(cell)
+#     s1_new = S1.add_cell(cell)
+
+#     assert s1 == s1_new
+
+    # cell2 = Point(1, [Point(0), Point(0)], vertex_num=2)
+
+    # s1 = S2.add_cell(cell)
+    # s1_new = S2.add_cell(cell2)
+
+    # assert not s1 == s1_new
