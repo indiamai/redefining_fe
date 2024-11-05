@@ -228,7 +228,6 @@ class GroupRepresentation(PermutationSetRepresentation):
         conj_class = set()
         for x in self.members():
             res = ~x * g * x
-            print(res)
             conj_class.add(res)
         return conj_class
 

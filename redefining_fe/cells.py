@@ -289,8 +289,7 @@ class Point():
         n = len(verts)
         max_group = SymmetricGroup(n)
         edges = [edge.vertices() for edge in self.edges(get_class=True)]
-
-        accepted_perms = max_group.elements
+        accepted_perms = max_group.elements.copy()
         if n > 2:
             for element in max_group.elements:
                 reordered = element(verts)
@@ -300,8 +299,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-
-        return fe_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
+        return fe_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):
         return self.dimension
@@ -447,9 +445,7 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
-                else:
-                    # breakpoint()
-                    pass
+
         return reordered_entities
 
     def basis_vectors(self, return_coords=True, entity=None):

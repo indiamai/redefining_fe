@@ -226,6 +226,8 @@ class ElementTriple():
         dim = self.cell.dim()
         e = self.cell
         members = e.group.members()
+        print("lren", len(members))
+        print(e.group.size())
         for g in members:
             val = g.numeric_rep()
             oriented_mats_overall[val] = dof_id_mat.copy()

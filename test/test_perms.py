@@ -71,6 +71,7 @@ def test_basic_perms(cell):
 
 def test_square():
     square = n_sided_polygon(4)
+    print("testsq",square.group.size())
     edge = square.d_entities(1, get_class=True)[0]
 # edge.basis_vectors()[0]
     xs = [DOF(L2InnerProd(), PointKernel(-0.5))]
