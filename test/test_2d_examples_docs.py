@@ -99,7 +99,7 @@ def plot_cg1():
     cg1.plot()
 
 
-def construct_cg3(cell=None):
+def construct_cg3():
     # [test_cg3 0]
     tri = n_sided_polygon(3)
     edge = tri.edges(get_class=True)[0]
@@ -113,7 +113,6 @@ def construct_cg3(cell=None):
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
-    print([d.generation for d in dg0_int.generate()])
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, tri_C3, S1)
@@ -328,4 +327,3 @@ def test_rt_second_order():
     for dof in rt2.generate():
         dof.eval(phi)
     rt2.plot()
-

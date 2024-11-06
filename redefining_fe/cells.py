@@ -9,7 +9,7 @@ import copy
 import sympy as sp
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
-from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
+from sympy.combinatorics.named_groups import SymmetricGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex
 from ufl.cell import Cell

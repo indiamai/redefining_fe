@@ -133,6 +133,16 @@ class PointKernel(BaseKernel):
     def __call__(self, *args):
         return self.pt
 
+    def _to_dict(self):
+        o_dict = {"pt": self.pt}
+        return o_dict
+
+    def dict_id(self):
+        return "PointKernel"
+
+    def _from_dict(obj_dict):
+        return PointKernel(tuple(obj_dict["pt"]))
+
 
 class PolynomialKernel(BaseKernel):
 
@@ -172,7 +182,7 @@ class PolynomialKernel(BaseKernel):
 
 class DOF():
 
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=dict({}), sub_id=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=None, sub_id=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -182,7 +192,11 @@ class DOF():
         self.g = g
         self.id = None
         self.sub_id = sub_id
-        self.generation = generation
+
+        if generation is None:
+            self.generation = {}
+        else:
+            self.generation = generation
         if entity is not None:
             self.pairing.add_entity(entity)
 
@@ -195,10 +209,10 @@ class DOF():
 
     def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
         # For some of these, we only want to store the first instance of each
+        print("adding context", cell.dim())
         self.generation[cell.dim()] = dof_gen
         if self.trace_entity is None:
             self.trace_entity = cell
-            self.generation[self.trace_entity.dim()] = g
             self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
@@ -233,7 +247,7 @@ class DOF():
 
 class ImmersedDOF(DOF):
     # probably need to add a convert to fiat method here to capture derivatives from immersion
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation={}, sub_id=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation=None, sub_id=None):
         self.immersed = True
         self.triple = triple
         super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id)
@@ -249,7 +263,7 @@ class ImmersedDOF(DOF):
 
     def __call__(self, g):
         return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
-                           self.attachment, self.target_space, g, self.immersed, self.sub_id)
+                           self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id)
 
     def __repr__(self):
         fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))

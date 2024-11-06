@@ -74,7 +74,7 @@ def test_conj():
     g = cell.group.members()[4]
     print("g", g)
 
-    print(cell.group.conjugacy_class(g))
+    # print(cell.group.conjugacy_class(g))
 
     for g in cell.group.members():
         print("g", g)
@@ -97,7 +97,7 @@ def test_conj():
     #         #     print(row)
     mems = cell.group.members()
     for m in mems:
-        print(m.compute_num_rep())
+        print(m.numeric_rep())
 
 
 # def test_group_equality():

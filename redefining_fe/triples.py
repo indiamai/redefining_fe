@@ -113,7 +113,7 @@ class ElementTriple():
             # print(nodes[i].pt_dict)
         print("my ent ids", entity_ids)
 
-        form_degree = 1 if self.spaces[0].vec else 0
+        form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         return CiarletElement(poly_set, dual, degree, form_degree)
@@ -169,6 +169,7 @@ class ElementTriple():
 
     def make_dof_perms(self):
         dofs = self.generate()
+        print(dofs)
         entity_associations = {dim: {str(e): {} for e in self.cell.d_entities(dim, get_class=True)}
                                for dim in range(self.cell.dim() + 1)}
         cell_dim = self.cell.dim()
@@ -178,6 +179,8 @@ class ElementTriple():
         for d in dofs:
             sub_dim = d.trace_entity.dim()
             sub_dict = entity_associations[sub_dim][str(d.trace_entity)]
+            print(d)
+            print(d.generation)
             dof_gen = str(d.generation[sub_dim])
             if dof_gen in sub_dict.keys():
                 sub_dict[dof_gen] += [d]
@@ -227,6 +230,7 @@ class ElementTriple():
         members = e.group.members()
         print("lren", len(members))
         print(e.group.size())
+        print(entity_associations)
         for g in members:
             val = g.numeric_rep()
             oriented_mats_overall[val] = dof_id_mat.copy()
@@ -234,6 +238,8 @@ class ElementTriple():
                 ent_dofs = entity_associations[dim][str(e)][dof_gen]
                 ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                 dof_gen_class = ent_dofs[0].generation
+
+                print("dof gen class", dof_gen_class)
                 for key in dof_gen_class.keys():
                     if not key == dim:
                         immersed_dim = key
@@ -242,7 +248,7 @@ class ElementTriple():
                             sub_e = e.get_node(sub_e)
                             sub_ent_assoc = entity_associations[immersed_dim][str(sub_e)][str(dof_gen_class[immersed_dim])]
                             sub_mat = oriented_mats_by_entity[immersed_dim][str(sub_e)][sub_g.numeric_rep()][np.ix_(ent_dofs_ids, ent_dofs_ids)]
- 
+
                             g_sub_mat = g.matrix_form()
                             expanded = np.kron(g_sub_mat, np.eye(len(sub_ent_assoc)))
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, expanded).copy()
@@ -294,39 +300,45 @@ class DOFGenerator():
         return self.dof_numbers
 
     def generate(self, cell, space, id_counter):
-        if self.ls is None:
-            self.ls = []
-            for l_g in self.x:
-                i = 0
-                for g in self.g1.members():
-                    generated = l_g(g)
-                    if not isinstance(generated, list):
-                        generated = [generated]
-                    for dof in generated:
-                        dof.add_context(self, cell, space, g, id_counter, i)
-                        id_counter += 1
-                        i += 1
-                    self.ls.extend(generated)
-            self.dof_numbers = len(self.ls)
-            self.dof_ids = [dof.id for dof in self.ls]
-            return self.ls
-        return self.ls
-
-    def generate_by_x(self, cell, space, id_counter):
-        res_ls = []
+        # if self.ls is None:
+        self.ls = []
         for l_g in self.x:
-            ls = []
+            i = 0
             for g in self.g1.members():
                 generated = l_g(g)
                 if not isinstance(generated, list):
                     generated = [generated]
                 for dof in generated:
-                    dof.add_context(cell, space, g, id=id_counter)
+                    print("in generation", self)
+                    print(dof.generation)
+                    dof.add_context(self, cell, space, g, id_counter, i)
+                    print("in generation", dof.generation)
                     id_counter += 1
-                ls.extend(generated)
-            res_ls.append(ls)
+                    i += 1
+                self.ls.extend(generated)
+        self.dof_numbers = len(self.ls)
+        self.dof_ids = [dof.id for dof in self.ls]
+        print("After generation")
+        for dof in self.ls:
+            print(dof.generation)
+            # return self.ls
+        return self.ls
 
-        return res_ls
+    # def generate_by_x(self, cell, space, id_counter):
+    #     res_ls = []
+    #     for l_g in self.x:
+    #         ls = []
+    #         for g in self.g1.members():
+    #             generated = l_g(g)
+    #             if not isinstance(generated, list):
+    #                 generated = [generated]
+    #             for dof in generated:
+    #                 dof.add_context(self, cell, space, g, id=id_counter)
+    #                 id_counter += 1
+    #             ls.extend(generated)
+    #         res_ls.append(ls)
+
+        # return res_ls
 
     def __repr__(self):
         repr_str = "DOFGen("

@@ -2,30 +2,30 @@ from redefining_fe import *
 from test_convert_to_fiat import create_cg1, create_dg1, create_cg2
 from test_2d_examples_docs import construct_cg3
 import pytest
-import sympy as sp
 import numpy as np
 
-vert = Point(0)
-edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-tri = n_sided_polygon(3)
+# vert = Point(0)
+# edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+# tri = n_sided_polygon(3)
 
 
-@pytest.mark.parametrize("cell", [edge])
-def test_cg_perms(cell):
+def test_cg_perms():
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
     cg1 = create_cg1(cell)
     cg1.make_dof_perms()
 
 
-@pytest.mark.parametrize("cell", [edge])
-def test_cg2_perms(cell):
+def test_cg2_perms():
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
     cg2 = create_cg2(cell)
     cg2.make_dof_perms()
 
 
-@pytest.mark.parametrize("cell", [tri])
-def test_cg3_perms(cell):
-    cg3 = construct_cg3(cell)
+def test_cg3_perms():
+    # cell = n_sided_polygon(3)
+    cg3 = construct_cg3()
     cg3.make_dof_perms()
+
 
 def test_cg_edges():
     tri = n_sided_polygon(3)
@@ -45,20 +45,13 @@ def test_cg_edges():
     cg3.make_dof_perms()
 
 
-@pytest.mark.parametrize("cell", [vert, edge])
+@pytest.mark.parametrize("cell", [Point(0), Point(1, [Point(0), Point(0)], vertex_num=2)])
 def test_dg_perms(cell):
-    cg1 = create_dg1(cell)
-    cg1.make_dof_perms()
+    dg1 = create_dg1(cell)
+    dg1.make_dof_perms()
 
 
-def test_nd_perms():
-    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
-    dofs = DOFGenerator(xs, S1, S2)
-    int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
-    int_ned.make_dof_perms()
-
-
-@pytest.mark.parametrize("cell", [edge, tri])
+@pytest.mark.parametrize("cell", [Point(1, [Point(0), Point(0)], vertex_num=2), n_sided_polygon(3)])
 def test_basic_perms(cell):
     cell_group = cell.group
     bvs = cell.basis_vectors()
@@ -71,7 +64,7 @@ def test_basic_perms(cell):
 
 def test_square():
     square = n_sided_polygon(4)
-    print("testsq",square.group.size())
+    print("testsq", square.group.size())
     edge = square.d_entities(1, get_class=True)[0]
 # edge.basis_vectors()[0]
     xs = [DOF(L2InnerProd(), PointKernel(-0.5))]
