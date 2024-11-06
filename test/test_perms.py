@@ -4,25 +4,24 @@ from test_2d_examples_docs import construct_cg3
 import pytest
 import numpy as np
 
-# vert = Point(0)
-# edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-# tri = n_sided_polygon(3)
+vert = Point(0)
+edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+tri = n_sided_polygon(3)
 
 
-def test_cg_perms():
-    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
+@pytest.mark.parametrize("cell", [edge])
+def test_cg_perms(cell):
     cg1 = create_cg1(cell)
     cg1.make_dof_perms()
 
 
-def test_cg2_perms():
-    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
+@pytest.mark.parametrize("cell", [edge])
+def test_cg2_perms(cell):
     cg2 = create_cg2(cell)
     cg2.make_dof_perms()
 
 
 def test_cg3_perms():
-    # cell = n_sided_polygon(3)
     cg3 = construct_cg3()
     cg3.make_dof_perms()
 
@@ -45,7 +44,7 @@ def test_cg_edges():
     cg3.make_dof_perms()
 
 
-@pytest.mark.parametrize("cell", [Point(0), Point(1, [Point(0), Point(0)], vertex_num=2)])
+@pytest.mark.parametrize("cell", [vert, edge])
 def test_dg_perms(cell):
     dg1 = create_dg1(cell)
     dg1.make_dof_perms()
@@ -60,6 +59,14 @@ def test_basic_perms(cell):
         trans_bvs = np.array([g(bvs[i]) for i in range(len(bvs))]).T
         print(g)
         print(np.linalg.solve(M, trans_bvs))
+
+
+@pytest.mark.parametrize("cell", [edge])
+def test_nd_perms(cell):
+    xs = [DOF(L2InnerProd(), PointKernel(cell.basis_vectors()[0]))]
+    dofs = DOFGenerator(xs, S1, S2)
+    int_ned = ElementTriple(cell, (P1, CellHCurl, C0), dofs)
+    int_ned.make_dof_perms()
 
 
 def test_square():

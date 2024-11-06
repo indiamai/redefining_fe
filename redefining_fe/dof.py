@@ -209,7 +209,6 @@ class DOF():
 
     def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
         # For some of these, we only want to store the first instance of each
-        print("adding context", cell.dim())
         self.generation[cell.dim()] = dof_gen
         if self.trace_entity is None:
             self.trace_entity = cell
