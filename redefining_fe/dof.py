@@ -1,6 +1,6 @@
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT.quadrature import FacetQuadratureRule
-from FIAT.functional import PointEvaluation, IntegralMoment
+from FIAT.functional import PointEvaluation, FrobeniusIntegralMoment
 from redefining_fe.cells import CellComplexToFiat
 import numpy as np
 import sympy as sp
@@ -69,7 +69,11 @@ class L2InnerProd(Pairing):
 
         def kernel_dot(x):
             return np.dot(kernel(*x), v(*x))
+
         return quadrature.integrate(kernel_dot)
+
+    def tabulate(self):
+        pass
 
     def add_entity(self, entity):
         res = L2InnerProd()
@@ -78,25 +82,16 @@ class L2InnerProd(Pairing):
 
     def convert_to_fiat(self, ref_el, dof, interpolant_degree):
         total_deg = interpolant_degree + dof.kernel.degree()
-        print(self.entity)
-        print(self.entity.id)
-        print(ref_el.fe_cell.get_topology())
         ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
-        print(ent_id)
         entity = ref_el.construct_subelement(self.entity.dim())
-        print(total_deg)
-        Q_ref = create_quadrature(entity, total_deg+2)
+        Q_ref = create_quadrature(entity, total_deg)
         Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        Jdet = Q.jacobian_determinant()
         qpts, _ = Q.get_points(), Q.get_weights()
-        f_at_qpts = [list(dof.kernel(*pt))[0] for pt in qpts]
-        print(qpts)
-        print(Q)
+        f_at_qpts = dof.tabulate(qpts).T / Jdet
         print(f_at_qpts)
-        functional = IntegralMoment(ref_el, Q, f_at_qpts, shp=(2,))
+        functional = FrobeniusIntegralMoment(ref_el, Q, f_at_qpts)
         return functional
-        # need quadrature - for that need information from triple.
-        # need polynomial degree and kernel degree
-        # also will need to convert entity to fiat - or can we get the entity from the ref_el
         # raise NotImplementedError("L2 functionals not yet fiat convertible")
 
     def __repr__(self):
@@ -147,6 +142,9 @@ class PointKernel(BaseKernel):
     def __call__(self, *args):
         return self.pt
 
+    def tabulate(self, Qpts):
+        return [self.pt for _ in Qpts]
+
     def _to_dict(self):
         o_dict = {"pt": self.pt}
         return o_dict
@@ -182,6 +180,9 @@ class PolynomialKernel(BaseKernel):
     def __call__(self, *args):
         res = self.fn.subs({self.syms[i]: args[i] for i in range(len(args))})
         return res
+
+    def tabulate(self, Qpts):
+        return [self(*pt) for pt in Qpts]
 
     def _to_dict(self):
         o_dict = {"fn": self.fn}
@@ -220,6 +221,9 @@ class DOF():
 
     def eval(self, fn, pullback=True):
         return self.pairing(self.kernel, fn)
+
+    def tabulate(self, Qpts):
+        return self.kernel.tabulate(Qpts)
 
     def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
         # For some of these, we only want to store the first instance of each
@@ -268,11 +272,15 @@ class ImmersedDOF(DOF):
     def eval(self, fn, pullback=True):
         attached_fn = fn.attach(self.attachment)
 
-        if not pullback:
-            return self.pairing(self.kernel, attached_fn)
+        if pullback:
+            attached_fn = self.target_space(attached_fn, self.trace_entity, self.g)
 
-        return self.pairing(self.kernel,
-                            self.target_space(attached_fn, self.trace_entity, self.g))
+        return self.pairing(self.kernel, attached_fn)
+
+    def tabulate(self, Qpts):
+        immersion = self.target_space.tabulate(Qpts, self.trace_entity)
+        res = [self.attachment(*p) for p in self.kernel.tabulate(Qpts)]
+        return res*immersion
 
     def __call__(self, g):
         return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,

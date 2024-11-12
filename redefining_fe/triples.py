@@ -108,9 +108,8 @@ class ElementTriple():
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             print(dofs[i])
-
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-            # print(nodes[i].pt_dict)
+            print("my pt dict", nodes[i].pt_dict)
         print("my ent ids", entity_ids)
 
         form_degree = 1 if self.spaces[0].set_shape else 0

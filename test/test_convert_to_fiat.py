@@ -1,11 +1,10 @@
 import pytest
 import numpy as np
-# import sympy as sp
 from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-# from test_2d_examples_docs import construct_nd
+from test_2d_examples_docs import construct_nd
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -50,17 +49,26 @@ def create_cg2(cell):
     return cg
 
 
-# @pytest.mark.parametrize("cell", [tri])
-# def test_create_fiat_nd(cell):
-#     nd = construct_nd(cell)
-#     ref_el = cell.to_fiat()
-#     print(ref_el.get_topology())
-#     print(cell.d_entities(1))
-#     x = sp.Symbol("x")
-#     ker = PolynomialKernel((1/2)*(1 + x), (x,))
-#     print(ker(2))
-#     ker.degree()
-#     nd.to_fiat_elem()
+@pytest.mark.parametrize("cell", [tri])
+def test_create_fiat_nd(cell):
+    nd = construct_nd(cell)
+    ref_el = cell.to_fiat()
+    sd = ref_el.get_spatial_dimension()
+    deg = 1
+
+    from FIAT.nedelec import Nedelec
+    fiat_elem = Nedelec(ref_el, deg)
+    my_elem = nd.to_fiat_elem()
+
+    Q = create_quadrature(ref_el, 2*(deg+1))
+    Qpts, _ = Q.get_points(), Q.get_weights()
+
+    fiat_vals = fiat_elem.tabulate(0, Qpts)
+    my_vals = my_elem.tabulate(0, Qpts)
+    print(fiat_vals)
+    print(my_vals)
+
+    assert np.allclose(fiat_vals[(0,) * sd], my_vals[(0,) * sd])
 
 
 @pytest.mark.parametrize("cell", [tri, edge])
