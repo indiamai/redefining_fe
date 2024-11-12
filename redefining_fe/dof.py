@@ -1,6 +1,6 @@
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT.quadrature import FacetQuadratureRule
-from FIAT.functional import PointEvaluation
+from FIAT.functional import PointEvaluation, IntegralMoment
 from redefining_fe.cells import CellComplexToFiat
 import numpy as np
 import sympy as sp
@@ -13,9 +13,6 @@ class Pairing():
 
     def __init__(self):
         self.entity = None
-
-    def add_entity(self, entity):
-        self.entity = entity
 
     def _to_dict(self):
         o_dict = {"entity": self.entity}
@@ -41,6 +38,11 @@ class DeltaPairing(Pairing):
         pt = dof.eval(MyTestFunction(lambda *x: x))
         return PointEvaluation(ref_el, pt)
 
+    def add_entity(self, entity):
+        res = DeltaPairing()
+        res.entity = entity
+        return res
+
     def __repr__(self):
         return "{fn}({kernel})"
 
@@ -63,10 +65,16 @@ class L2InnerProd(Pairing):
     def __call__(self, kernel, v):
         # print("evaluating", kernel, v, "on", self.entity)
         quadrature = create_quadrature(CellComplexToFiat(self.entity), 5)
+        # need quadrature here too - therefore need the information from the triple.
 
         def kernel_dot(x):
             return np.dot(kernel(*x), v(*x))
         return quadrature.integrate(kernel_dot)
+
+    def add_entity(self, entity):
+        res = L2InnerProd()
+        res.entity = entity
+        return res
 
     def convert_to_fiat(self, ref_el, dof, interpolant_degree):
         total_deg = interpolant_degree + dof.kernel.degree()
@@ -76,14 +84,20 @@ class L2InnerProd(Pairing):
         ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
         print(ent_id)
         entity = ref_el.construct_subelement(self.entity.dim())
-        Q_ref = create_quadrature(entity, total_deg)
+        print(total_deg)
+        Q_ref = create_quadrature(entity, total_deg+2)
         Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
-
+        qpts, _ = Q.get_points(), Q.get_weights()
+        f_at_qpts = [list(dof.kernel(*pt))[0] for pt in qpts]
+        print(qpts)
         print(Q)
+        print(f_at_qpts)
+        functional = IntegralMoment(ref_el, Q, f_at_qpts, shp=(2,))
+        return functional
         # need quadrature - for that need information from triple.
         # need polynomial degree and kernel degree
         # also will need to convert entity to fiat - or can we get the entity from the ref_el
-        raise NotImplementedError("L2 functionals not yet fiat convertible")
+        # raise NotImplementedError("L2 functionals not yet fiat convertible")
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
@@ -157,7 +171,7 @@ class PolynomialKernel(BaseKernel):
         return str(self.fn)
 
     def degree(self):
-        if len(self.fn.free_symbols()) == 0:
+        if len(self.fn.free_symbols) == 0:
             return 1
         return self.fn.as_poly().total_degree()
 
@@ -198,7 +212,7 @@ class DOF():
         else:
             self.generation = generation
         if entity is not None:
-            self.pairing.add_entity(entity)
+            self.pairing = self.pairing.add_entity(entity)
 
     def __call__(self, g):
         new_generation = self.generation.copy()
@@ -212,7 +226,7 @@ class DOF():
         self.generation[cell.dim()] = dof_gen
         if self.trace_entity is None:
             self.trace_entity = cell
-            self.pairing.add_entity(cell)
+            self.pairing = self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
         if self.id is None and overall_id is not None:
@@ -265,6 +279,8 @@ class ImmersedDOF(DOF):
                            self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id)
 
     def __repr__(self):
+        print("immersed dof", self.trace_entity)
+        print('pairing', self.pairing.entity)
         fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))
         return super(ImmersedDOF, self).__repr__(fn)
 

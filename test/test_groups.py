@@ -75,11 +75,12 @@ def test_conj():
     print("g", g)
 
     # print(cell.group.conjugacy_class(g))
-
+    import numpy as np
     for g in cell.group.members():
         print("g", g)
-        for row in g.matrix_form():
-            print(row)
+        print("transformed", g((-1/2, -np.sqrt(3)/3)))
+        # for row in g.transform_matrix:
+        #     print(row)
 
     # print("tri_c3")
     # g1 = tri_C3.add_cell(cell)
