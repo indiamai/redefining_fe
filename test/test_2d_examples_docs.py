@@ -206,7 +206,7 @@ def construct_rt(tri=None):
     deg = 1
     edge = tri.edges(get_class=True)[0]
 
-    xs = [DOF(L2InnerProd(), PointKernel((0.70710678,)))]
+    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
     dofs = DOFGenerator(xs, S1, S2)
 
     int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)

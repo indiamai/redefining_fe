@@ -76,6 +76,7 @@ def test_create_fiat_nd(cell):
     assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
     assert np.allclose(res, 0)
 
+
 @pytest.mark.parametrize("cell", [tri])
 def test_create_fiat_rt(cell):
     rt = construct_rt(cell)
@@ -84,9 +85,7 @@ def test_create_fiat_rt(cell):
     deg = 1
 
     from FIAT.raviart_thomas import RaviartThomas
-    print("fiat")
     fiat_elem = RaviartThomas(ref_el, deg)
-    print("mine")
     my_elem = rt.to_fiat_elem()
 
     Q = create_quadrature(ref_el, 2*(deg+1))
