@@ -88,7 +88,7 @@ class TrHDiv(Trace):
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
         if len(coord) == 2:
-            vec = vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
+            vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
         else:
             vec = np.cross(basis[0], basis[1])
         ax.quiver(*coord, *vec, **kwargs)
@@ -99,11 +99,12 @@ class TrHDiv(Trace):
         basis = np.matmul(entityBasis, cellEntityBasis)
 
         if trace_entity.dimension == 1:
-            result = basis
+            result = np.matmul(basis, np.array([[0, -1], [1, 0]]))
         elif trace_entity.dimension == 2:
             result = np.cross(basis[0], basis[1])
         else:
             raise ValueError("Immersion of HDiv edges not defined in 3D")
+
         return result
 
     def __repr__(self):

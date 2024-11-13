@@ -89,7 +89,6 @@ class L2InnerProd(Pairing):
         Jdet = Q.jacobian_determinant()
         qpts, _ = Q.get_points(), Q.get_weights()
         f_at_qpts = dof.tabulate(qpts).T / Jdet
-        print(f_at_qpts)
         functional = FrobeniusIntegralMoment(ref_el, Q, f_at_qpts)
         return functional
         # raise NotImplementedError("L2 functionals not yet fiat convertible")
@@ -279,16 +278,14 @@ class ImmersedDOF(DOF):
 
     def tabulate(self, Qpts):
         immersion = self.target_space.tabulate(Qpts, self.trace_entity)
-        res = [self.attachment(*p) for p in self.kernel.tabulate(Qpts)]
-        return res*immersion
+        res = self.kernel.tabulate(Qpts)
+        return immersion*res
 
     def __call__(self, g):
         return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
                            self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id)
 
     def __repr__(self):
-        print("immersed dof", self.trace_entity)
-        print('pairing', self.pairing.entity)
         fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))
         return super(ImmersedDOF, self).__repr__(fn)
 

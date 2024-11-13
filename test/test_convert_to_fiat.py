@@ -4,7 +4,8 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from test_2d_examples_docs import construct_nd
+from test_2d_examples_docs import construct_nd, construct_rt
+from test_polynomial_space import flatten
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -65,10 +66,43 @@ def test_create_fiat_nd(cell):
 
     fiat_vals = fiat_elem.tabulate(0, Qpts)
     my_vals = my_elem.tabulate(0, Qpts)
-    print(fiat_vals)
-    print(my_vals)
 
-    assert np.allclose(fiat_vals[(0,) * sd], my_vals[(0,) * sd])
+    fiat_vals = flatten(fiat_vals[(0,) * sd])
+    my_vals = flatten(my_vals[(0,) * sd])
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
+
+@pytest.mark.parametrize("cell", [tri])
+def test_create_fiat_rt(cell):
+    rt = construct_rt(cell)
+    ref_el = cell.to_fiat()
+    sd = ref_el.get_spatial_dimension()
+    deg = 1
+
+    from FIAT.raviart_thomas import RaviartThomas
+    print("fiat")
+    fiat_elem = RaviartThomas(ref_el, deg)
+    print("mine")
+    my_elem = rt.to_fiat_elem()
+
+    Q = create_quadrature(ref_el, 2*(deg+1))
+    Qpts, _ = Q.get_points(), Q.get_weights()
+
+    fiat_vals = fiat_elem.tabulate(0, Qpts)
+    my_vals = my_elem.tabulate(0, Qpts)
+
+    fiat_vals = flatten(fiat_vals[(0,) * sd])
+    my_vals = flatten(my_vals[(0,) * sd])
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
 
 
 @pytest.mark.parametrize("cell", [tri, edge])

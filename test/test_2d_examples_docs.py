@@ -174,8 +174,8 @@ def construct_nd(tri):
     tri_dofs = DOFGenerator(xs, tri_C3, S3)
 
     M = sp.Matrix([[y, -x]])
-    vec_Pk = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
-    Pk = PolynomialSpace(deg - 1, deg - 1)
+    vec_Pk = PolynomialSpace(deg - 1, set_shape=True)
+    Pk = PolynomialSpace(deg - 1)
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
 
     ned = ElementTriple(tri, (nd, CellHCurl, C0), [tri_dofs])
@@ -200,16 +200,33 @@ def test_nd_example():
         assert [np.allclose(0, dof.eval(basis_func).flatten()) for basis_func in basis_funcs].count(True) == 2
 
 
-def test_rt_example():
-    tri = n_sided_polygon(3)
+def construct_rt(tri=None):
+    if tri is None:
+        tri = n_sided_polygon(3)
     deg = 1
     edge = tri.edges(get_class=True)[0]
 
-    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
+    xs = [DOF(L2InnerProd(), PointKernel((0.70710678,)))]
     dofs = DOFGenerator(xs, S1, S2)
 
     int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
+    xs = [immerse(tri, int_rt, TrHDiv)]
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+
+    M = sp.Matrix([[x, y]])
+    vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
+    Pd = PolynomialSpace(deg - 1)
+    rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+
+    rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
+    return rt
+
+
+def test_rt_example():
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     phi_2 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6)*x,
@@ -219,13 +236,7 @@ def test_rt_example():
     phi_1 = MyTestFunction(sp.Matrix([(np.sqrt(3)/6) + (np.sqrt(3)/6)*x,
                                       1/6 + (np.sqrt(3)/6)*y]), symbols=(x, y))
 
-    xs = [immerse(tri, int_rt, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
-    M = sp.Matrix([[x, y]])
-    vec_Pd = PolynomialSpace(deg - 1, deg - 1, set_shape=True)
-    Pd = PolynomialSpace(deg - 1, deg - 1)
-    rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
-    rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
+    rt = construct_rt()
 
     basis_funcs = [phi_0, phi_1, phi_2]
 

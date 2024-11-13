@@ -107,10 +107,8 @@ class ElementTriple():
             entity = dofs[i].trace_entity
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
-            print(dofs[i])
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-            print("my pt dict", nodes[i].pt_dict)
-        print("my ent ids", entity_ids)
+            # print("my pt dict", nodes[i].pt_dict)
 
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)

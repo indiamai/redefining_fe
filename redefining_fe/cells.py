@@ -688,6 +688,10 @@ class CellComplexToFiat(Simplex):
         """
         return self.fe_cell.d_entities(dimension, get_class=True)[0].to_fiat()
 
+    def get_facet_element(self):
+        dimension = self.get_spatial_dimension()
+        return self.construct_subelement(dimension - 1)
+
 
 class CellComplexToUFL(Cell):
     """
