@@ -2,6 +2,7 @@ from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
+from redefining_fe.groups import perm_matrix_to_perm_array
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib as mpl
@@ -100,15 +101,15 @@ class ElementTriple():
             entity_perms[dim] = {}
             # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
             # for entity in sorted(top[dim]):
-            #         entity_perms[dim][entity] = perms
+            # entity_perms[dim][entity] = perms
+        entity_perms = self.make_dof_perms()
+        print("my ent perms", entity_perms)
 
-        entity_perms = None
         for i in range(len(dofs)):
             entity = dofs[i].trace_entity
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-            # print("my pt dict", nodes[i].pt_dict)
 
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
@@ -166,22 +167,28 @@ class ElementTriple():
 
     def make_dof_perms(self):
         dofs = self.generate()
-        entity_associations = {dim: {str(e): {} for e in self.cell.d_entities(dim, get_class=True)}
+        min_ids = self.cell.get_starter_ids()
+        entity_associations = {dim: {e.id - min_ids[dim]: {} for e in self.cell.d_entities(dim, get_class=True)}
                                for dim in range(self.cell.dim() + 1)}
         cell_dim = self.cell.dim()
-        cell_dict = entity_associations[cell_dim][str(self.cell)]
+        cell_dict = entity_associations[cell_dim][self.cell.id - min_ids[cell_dim]]
+        pure_perm = True
 
         # construct mapping of entities to the dof generators and the dofs they generate
         for d in dofs:
             sub_dim = d.trace_entity.dim()
-            sub_dict = entity_associations[sub_dim][str(d.trace_entity)]
+            sub_dict = entity_associations[sub_dim][d.trace_entity.id - min_ids[sub_dim]]
             dof_gen = str(d.generation[sub_dim])
+            if not len(d.generation[sub_dim].g2.members()) == 1:
+                pure_perm = False
             if dof_gen in sub_dict.keys():
                 sub_dict[dof_gen] += [d]
             else:
                 sub_dict[dof_gen] = [d]
             if sub_dim != cell_dim:
                 dof_gen = str(d.generation[cell_dim])
+                if not len(d.generation[cell_dim].g2.members()) == 1:
+                    pure_perm = False
 
                 if dof_gen in cell_dict.keys():
                     cell_dict[dof_gen] += [d]
@@ -190,26 +197,32 @@ class ElementTriple():
 
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
+        flat_by_entity = {}
 
         # for each entity, look up generation on that entity and permute the
         # dof mapping according to the generation
         for dim in range(self.cell.dim()):
             oriented_mats_by_entity[dim] = {}
+            flat_by_entity[dim] = {}
             ents = self.cell.d_entities(dim, get_class=True)
             for e in ents:
+                e_id = e.id - min_ids[dim]
                 members = e.group.members()
-                oriented_mats_by_entity[dim][str(e)] = {}
+                oriented_mats_by_entity[dim][e_id] = {}
+                flat_by_entity[dim][e_id] = {}
                 for g in members:
                     val = g.numeric_rep()
-                    oriented_mats_by_entity[dim][str(e)][val] = dof_id_mat.copy()
-                    for dof_gen in entity_associations[dim][str(e)].keys():
-                        ent_dofs = entity_associations[dim][str(e)][dof_gen]
+                    oriented_mats_by_entity[dim][e_id][val] = dof_id_mat.copy()
+                    flat_by_entity[dim][e_id][val] = []
+                    for dof_gen in entity_associations[dim][e_id].keys():
+                        ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
                         print("G", g)
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
-                            oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+                            oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+                            flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
                         # if g in dof_gen_class.g2.members():
                         sub_mat = g.lin_combination_form()
                         print("g2", sub_mat)
@@ -217,16 +230,19 @@ class ElementTriple():
                         #     print("existing", existing_mat)
                         #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
         # print(oriented_mats_by_entity)
-
+        print("flat", flat_by_entity)
         oriented_mats_overall = {}
         dim = self.cell.dim()
         e = self.cell
+        e_id = e.id - min_ids[dim]
+        flat_by_entity[dim] = {e_id: {}}
         members = e.group.members()
         for g in members:
             val = g.numeric_rep()
             oriented_mats_overall[val] = dof_id_mat.copy()
-            for dof_gen in entity_associations[dim][str(e)].keys():
-                ent_dofs = entity_associations[dim][str(e)][dof_gen]
+            flat_by_entity[dim][e_id][val] = []
+            for dof_gen in entity_associations[dim][e_id].keys():
+                ent_dofs = entity_associations[dim][e_id][dof_gen]
                 ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                 dof_gen_class = ent_dofs[0].generation
                 for key in dof_gen_class.keys():
@@ -234,24 +250,35 @@ class ElementTriple():
                         immersed_dim = key
                         for sub_e, sub_g in e.permute_entities(g, immersed_dim):
                             sub_e = e.get_node(sub_e)
-                            sub_ent_assoc = entity_associations[immersed_dim][str(sub_e)][str(dof_gen_class[immersed_dim])]
-                            sub_mat = oriented_mats_by_entity[immersed_dim][str(sub_e)][sub_g.numeric_rep()][np.ix_(ent_dofs_ids, ent_dofs_ids)]
+                            sub_e_id = sub_e.id - min_ids[sub_e.dim()]
+                            sub_ent_assoc = entity_associations[immersed_dim][sub_e_id][str(dof_gen_class[immersed_dim])]
+                            sub_mat = oriented_mats_by_entity[immersed_dim][sub_e_id][sub_g.numeric_rep()][np.ix_(ent_dofs_ids, ent_dofs_ids)]
 
                             g_sub_mat = g.matrix_form()
                             expanded = np.kron(g_sub_mat, np.eye(len(sub_ent_assoc)))
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, expanded).copy()
+                            # flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(np.matmul(sub_mat, expanded))
                     elif len(dof_gen_class.keys()) == 1:
-                        print(e)
-                        print(dof_gen_class)
                         if g in dof_gen_class[dim].g1.members():
                             sub_mat = g.matrix_form()
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
-
+                            # flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
+        print("flat2", flat_by_entity)
         for g in self.cell.group.members():
             val = g.numeric_rep()
             print(g)
             for d in dofs:
                 print(d.id, oriented_mats_overall[val][d.id], d)
+        print(oriented_mats_overall)
+        print(oriented_mats_by_entity)
+        print("Pure Perm", pure_perm)
+        if pure_perm:
+            min_ids = self.cell.get_starter_ids()
+            for val, mat in oriented_mats_overall.items():
+                flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat)
+            print("flat3", flat_by_entity)
+            return flat_by_entity
+        return oriented_mats_overall
 
     def _to_dict(self):
         o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}

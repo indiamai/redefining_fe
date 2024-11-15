@@ -7,6 +7,16 @@ import sympy as sp
 import math
 
 
+def perm_matrix_to_perm_array(p_mat):
+    summed = np.sum(p_mat, axis=0)
+    assert np.all(summed == np.ones_like(summed))
+    res = []
+    for row in p_mat:
+        indices = list(row).index(1)
+        res += [indices]
+    return res
+
+
 class GroupMemberRep(object):
 
     def __init__(self, perm, M, group):
@@ -70,13 +80,6 @@ class GroupMemberRep(object):
         string = "g"
         string += str(self.perm.array_form)
         return string
-
-    # def _to_dict(self):
-    #     o_dict = {self.dict_id(): self.perm}
-    #     return o_dict
-
-    # def dict_id(self):
-    #     return "GroupMemberRep" + str(id(self))
 
     def matrix_form(self):
         return np.array(PermutationMatrix(self.perm).as_explicit()).astype(np.float64)

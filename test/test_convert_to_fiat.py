@@ -4,7 +4,7 @@ from redefining_fe import *
 from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
 from ufl.cell import simplex
-from test_2d_examples_docs import construct_nd, construct_rt
+from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_polynomial_space import flatten
 
 vert = Point(0)
@@ -122,15 +122,23 @@ def test_create_fiat_cg1(cell):
     fiat_vals = fiat_elem.tabulate(0, Qpts)
     my_vals = my_elem.tabulate(0, Qpts)
 
-    assert np.allclose(fiat_vals[(0,) * sd], my_vals[(0,) * sd])
+    fiat_vals = flatten(fiat_vals[(0,) * sd])
+    my_vals = flatten(my_vals[(0,) * sd])
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
-                                                    (create_dg1, "DG", 1),
-                                                    (create_dg2, "DG", 2),
-                                                    (create_cg2, "CG", 2)])
-def test_entity_perms(elem_gen, elem_code, deg):
-    cell = edge
+@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, edge),
+                                                         (create_dg1, "DG", 1, edge),
+                                                         (create_dg2, "DG", 2, edge),
+                                                         (create_cg2, "CG", 2, edge),
+                                                         (construct_cg3, "CG", 3, tri),
+                                                         (construct_nd, "N1curl", 1, tri)])
+def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
 
     print(elem.to_fiat_elem())
@@ -138,8 +146,8 @@ def test_entity_perms(elem_gen, elem_code, deg):
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
-                                                    # (create_dg2, "DG", 2),
-                                                    # (create_cg2, "CG", 2)
+                                                    pytest.param(create_dg2, "DG", 2, marks=pytest.mark.xfail(reason='Orientations bug')),
+                                                    pytest.param(create_cg2, "CG", 2, marks=pytest.mark.xfail(reason='Orientations bug'))
                                                     ])
 def test_2d(elem_gen, elem_code, deg):
     cell = edge
@@ -172,25 +180,23 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-# @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
-#                                                     (create_dg1, "DG", 1),
-#                                                     (construct_cg3, "CG", 3)])
-# # ,
-# #                                                     (lambda x:x, "CG", 4)
-# def test_helmholtz(elem_gen, elem_code, deg):
-#     cell = n_sided_polygon(3)
-#     elem = elem_gen(cell)
+@pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_cg1, "CG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
+                                                    pytest.param(create_dg1, "DG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
+                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Orientations bug'))])
+def test_helmholtz(elem_gen, elem_code, deg):
+    cell = n_sided_polygon(3)
+    elem = elem_gen(cell)
 
-#     mesh = UnitSquareMesh(20, 20)
+    mesh = UnitSquareMesh(20, 20)
 
-#     V = FunctionSpace(mesh, elem_code, deg)
-#     res1 = helmholtz_solve(mesh, V)
+    V = FunctionSpace(mesh, elem_code, deg)
+    res1 = helmholtz_solve(mesh, V)
 
-#     V = FunctionSpace(mesh, elem.to_ufl_elem())
-#     res2 = helmholtz_solve(mesh, V)
+    V = FunctionSpace(mesh, elem.to_ufl_elem())
+    res2 = helmholtz_solve(mesh, V)
 
-#     res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
-#     assert np.allclose(res, 0)
+    res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
+    assert np.allclose(res, 0)
 
 
 def helmholtz_solve(mesh, V):

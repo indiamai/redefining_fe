@@ -99,7 +99,7 @@ def plot_cg1():
     cg1.plot()
 
 
-def construct_cg3():
+def construct_cg3(tri=None):
     # [test_cg3 0]
     tri = n_sided_polygon(3)
     edge = tri.edges(get_class=True)[0]
@@ -117,7 +117,7 @@ def construct_cg3():
     e_xs = [immerse(tri, dg0_int, TrH1)]
     e_dofs = DOFGenerator(e_xs, tri_C3, S1)
 
-    i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
+    i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
 
     cg3 = ElementTriple(tri, (P3, CellH1, C0), [v_dofs, e_dofs, i_dofs])

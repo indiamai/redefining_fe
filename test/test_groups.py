@@ -1,7 +1,9 @@
 from pytest import *
 from redefining_fe import *
+from redefining_fe.groups import perm_matrix_to_perm_array
 from sympy.combinatorics import Permutation
 from test_convert_to_fiat import create_dg1
+import numpy as np
 
 
 def test_numerical_orientations():
@@ -115,3 +117,12 @@ def test_conj():
     # s1_new = S2.add_cell(cell2)
 
     # assert not s1 == s1_new
+
+def test_perm_mat_conversion():
+    cell = n_sided_polygon(3)
+    cS3 = S3.add_cell(cell)
+
+    for g in cS3.members():
+        mat_form = g.matrix_form()
+        array_form = perm_matrix_to_perm_array(mat_form)
+        assert np.allclose(g.perm.array_form, array_form)
