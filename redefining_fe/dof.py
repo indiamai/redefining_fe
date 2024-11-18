@@ -142,7 +142,7 @@ class PointKernel(BaseKernel):
         return self.pt
 
     def tabulate(self, Qpts):
-        return [self.pt for _ in Qpts]
+        return np.array([self.pt for _ in Qpts])
 
     def _to_dict(self):
         o_dict = {"pt": self.pt}
@@ -181,7 +181,7 @@ class PolynomialKernel(BaseKernel):
         return res
 
     def tabulate(self, Qpts):
-        return [self(*pt) for pt in Qpts]
+        return np.array([self(*pt) for pt in Qpts])
 
     def _to_dict(self):
         o_dict = {"fn": self.fn}

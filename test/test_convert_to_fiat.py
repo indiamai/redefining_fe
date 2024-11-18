@@ -104,17 +104,19 @@ def test_create_fiat_rt(cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("cell", [tri, edge])
-def test_create_fiat_cg1(cell):
-    deg = 1
-    cg = create_cg1(cell)
+@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, edge),
+                                                         (create_dg1, "DG", 1, edge),
+                                                         (create_dg2, "DG", 2, edge),
+                                                         (create_cg2, "CG", 2, edge)])
+def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
+    elem = elem_gen(cell)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
     from FIAT.lagrange import Lagrange
     fiat_elem = Lagrange(ref_el, deg)
 
-    my_elem = cg.to_fiat_elem()
+    my_elem = elem.to_fiat_elem()
 
     Q = create_quadrature(ref_el, 2*(deg+1))
     Qpts, _ = Q.get_points(), Q.get_weights()
@@ -136,6 +138,8 @@ def test_create_fiat_cg1(cell):
                                                          (create_dg1, "DG", 1, edge),
                                                          (create_dg2, "DG", 2, edge),
                                                          (create_cg2, "CG", 2, edge),
+                                                         (create_cg1, "CG", 1, tri),
+                                                         (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
                                                          (construct_nd, "N1curl", 1, tri)])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
@@ -146,48 +150,49 @@ def test_entity_perms(elem_gen, elem_code, deg, cell):
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
-                                                    pytest.param(create_dg2, "DG", 2, marks=pytest.mark.xfail(reason='Orientations bug')),
-                                                    pytest.param(create_cg2, "CG", 2, marks=pytest.mark.xfail(reason='Orientations bug'))
+                                                    pytest.param(create_dg2, "DG", 2, marks=pytest.mark.xfail(reason='Not orientations - Maybe poly space')),
+                                                    (create_cg2, "CG", 2)
                                                     ])
 def test_2d(elem_gen, elem_code, deg):
     cell = edge
     elem = elem_gen(cell)
 
     mesh = UnitIntervalMesh(5)
-    V = FunctionSpace(mesh, elem_code, deg)
-    u = TrialFunction(V)
-    v = TestFunction(V)
-    f = Function(V)
+    V1 = FunctionSpace(mesh, elem_code, deg)
+    u = TrialFunction(V1)
+    v = TestFunction(V1)
+    f = Function(V1)
     x, = SpatialCoordinate(mesh)
     f.interpolate(cos(x*pi*2))
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
-    u1 = Function(V)
+    u1 = Function(V1)
     solve(a == L, u1)
 
-    V = FunctionSpace(mesh, elem.to_ufl_elem())
-    u = TrialFunction(V)
-    v = TestFunction(V)
-    f = Function(V)
+    V2 = FunctionSpace(mesh, elem.to_ufl_elem())
+    u = TrialFunction(V2)
+    v = TestFunction(V2)
+    f = Function(V2)
     x, = SpatialCoordinate(mesh)
     f.interpolate((1+8*pi*pi)*cos(x*pi*2))
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
-    u2 = Function(V)
+    u2 = Function(V2)
     solve(a == L, u2)
 
     res = sqrt(assemble(dot(u1 - u1, u1 - u2) * dx))
     assert np.allclose(res, 0)
 
 
+# pytest.param( marks=pytest.mark.xfail(reason='Orientations bug'))
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_cg1, "CG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
                                                     pytest.param(create_dg1, "DG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
-                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Orientations bug'))])
+                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Firedrake error'))])
 def test_helmholtz(elem_gen, elem_code, deg):
     cell = n_sided_polygon(3)
     elem = elem_gen(cell)
 
-    mesh = UnitSquareMesh(20, 20)
+    mesh = UnitSquareMesh(40, 40)
 
     V = FunctionSpace(mesh, elem_code, deg)
     res1 = helmholtz_solve(mesh, V)

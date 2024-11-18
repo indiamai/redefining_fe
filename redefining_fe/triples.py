@@ -102,18 +102,20 @@ class ElementTriple():
             # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
             # for entity in sorted(top[dim]):
             # entity_perms[dim][entity] = perms
-        entity_perms = self.make_dof_perms()
-        print("my ent perms", entity_perms)
 
         for i in range(len(dofs)):
             entity = dofs[i].trace_entity
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-
+        entity_perms = self.make_dof_perms(entity_ids)
+        print("my ent perms", entity_perms)
+        print(entity_ids)
+        print([n.pt_dict for n in nodes])
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
         poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
+        print("Element created")
         return CiarletElement(poly_set, dual, degree, form_degree)
 
     def plot(self, filename="temp.png"):
@@ -165,7 +167,7 @@ class ElementTriple():
         else:
             raise ValueError("Plotting not supported in this dimension")
 
-    def make_dof_perms(self):
+    def make_dof_perms(self, entity_ids):
         dofs = self.generate()
         min_ids = self.cell.get_starter_ids()
         entity_associations = {dim: {e.id - min_ids[dim]: {} for e in self.cell.d_entities(dim, get_class=True)}
@@ -194,7 +196,6 @@ class ElementTriple():
                     cell_dict[dof_gen] += [d]
                 else:
                     cell_dict[dof_gen] = [d]
-
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
         flat_by_entity = {}
@@ -218,19 +219,17 @@ class ElementTriple():
                         ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
-                        print("G", g)
                         if g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
                         # if g in dof_gen_class.g2.members():
-                        sub_mat = g.lin_combination_form()
-                        print("g2", sub_mat)
+                        # sub_mat = g.lin_combination_form()
+                        # print("g2", sub_mat)
                         #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
                         #     print("existing", existing_mat)
                         #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
-        # print(oriented_mats_by_entity)
-        print("flat", flat_by_entity)
+        # print("flat", flat_by_entity)
         oriented_mats_overall = {}
         dim = self.cell.dim()
         e = self.cell
@@ -262,21 +261,21 @@ class ElementTriple():
                         if g in dof_gen_class[dim].g1.members():
                             sub_mat = g.matrix_form()
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
-                            # flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
-        print("flat2", flat_by_entity)
+                        elif pure_perm and len(dof_gen_class[dim].g1.members()) > 1:
+                            sub_mat = g.matrix_form()
+                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+        for val, mat in oriented_mats_overall.items():
+            cell_dofs = entity_ids[dim][0]
+            flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat[np.ix_(cell_dofs, cell_dofs)])
+
         for g in self.cell.group.members():
             val = g.numeric_rep()
             print(g)
             for d in dofs:
                 print(d.id, oriented_mats_overall[val][d.id], d)
-        print(oriented_mats_overall)
-        print(oriented_mats_by_entity)
+
         print("Pure Perm", pure_perm)
         if pure_perm:
-            min_ids = self.cell.get_starter_ids()
-            for val, mat in oriented_mats_overall.items():
-                flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat)
-            print("flat3", flat_by_entity)
             return flat_by_entity
         return oriented_mats_overall
 
@@ -431,8 +430,8 @@ class IndiaTripleUFL(finat.ufl.FiniteElementBase):
         super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape(), triple.get_value_shape())
 
     def __repr__(self):
-        return "FiniteElement(%s, (%s, %s, %s), %s)" % (
-            repr(self.triple.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
+        return "FiniteElement(%s, %s, (%s, %s, %s), %s)" % (
+               repr(self.triple.DOFGenerator), repr(self.triple.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
 
     def __str__(self):
         return "<Custom%sElem on %s>" % (self.triple.spaces[0], self.triple.cell)
