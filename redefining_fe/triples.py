@@ -427,7 +427,7 @@ class IndiaTripleUFL(finat.ufl.FiniteElementBase):
         # this isn't really correct
         degree = self.triple.spaces[0].degree()
 
-        super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape(), triple.get_value_shape())
+        super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape())
 
     def __repr__(self):
         return "FiniteElement(%s, %s, (%s, %s, %s), %s)" % (

@@ -593,8 +593,8 @@ class Point():
     def to_fiat(self):
         return CellComplexToFiat(self)
 
-    def to_ufl(self, name=None, geo_dim=None):
-        return CellComplexToUFL(self, name, geo_dim)
+    def to_ufl(self, name=None):
+        return CellComplexToUFL(self, name)
 
     def _to_dict(self):
         # think this is probably missing stuf
@@ -703,7 +703,7 @@ class CellComplexToUFL(Cell):
     TODO work out generic way around the naming issue
     """
 
-    def __init__(self, cell, name=None, geo_dim=None):
+    def __init__(self, cell, name=None):
         self.cell_complex = cell
 
         # TODO work out generic way around the naming issue
@@ -730,7 +730,7 @@ class CellComplexToUFL(Cell):
                 name = "hexahedron"
             else:
                 raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
-        super(CellComplexToUFL, self).__init__(name, geometric_dimension=geo_dim)
+        super(CellComplexToUFL, self).__init__(name)
 
     def to_fiat(self):
         return self.cell_complex.to_fiat()
@@ -740,28 +740,25 @@ class CellComplexToUFL(Cell):
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
-        gdim = self._gdim
         cell = self.cell_complex
         for key, value in kwargs.items():
-            if key == "geometric_dimension":
-                gdim = value
-            elif key == "cell":
+            if key == "cell":
                 cell = value
             else:
                 raise TypeError(f"reconstruct() got unexpected keyword argument '{key}'")
-        return CellComplexToUFL(cell, self._cellname, geo_dim=gdim)
+        return CellComplexToUFL(cell, self._cellname)
 
 
-def constructCellComplex(name, geo_dim=None):
+def constructCellComplex(name):
     if name == "vertex":
-        return Point(0).to_ufl(name, geo_dim)
+        return Point(0).to_ufl(name)
     elif name == "interval":
-        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name, geo_dim)
+        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
-        return n_sided_polygon(3).to_ufl(name, geo_dim)
+        return n_sided_polygon(3).to_ufl(name)
     elif name == "quadrilateral":
-        return n_sided_polygon(4).to_ufl(name, geo_dim)
+        return n_sided_polygon(4).to_ufl(name)
     elif name == "tetrahedron":
-        return make_tetrahedron().to_ufl(name, geo_dim)
+        return make_tetrahedron().to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
