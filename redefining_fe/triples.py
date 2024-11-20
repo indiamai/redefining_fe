@@ -12,6 +12,7 @@ import inspect
 import finat.ufl
 import warnings
 import numpy as np
+import scipy
 
 
 class ElementTriple():
@@ -95,6 +96,7 @@ class ElementTriple():
         nodes = []
         top = ref_el.get_topology()
         min_ids = self.cell.get_starter_ids()
+        poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
 
         for dim in sorted(top):
             entity_ids[dim] = {i: [] for i in top[dim]}
@@ -108,13 +110,13 @@ class ElementTriple():
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-        entity_perms = self.make_dof_perms(entity_ids)
+        entity_perms, pure_perm = self.make_dof_perms(entity_ids)
+        if not pure_perm:
+            entity_perms = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
         print("my ent perms", entity_perms)
         print(entity_ids)
-        print([n.pt_dict for n in nodes])
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
-        poly_set = self.spaces[0].to_ON_polynomial_set(ref_el)
         print("Element created")
         return CiarletElement(poly_set, dual, degree, form_degree)
 
@@ -166,6 +168,46 @@ class ElementTriple():
             fig.savefig(filename)
         else:
             raise ValueError("Plotting not supported in this dimension")
+
+    def compute_dense_matrix(self, ref_el, entity_ids, nodes, poly_set):
+        dual = DualSet(nodes, ref_el, entity_ids)
+
+        # build generalized Vandermonde matrix
+        old_coeffs = poly_set.get_coeffs()
+        dualmat = dual.to_riesz(poly_set)
+
+        shp = dualmat.shape
+        A = dualmat.reshape((shp[0], -1))
+        B = old_coeffs.reshape((shp[0], -1))
+        V = np.dot(A, np.transpose(B))
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error")
+            try:
+                new_coeffs_flat = scipy.linalg.solve(V, B, transposed=True)
+            except (scipy.linalg.LinAlgWarning, scipy.linalg.LinAlgError):
+                raise np.linalg.LinAlgError("Singular Vandermonde matrix")
+
+        new_shp = new_coeffs_flat.shape[:1] + shp[1:]
+        basis_coeffs = new_coeffs_flat.reshape(new_shp)
+
+        return V, basis_coeffs
+
+    def make_overall_dense_matrices(self, ref_el, entity_ids, nodes, poly_set):
+        min_ids = self.cell.get_starter_ids()
+        dim = self.cell.dim()
+        e = self.cell
+        e_id = e.id - min_ids[dim]
+        res_dict = {dim: {e_id: {}}}
+        degree = self.spaces[0].degree()
+        original_V, original_basis = self.compute_dense_matrix(ref_el, entity_ids, nodes, poly_set)
+
+        for g in self.cell.group.members():
+            val = g.numeric_rep()
+            new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in self.generate()]
+            transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, entity_ids, new_nodes, poly_set)
+            res_dict[dim][e_id][val] = np.matmul(transformed_V, original_basis.T)
+        return res_dict
 
     def make_dof_perms(self, entity_ids):
         dofs = self.generate()
@@ -229,7 +271,7 @@ class ElementTriple():
                         #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
                         #     print("existing", existing_mat)
                         #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
-        # print("flat", flat_by_entity)
+
         oriented_mats_overall = {}
         dim = self.cell.dim()
         e = self.cell
@@ -256,7 +298,6 @@ class ElementTriple():
                             g_sub_mat = g.matrix_form()
                             expanded = np.kron(g_sub_mat, np.eye(len(sub_ent_assoc)))
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, expanded).copy()
-                            # flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(np.matmul(sub_mat, expanded))
                     elif len(dof_gen_class.keys()) == 1:
                         if g in dof_gen_class[dim].g1.members():
                             sub_mat = g.matrix_form()
@@ -264,20 +305,21 @@ class ElementTriple():
                         elif pure_perm and len(dof_gen_class[dim].g1.members()) > 1:
                             sub_mat = g.matrix_form()
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+
         for val, mat in oriented_mats_overall.items():
             cell_dofs = entity_ids[dim][0]
             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat[np.ix_(cell_dofs, cell_dofs)])
 
-        for g in self.cell.group.members():
-            val = g.numeric_rep()
-            print(g)
-            for d in dofs:
-                print(d.id, oriented_mats_overall[val][d.id], d)
+        # for g in self.cell.group.members():
+        #     val = g.numeric_rep()
+        #     print(g)
+        #     for d in dofs:
+        #         print(d.id, oriented_mats_overall[val][d.id], d)
 
-        print("Pure Perm", pure_perm)
+        # print("Pure Perm", pure_perm)
         if pure_perm:
-            return flat_by_entity
-        return oriented_mats_overall
+            return flat_by_entity, pure_perm
+        return oriented_mats_overall, pure_perm
 
     def _to_dict(self):
         o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}

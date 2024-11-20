@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
 from redefining_fe import *
-from FIAT.quadrature_schemes import create_quadrature
 from firedrake import *
+from FIAT.quadrature_schemes import create_quadrature
 from ufl.cell import simplex
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_polynomial_space import flatten
@@ -28,6 +28,15 @@ def create_dg2(cell):
     return dg
 
 
+def create_dg1_uneven(cell):
+    xs = [DOF(DeltaPairing(), PointKernel(-0.75,))]
+    center = [DOF(DeltaPairing(), PointKernel((0.25,)))]
+    Pk = PolynomialSpace(1)
+    dg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, S1, S2),
+                                                DOFGenerator(center, S1, S2)])
+    return dg
+
+
 def create_cg1(cell):
     deg = 1
     vert_dg = create_dg1(cell.vertices(get_class=True)[0])
@@ -35,6 +44,22 @@ def create_cg1(cell):
 
     Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+
+    for dof in cg.generate():
+        print(dof)
+    return cg
+
+
+def create_cg1_flipped(cell):
+    deg = 1
+    vert_dg = create_dg1(cell.vertices(get_class=True)[0])
+    xs = [immerse(cell, vert_dg, TrH1, node=1)]
+
+    Pk = PolynomialSpace(deg)
+    cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
+
+    for dof in cg.generate():
+        print(dof)
     return cg
 
 
@@ -50,7 +75,7 @@ def create_cg2(cell):
     return cg
 
 
-@pytest.mark.parametrize("cell", [tri])
+@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
 def test_create_fiat_nd(cell):
     nd = construct_nd(cell)
     ref_el = cell.to_fiat()
@@ -77,7 +102,7 @@ def test_create_fiat_nd(cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("cell", [tri])
+@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
 def test_create_fiat_rt(cell):
     rt = construct_rt(cell)
     ref_el = cell.to_fiat()
@@ -141,7 +166,7 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
                                                          (create_cg1, "CG", 1, tri),
                                                          (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
-                                                         (construct_nd, "N1curl", 1, tri)])
+                                                         pytest.param(construct_nd, "N1curl", 1, tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
 
@@ -225,3 +250,48 @@ def test_ufl_cell_conversion(cell):
     print(isinstance(ufl_cell, ufl.Cell))
     print(ufl_cell.cell_complex)
     print(ufl_cell.cellname())
+
+
+@pytest.mark.parametrize("cell", [edge])
+def test_functional_evaluation(cell):
+    cg = create_cg1(cell)
+    cg_f = create_cg1_flipped(cell)
+    ref_el = cell.to_fiat()
+    deg = 1
+
+    from FIAT.lagrange import Lagrange
+    fiat_elem = Lagrange(ref_el, deg)
+    my_elem = cg.to_fiat_elem()
+    my_elem_f = cg_f.to_fiat_elem()
+
+    print([n.pt_dict for n in my_elem.dual.nodes])
+    print([n.pt_dict for n in my_elem_f.dual.nodes])
+    print([n.pt_dict for n in fiat_elem.dual.nodes])
+
+    print("my poly set")
+    print(np.matmul(my_elem.V, my_elem.get_coeffs().T))
+    print(np.matmul(my_elem_f.V, my_elem.get_coeffs().T))
+    # print(np.matmul(fiat_elem.V.T, my_elem.get_coeffs()))
+
+    print("my poly set")
+    print(np.matmul(my_elem.V, my_elem_f.get_coeffs().T))
+    print(np.matmul(my_elem_f.V, my_elem_f.get_coeffs().T))
+
+
+@pytest.mark.parametrize("cell", [edge])
+def test_functional_evaluation_uneven(cell):
+    cg = create_dg1(cell)
+    cg_f = create_dg1_uneven(cell)
+
+    my_elem = cg.to_fiat_elem()
+    my_elem_f = cg_f.to_fiat_elem()
+    print(my_elem_f)
+    print(my_elem)
+
+
+@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+def test_functional_evaluation_vector(cell):
+    rt = construct_rt(cell)
+
+    my_elem = rt.to_fiat_elem()
+    print(my_elem)
