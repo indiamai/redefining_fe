@@ -187,11 +187,7 @@ class ElementTriple():
                 new_coeffs_flat = scipy.linalg.solve(V, B, transposed=True)
             except (scipy.linalg.LinAlgWarning, scipy.linalg.LinAlgError):
                 raise np.linalg.LinAlgError("Singular Vandermonde matrix")
-
-        new_shp = new_coeffs_flat.shape[:1] + shp[1:]
-        basis_coeffs = new_coeffs_flat.reshape(new_shp)
-
-        return V, basis_coeffs
+        return A, new_coeffs_flat
 
     def make_overall_dense_matrices(self, ref_el, entity_ids, nodes, poly_set):
         min_ids = self.cell.get_starter_ids()
@@ -201,12 +197,14 @@ class ElementTriple():
         res_dict = {dim: {e_id: {}}}
         degree = self.spaces[0].degree()
         original_V, original_basis = self.compute_dense_matrix(ref_el, entity_ids, nodes, poly_set)
-
         for g in self.cell.group.members():
             val = g.numeric_rep()
-            new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in self.generate()]
-            transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, entity_ids, new_nodes, poly_set)
-            res_dict[dim][e_id][val] = np.matmul(transformed_V, original_basis.T)
+            if g.perm.is_Identity:
+                res_dict[dim][e_id][val] = np.eye(len(nodes))
+            else:
+                new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in self.generate()]
+                transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, entity_ids, new_nodes, poly_set)
+                res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
         return res_dict
 
     def make_dof_perms(self, entity_ids):

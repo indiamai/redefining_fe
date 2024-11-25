@@ -206,14 +206,6 @@ def construct_rt(tri=None):
     deg = 1
     edge = tri.edges(get_class=True)[0]
 
-    xs = [DOF(L2InnerProd(), PointKernel((1,)))]
-    dofs = DOFGenerator(xs, S1, S2)
-
-    int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
-
-    xs = [immerse(tri, int_rt, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
-
     x = sp.Symbol("x")
     y = sp.Symbol("y")
 
@@ -221,6 +213,14 @@ def construct_rt(tri=None):
     vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
     Pd = PolynomialSpace(deg - 1)
     rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+
+    xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
+    dofs = DOFGenerator(xs, S1, S2)
+
+    int_rt = ElementTriple(edge, (rt_space, CellHDiv, C0), dofs)
+
+    xs = [immerse(tri, int_rt, TrHDiv)]
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
 
     rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
     return rt

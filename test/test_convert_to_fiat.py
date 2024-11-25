@@ -1,5 +1,6 @@
 import pytest
 import numpy as np
+import sympy as sp
 from redefining_fe import *
 from firedrake import *
 from FIAT.quadrature_schemes import create_quadrature
@@ -44,9 +45,6 @@ def create_cg1(cell):
 
     Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1))
-
-    for dof in cg.generate():
-        print(dof)
     return cg
 
 
@@ -283,15 +281,41 @@ def test_functional_evaluation_uneven(cell):
     cg = create_dg1(cell)
     cg_f = create_dg1_uneven(cell)
 
+    print("EVEN")
     my_elem = cg.to_fiat_elem()
+    print("UNEVEN")
     my_elem_f = cg_f.to_fiat_elem()
-    print(my_elem_f)
-    print(my_elem)
+    # print(my_elem_f)
+    # print(my_elem)
 
 
-@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+# @pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+@pytest.mark.parametrize("cell", [tri])
 def test_functional_evaluation_vector(cell):
     rt = construct_rt(cell)
 
+    from FIAT.raviart_thomas import RaviartThomas
+    ref_el = cell.to_fiat()
+    deg = 1
+    fiat_elem = RaviartThomas(ref_el, deg)
     my_elem = rt.to_fiat_elem()
-    print(my_elem)
+    # print(my_elem)
+    # deg = 1
+
+    # x = sp.Symbol("x")
+    # y = sp.Symbol("y")
+
+    # M = sp.Matrix([[x, y]])
+    # vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
+    # Pd = PolynomialSpace(deg - 1)
+    # rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+
+    # tri = n_sided_polygon(3)
+    # edge = tri.edges(get_class=True)[0]
+
+    # xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
+    # dofs = DOFGenerator(xs, S1, S2)
+
+    # int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+
+    # int_rt.to_fiat_elem()

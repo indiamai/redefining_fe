@@ -157,8 +157,8 @@ class PointKernel(BaseKernel):
 
 class PolynomialKernel(BaseKernel):
 
-    def __init__(self, fn, symbols):
-        if not sp.sympify(fn).as_poly() and not len(sp.sympify(fn).free_symbols) == 0:
+    def __init__(self, fn, symbols=[]):
+        if len(symbols) != 0 and not sp.sympify(fn).as_poly():
             raise ValueError("Function argument must be able to be interpreted as a sympy polynomial")
         self.fn = sp.sympify(fn)
         self.syms = symbols
@@ -177,7 +177,7 @@ class PolynomialKernel(BaseKernel):
         return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        res = self.fn.subs({self.syms[i]: args[i] for i in range(len(args))})
+        res = self.fn.subs({self.syms[i]: args[i] for i in range(min(len(args), len(self.syms)))})
         return res
 
     def tabulate(self, Qpts):
@@ -196,7 +196,7 @@ class PolynomialKernel(BaseKernel):
 
 class DOF():
 
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=None, sub_id=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=None, sub_id=None, cell=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -206,6 +206,7 @@ class DOF():
         self.g = g
         self.id = None
         self.sub_id = sub_id
+        self.cell = cell
 
         if generation is None:
             self.generation = {}
@@ -216,7 +217,7 @@ class DOF():
 
     def __call__(self, g):
         new_generation = self.generation.copy()
-        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id)
+        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id, self.cell)
 
     def eval(self, fn, pullback=True):
         return self.pairing(self.kernel, fn)
@@ -227,6 +228,7 @@ class DOF():
     def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
         # For some of these, we only want to store the first instance of each
         self.generation[cell.dim()] = dof_gen
+        self.cell = cell
         if self.trace_entity is None:
             self.trace_entity = cell
             self.pairing = self.pairing.add_entity(cell)
@@ -238,8 +240,7 @@ class DOF():
             self.sub_id = generator_id
 
     def convert_to_fiat(self, ref_el, interpolant_degree):
-        if isinstance(self.kernel, PointKernel):
-            return self.pairing.convert_to_fiat(ref_el, self, interpolant_degree)
+        return self.pairing.convert_to_fiat(ref_el, self, interpolant_degree)
         raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
     def __repr__(self, fn="v"):
@@ -247,7 +248,7 @@ class DOF():
 
     def immerse(self, entity, attachment, target_space, g, triple):
         new_generation = self.generation.copy()
-        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id, self.cell)
 
     def _to_dict(self):
         """ almost certainly needs more things"""
@@ -263,10 +264,10 @@ class DOF():
 
 class ImmersedDOF(DOF):
     # probably need to add a convert to fiat method here to capture derivatives from immersion
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation=None, sub_id=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation=None, sub_id=None, cell=None):
         self.immersed = True
         self.triple = triple
-        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id)
+        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id, cell=cell)
 
     def eval(self, fn, pullback=True):
         attached_fn = fn.attach(self.attachment)
@@ -282,8 +283,12 @@ class ImmersedDOF(DOF):
         return immersion*res
 
     def __call__(self, g):
-        return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
-                           self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id)
+        permuted = self.cell.permute_entities(g, self.trace_entity.dim())
+        index_trace = self.cell.d_entities(self.trace_entity.dim()).index(self.trace_entity.id)
+        new_trace_entity = self.cell.get_node(permuted[index_trace][0])
+        
+        return ImmersedDOF(self.pairing, self.kernel.permute(permuted[index_trace][1]), new_trace_entity,
+                           self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id, self.cell)
 
     def __repr__(self):
         fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))
