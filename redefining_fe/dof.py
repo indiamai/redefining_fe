@@ -2,6 +2,7 @@ from FIAT.quadrature_schemes import create_quadrature
 from FIAT.quadrature import FacetQuadratureRule
 from FIAT.functional import PointEvaluation, FrobeniusIntegralMoment
 from redefining_fe.cells import CellComplexToFiat
+from redefining_fe.utils import sympy_to_numpy
 import numpy as np
 import sympy as sp
 
@@ -142,7 +143,7 @@ class PointKernel(BaseKernel):
         return self.pt
 
     def tabulate(self, Qpts):
-        return np.array([self.pt for _ in Qpts])
+        return np.array([self.pt for _ in Qpts]).astype(np.float64)
 
     def _to_dict(self):
         o_dict = {"pt": self.pt}
@@ -177,11 +178,10 @@ class PolynomialKernel(BaseKernel):
         return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        res = self.fn.subs({self.syms[i]: args[i] for i in range(min(len(args), len(self.syms)))})
-        return res
+        return sympy_to_numpy(self.fn, self.syms, args[:len(self.syms)])
 
     def tabulate(self, Qpts):
-        return np.array([self(*pt) for pt in Qpts])
+        return np.array([self(*pt) for pt in Qpts]).astype(np.float64)
 
     def _to_dict(self):
         o_dict = {"fn": self.fn}
