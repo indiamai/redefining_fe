@@ -286,7 +286,7 @@ class ImmersedDOF(DOF):
         permuted = self.cell.permute_entities(g, self.trace_entity.dim())
         index_trace = self.cell.d_entities(self.trace_entity.dim()).index(self.trace_entity.id)
         new_trace_entity = self.cell.get_node(permuted[index_trace][0])
-        
+
         return ImmersedDOF(self.pairing, self.kernel.permute(permuted[index_trace][1]), new_trace_entity,
                            self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id, self.cell)
 

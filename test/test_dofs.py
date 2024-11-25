@@ -43,6 +43,7 @@ def test_permute_cg3():
         for dof in cg3.generate():
             print(dof, "->", dof(g))
 
+
 def test_permute_rt():
     cell = n_sided_polygon(3)
 

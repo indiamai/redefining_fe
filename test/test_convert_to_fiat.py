@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-import sympy as sp
+# import sympy as sp
 from redefining_fe import *
 from firedrake import *
 from FIAT.quadrature_schemes import create_quadrature
@@ -285,8 +285,8 @@ def test_functional_evaluation_uneven(cell):
     my_elem = cg.to_fiat_elem()
     print("UNEVEN")
     my_elem_f = cg_f.to_fiat_elem()
-    # print(my_elem_f)
-    # print(my_elem)
+    print(my_elem_f)
+    print(my_elem)
 
 
 # @pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
@@ -299,7 +299,8 @@ def test_functional_evaluation_vector(cell):
     deg = 1
     fiat_elem = RaviartThomas(ref_el, deg)
     my_elem = rt.to_fiat_elem()
-    # print(my_elem)
+    print(my_elem)
+    print(fiat_elem)
     # deg = 1
 
     # x = sp.Symbol("x")
