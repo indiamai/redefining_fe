@@ -260,7 +260,10 @@ class ElementTriple():
                         ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
-                        if g in dof_gen_class.g1.members():
+                        if g.perm.is_Identity or (pure_perm and len(ent_dofs_ids) == 1):
+                            oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
+                            flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(np.eye(len(ent_dofs_ids)))
+                        elif g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
@@ -270,7 +273,7 @@ class ElementTriple():
                         #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
                         #     print("existing", existing_mat)
                         #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
-
+        print("flat by entity", flat_by_entity)
         oriented_mats_overall = {}
         dim = self.cell.dim()
         e = self.cell

@@ -225,37 +225,26 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-# pytest.param( marks=pytest.mark.xfail(reason='Orientations bug'))
-# @pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_cg1, "CG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
-#                                                    pytest.param(create_dg1, "DG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
-#                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Firedrake error'))])
-@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8)])
+@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = n_sided_polygon(3)
     elem = elem_gen(cell)
 
-    diff_fiat = [0 for i in range(3, 6)]
-    diff_new = [0 for i in range(3, 6)]
+    diff = [0 for i in range(3, 6)]
     for i in range(3, 6):
         mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
         V = FunctionSpace(mesh, elem_code, deg)
         res1 = helmholtz_solve(mesh, V)
-        diff_fiat[i - 3] = res1
 
-        V = FunctionSpace(mesh, elem.to_ufl_elem())
-        res2 = helmholtz_solve(mesh, V)
-        diff_new[i - 3] = res2
+        V2 = FunctionSpace(mesh, elem.to_ufl_elem())
+        res2 = helmholtz_solve(mesh, V2)
+        diff[i - 3] = res2
+        assert np.allclose(res1, res2)
 
-    diff_fiat = np.array(diff_fiat)
-    print("l2 error norms:", diff_fiat)
-    conv = np.log2(diff_fiat[:-1] / diff_fiat[1:])
-    print("convergence order:", conv)
-    assert (np.array(conv) > conv_rate).all()
-
-    print("l2 error norms:", diff_new)
-    diff_new = np.array(diff_new)
-    conv = np.log2(diff_new[:-1] / diff_new[1:])
+    print("l2 error norms:", diff)
+    diff = np.array(diff)
+    conv = np.log2(diff[:-1] / diff[1:])
     print("convergence order:", conv)
     assert (np.array(conv) > conv_rate).all()
 
