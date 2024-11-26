@@ -757,7 +757,11 @@ def constructCellComplex(name):
     elif name == "triangle":
         return n_sided_polygon(3).to_ufl(name)
     elif name == "quadrilateral":
-        return n_sided_polygon(4).to_ufl(name)
+        import warnings
+        warnings.warn("Using UFL quadrilateral - New Style elements only supported on simplices")
+        return Cell("quadrilateral")
+        # TODO fix this
+        # return n_sided_polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
     else:
