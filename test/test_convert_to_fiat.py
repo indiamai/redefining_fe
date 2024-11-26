@@ -73,7 +73,7 @@ def create_cg2(cell):
     return cg
 
 
-@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+@pytest.mark.parametrize("cell", [tri])
 def test_create_fiat_nd(cell):
     nd = construct_nd(cell)
     ref_el = cell.to_fiat()
@@ -100,7 +100,7 @@ def test_create_fiat_nd(cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+@pytest.mark.parametrize("cell", [tri])
 def test_create_fiat_rt(cell):
     rt = construct_rt(cell)
     ref_el = cell.to_fiat()
@@ -164,7 +164,7 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
                                                          (create_cg1, "CG", 1, tri),
                                                          (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
-                                                         pytest.param(construct_nd, "N1curl", 1, tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
+                                                         (construct_nd, "N1curl", 1, tri)])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
 
