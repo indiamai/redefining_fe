@@ -41,7 +41,7 @@ class PolynomialSpace(object):
         return self.mindegree == self.maxdegree
 
     def degree(self):
-        return self.mindegree
+        return self.maxdegree
 
     def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here

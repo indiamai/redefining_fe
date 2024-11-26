@@ -101,9 +101,6 @@ class ElementTriple():
         for dim in sorted(top):
             entity_ids[dim] = {i: [] for i in top[dim]}
             entity_perms[dim] = {}
-            # perms = {0: [0]} if dim == 0 else self.make_entity_permutations(dim, degree - dim)
-            # for entity in sorted(top[dim]):
-            # entity_perms[dim][entity] = perms
 
         for i in range(len(dofs)):
             entity = dofs[i].trace_entity
@@ -113,10 +110,14 @@ class ElementTriple():
         entity_perms, pure_perm = self.make_dof_perms(entity_ids)
         if not pure_perm:
             entity_perms = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
+        print("my nodes", [n.pt_dict for n in nodes])
         print("my ent perms", entity_perms)
-        print(entity_ids)
+        print("my ent ids", entity_ids)
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
+        print("embedded", poly_set.get_embedded_degree())
+        print("deg", degree)
+        print("form", form_degree)
         print("Element created")
         return CiarletElement(poly_set, dual, degree, form_degree)
 

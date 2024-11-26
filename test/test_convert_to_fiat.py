@@ -63,6 +63,8 @@ def create_cg1_flipped(cell):
 
 def create_cg2(cell):
     deg = 2
+    if cell.dim() > 1:
+        raise NotImplementedError("This method is for cg2 on edges, please use create_cg2_tri for triangles")
     vert_dg = create_dg1(cell.vertices(get_class=True)[0])
     xs = [immerse(cell, vert_dg, TrH1)]
     center = [DOF(DeltaPairing(), PointKernel((0,)))]
@@ -70,6 +72,21 @@ def create_cg2(cell):
     Pk = PolynomialSpace(deg)
     cg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
                                                 DOFGenerator(center, S1, S1)])
+    return cg
+
+
+def create_cg2_tri(cell):
+    deg = 2
+    Pk = PolynomialSpace(deg)
+
+    vert_dg0 = create_dg1(cell.vertices(get_class=True)[0])
+    xs = [immerse(cell, vert_dg0, TrH1)]
+
+    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1))
+    edge_xs = [immerse(cell, edge_dg0, TrH1)]
+
+    cg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
+                                                DOFGenerator(edge_xs, tri_C3, S1)])
     return cg
 
 
@@ -161,6 +178,7 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
                                                          (create_dg1, "DG", 1, edge),
                                                          (create_dg2, "DG", 2, edge),
                                                          (create_cg2, "CG", 2, edge),
+                                                         (create_cg2_tri, "CG", 2, tri),
                                                          (create_cg1, "CG", 1, tri),
                                                          (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
@@ -173,7 +191,7 @@ def test_entity_perms(elem_gen, elem_code, deg, cell):
 
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
-                                                    pytest.param(create_dg2, "DG", 2, marks=pytest.mark.xfail(reason='Not orientations - Maybe poly space')),
+                                                    (create_dg2, "DG", 2),
                                                     (create_cg2, "CG", 2)
                                                     ])
 def test_2d(elem_gen, elem_code, deg):
@@ -208,23 +226,38 @@ def test_2d(elem_gen, elem_code, deg):
 
 
 # pytest.param( marks=pytest.mark.xfail(reason='Orientations bug'))
-@pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_cg1, "CG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
-                                                    pytest.param(create_dg1, "DG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
-                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Firedrake error'))])
-def test_helmholtz(elem_gen, elem_code, deg):
+# @pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_cg1, "CG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
+#                                                    pytest.param(create_dg1, "DG", 1, marks=pytest.mark.xfail(reason='Values incorrect')),
+#                                                    pytest.param(construct_cg3, "CG", 3, marks=pytest.mark.xfail(reason='Firedrake error'))])
+@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8)])
+def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = n_sided_polygon(3)
     elem = elem_gen(cell)
 
-    mesh = UnitSquareMesh(40, 40)
+    diff_fiat = [0 for i in range(3, 6)]
+    diff_new = [0 for i in range(3, 6)]
+    for i in range(3, 6):
+        mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
-    V = FunctionSpace(mesh, elem_code, deg)
-    res1 = helmholtz_solve(mesh, V)
+        V = FunctionSpace(mesh, elem_code, deg)
+        res1 = helmholtz_solve(mesh, V)
+        diff_fiat[i - 3] = res1
 
-    V = FunctionSpace(mesh, elem.to_ufl_elem())
-    res2 = helmholtz_solve(mesh, V)
+        V = FunctionSpace(mesh, elem.to_ufl_elem())
+        res2 = helmholtz_solve(mesh, V)
+        diff_new[i - 3] = res2
 
-    res = sqrt(assemble(dot(res1 - res2, res1 - res2) * dx))
-    assert np.allclose(res, 0)
+    diff_fiat = np.array(diff_fiat)
+    print("l2 error norms:", diff_fiat)
+    conv = np.log2(diff_fiat[:-1] / diff_fiat[1:])
+    print("convergence order:", conv)
+    assert (np.array(conv) > conv_rate).all()
+
+    print("l2 error norms:", diff_new)
+    diff_new = np.array(diff_new)
+    conv = np.log2(diff_new[:-1] / diff_new[1:])
+    print("convergence order:", conv)
+    assert (np.array(conv) > conv_rate).all()
 
 
 def helmholtz_solve(mesh, V):
@@ -237,7 +270,8 @@ def helmholtz_solve(mesh, V):
     L = inner(f, v) * dx
     u = Function(V)
     solve(a == L, u)
-    return u
+    f.interpolate(cos(x*pi*2)*cos(y*pi*2))
+    return sqrt(assemble(dot(u - f, u - f) * dx))
 
 
 @pytest.mark.parametrize("cell", [vert, edge, tri])
