@@ -228,7 +228,7 @@ class ElementTriple():
                     cell_dict[dof_gen] += [d]
                 else:
                     cell_dict[dof_gen] = [d]
-        
+
         if pure_perm is False:
             return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
 

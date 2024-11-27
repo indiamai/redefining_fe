@@ -366,6 +366,7 @@ def run_test(r, elem, parameters={}, quadrilateral=False):
 
     return sqrt(assemble(inner(u - f, u - f) * dx))
 
+
 @pytest.mark.parametrize(['params', 'elem_gen'],
                          [(p, d)
                           for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
