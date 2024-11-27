@@ -301,18 +301,17 @@ def test_functional_evaluation(cell):
 
 @pytest.mark.parametrize("cell", [edge])
 def test_functional_evaluation_uneven(cell):
-    cg = create_dg1(cell)
-    cg_f = create_dg1_uneven(cell)
+    dg = create_dg1(cell)
+    dg_f = create_dg1_uneven(cell)
 
     print("EVEN")
-    my_elem = cg.to_fiat_elem()
+    my_elem = dg.to_fiat_elem()
     print("UNEVEN")
-    my_elem_f = cg_f.to_fiat_elem()
+    my_elem_f = dg_f.to_fiat_elem()
     print(my_elem_f)
     print(my_elem)
 
 
-# @pytest.mark.parametrize("cell", [pytest.param(tri, marks=pytest.mark.xfail(reason="Dense matrix dimensions in vector case"))])
 @pytest.mark.parametrize("cell", [tri])
 def test_functional_evaluation_vector(cell):
     rt = construct_rt(cell)
@@ -343,3 +342,35 @@ def test_functional_evaluation_vector(cell):
     # int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
     # int_rt.to_fiat_elem()
+
+
+def run_test(r, elem, parameters={}, quadrilateral=False):
+    # Create mesh and define function space
+    mesh = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
+    x = SpatialCoordinate(mesh)
+    V = FunctionSpace(mesh, elem)
+
+    # Define variational problem
+    u = Function(V)
+    v = TestFunction(V)
+    a = inner(grad(u), grad(v)) * dx
+
+    bcs = [DirichletBC(V, Constant(0), 3),
+           DirichletBC(V, Constant(42), 4)]
+
+    # Compute solution
+    solve(a == 0, u, solver_parameters=parameters, bcs=bcs)
+
+    f = Function(V)
+    f.interpolate(42*x[1])
+
+    return sqrt(assemble(inner(u - f, u - f) * dx))
+
+@pytest.mark.parametrize(['params', 'elem_gen'],
+                         [(p, d)
+                          for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
+                          for d in (create_cg1, create_cg2_tri)])
+def test_poisson_analytic(params, elem_gen):
+    cell = n_sided_polygon(3)
+    elem = elem_gen(cell)
+    assert (run_test(2, elem.to_ufl_elem(), parameters=params) < 1.e-9)

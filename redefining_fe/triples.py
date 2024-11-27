@@ -107,18 +107,10 @@ class ElementTriple():
             dim = entity.dim()
             entity_ids[dim][entity.id - min_ids[dim]].append(i)
             nodes.append(dofs[i].convert_to_fiat(ref_el, degree))
-        entity_perms, pure_perm = self.make_dof_perms(entity_ids)
-        if not pure_perm:
-            entity_perms = self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set)
-        print("my nodes", [n.pt_dict for n in nodes])
-        print("my ent perms", entity_perms)
-        print("my ent ids", entity_ids)
+        entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
+
         form_degree = 1 if self.spaces[0].set_shape else 0
         dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
-        print("embedded", poly_set.get_embedded_degree())
-        print("deg", degree)
-        print("form", form_degree)
-        print("Element created")
         return CiarletElement(poly_set, dual, degree, form_degree)
 
     def plot(self, filename="temp.png"):
@@ -173,7 +165,6 @@ class ElementTriple():
     def compute_dense_matrix(self, ref_el, entity_ids, nodes, poly_set):
         dual = DualSet(nodes, ref_el, entity_ids)
 
-        # build generalized Vandermonde matrix
         old_coeffs = poly_set.get_coeffs()
         dualmat = dual.to_riesz(poly_set)
 
@@ -208,7 +199,7 @@ class ElementTriple():
                 res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
         return res_dict
 
-    def make_dof_perms(self, entity_ids):
+    def make_dof_perms(self, ref_el, entity_ids, nodes, poly_set):
         dofs = self.generate()
         min_ids = self.cell.get_starter_ids()
         entity_associations = {dim: {e.id - min_ids[dim]: {} for e in self.cell.d_entities(dim, get_class=True)}
@@ -237,6 +228,10 @@ class ElementTriple():
                     cell_dict[dof_gen] += [d]
                 else:
                     cell_dict[dof_gen] = [d]
+        
+        if pure_perm is False:
+            return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
+
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
         flat_by_entity = {}
@@ -260,6 +255,7 @@ class ElementTriple():
                         ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
+                        # TODO not sure about correctness of this
                         if g.perm.is_Identity or (pure_perm and len(ent_dofs_ids) == 1):
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(np.eye(len(ent_dofs_ids)))
@@ -267,13 +263,7 @@ class ElementTriple():
                             sub_mat = g.matrix_form()
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
-                        # if g in dof_gen_class.g2.members():
-                        # sub_mat = g.lin_combination_form()
-                        # print("g2", sub_mat)
-                        #     existing_mat = oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)]
-                        #     print("existing", existing_mat)
-                        #     oriented_mats_by_entity[dim][str(e)][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.kron(existing_mat, sub_mat)
-        print("flat by entity", flat_by_entity)
+
         oriented_mats_overall = {}
         dim = self.cell.dim()
         e = self.cell
@@ -312,16 +302,7 @@ class ElementTriple():
             cell_dofs = entity_ids[dim][0]
             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat[np.ix_(cell_dofs, cell_dofs)])
 
-        # for g in self.cell.group.members():
-        #     val = g.numeric_rep()
-        #     print(g)
-        #     for d in dofs:
-        #         print(d.id, oriented_mats_overall[val][d.id], d)
-
-        # print("Pure Perm", pure_perm)
-        if pure_perm:
-            return flat_by_entity, pure_perm
-        return oriented_mats_overall, pure_perm
+        return flat_by_entity, pure_perm
 
     def _to_dict(self):
         o_dict = {"cell": self.cell, "spaces": self.spaces, "dofs": self.DOFGenerator}
