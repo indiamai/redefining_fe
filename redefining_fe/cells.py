@@ -1,3 +1,5 @@
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
@@ -7,7 +9,7 @@ import copy
 import sympy as sp
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
-from sympy.combinatorics.named_groups import SymmetricGroup, PermutationGroup
+from sympy.combinatorics.named_groups import SymmetricGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex
 from ufl.cell import Cell
@@ -285,8 +287,7 @@ class Point():
         n = len(verts)
         max_group = SymmetricGroup(n)
         edges = [edge.vertices() for edge in self.edges(get_class=True)]
-
-        accepted_perms = max_group.elements
+        accepted_perms = max_group.elements.copy()
         if n > 2:
             for element in max_group.elements:
                 reordered = element(verts)
@@ -296,8 +297,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-
-        return fe_groups.GroupRepresentation(PermutationGroup(list(accepted_perms)))
+        return fe_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):
         return self.dimension
@@ -411,6 +411,7 @@ class Point():
         return self.d_entities(1, get_class)
 
     def permute_entities(self, g, d):
+        # TODO something is wrong here for squares it can return [()]
         verts = self.vertices()
         entities = self.d_entities(d)
         reordered = g.permute(verts)
@@ -442,6 +443,7 @@ class Point():
                         reordered_entities[ent1 - min_id] = (ent, o)
                     else:
                         reordered_entities[ent1 - min_id] = (ent, entity_group.identity)
+
         return reordered_entities
 
     def basis_vectors(self, return_coords=True, entity=None):
@@ -449,6 +451,7 @@ class Point():
             entity = self
         vertices = entity.vertices()
         if self.dimension == 0:
+            # return [[]
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
         top_level_node = self.d_entities(self.graph_dim())[0]
         v_0 = vertices[0]
@@ -590,8 +593,8 @@ class Point():
     def to_fiat(self):
         return CellComplexToFiat(self)
 
-    def to_ufl(self, name=None, geo_dim=None):
-        return CellComplexToUFL(self, name, geo_dim)
+    def to_ufl(self, name=None):
+        return CellComplexToUFL(self, name)
 
     def _to_dict(self):
         # think this is probably missing stuf
@@ -685,6 +688,10 @@ class CellComplexToFiat(Simplex):
         """
         return self.fe_cell.d_entities(dimension, get_class=True)[0].to_fiat()
 
+    def get_facet_element(self):
+        dimension = self.get_spatial_dimension()
+        return self.construct_subelement(dimension - 1)
+
 
 class CellComplexToUFL(Cell):
     """
@@ -696,7 +703,7 @@ class CellComplexToUFL(Cell):
     TODO work out generic way around the naming issue
     """
 
-    def __init__(self, cell, name=None, geo_dim=None):
+    def __init__(self, cell, name=None):
         self.cell_complex = cell
 
         # TODO work out generic way around the naming issue
@@ -723,7 +730,7 @@ class CellComplexToUFL(Cell):
                 name = "hexahedron"
             else:
                 raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
-        super(CellComplexToUFL, self).__init__(name, geometric_dimension=geo_dim)
+        super(CellComplexToUFL, self).__init__(name)
 
     def to_fiat(self):
         return self.cell_complex.to_fiat()
@@ -733,28 +740,29 @@ class CellComplexToUFL(Cell):
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
-        gdim = self._gdim
         cell = self.cell_complex
         for key, value in kwargs.items():
-            if key == "geometric_dimension":
-                gdim = value
-            elif key == "cell":
+            if key == "cell":
                 cell = value
             else:
                 raise TypeError(f"reconstruct() got unexpected keyword argument '{key}'")
-        return CellComplexToUFL(cell, self._cellname, geo_dim=gdim)
+        return CellComplexToUFL(cell, self._cellname)
 
 
-def constructCellComplex(name, geo_dim=None):
+def constructCellComplex(name):
     if name == "vertex":
-        return Point(0).to_ufl(name, geo_dim)
+        return Point(0).to_ufl(name)
     elif name == "interval":
-        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name, geo_dim)
+        return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
-        return n_sided_polygon(3).to_ufl(name, geo_dim)
+        return n_sided_polygon(3).to_ufl(name)
     elif name == "quadrilateral":
-        return n_sided_polygon(4).to_ufl(name, geo_dim)
+        import warnings
+        warnings.warn("Using UFL quadrilateral - New Style elements only supported on simplices")
+        return Cell("quadrilateral")
+        # TODO fix this
+        # return n_sided_polygon(4).to_ufl(name)
     elif name == "tetrahedron":
-        return make_tetrahedron().to_ufl(name, geo_dim)
+        return make_tetrahedron().to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))

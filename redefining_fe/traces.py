@@ -15,6 +15,9 @@ class Trace():
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         raise NotImplementedError("Trace uninstanitated")
 
+    def tabulate(self, Qpts, trace_entity):
+        raise NotImplementedError("Tabulation uninstantiated")
+
     def _to_dict(self):
         return {"trace": str(self)}
 
@@ -47,6 +50,9 @@ class TrH1(Trace):
 
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         ax.scatter(*coord, **kwargs)
+
+    def tabulate(self, Qpts, trace_entity):
+        return np.ones_like(Qpts)
 
     def __repr__(self):
         return "H1"
@@ -82,10 +88,24 @@ class TrHDiv(Trace):
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
         if len(coord) == 2:
-            vec = vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
+            vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
         else:
             vec = np.cross(basis[0], basis[1])
         ax.quiver(*coord, *vec, **kwargs)
+
+    def tabulate(self, Qpts, trace_entity):
+        entityBasis = np.array(trace_entity.basis_vectors())
+        cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+        basis = np.matmul(entityBasis, cellEntityBasis)
+
+        if trace_entity.dimension == 1:
+            result = np.matmul(basis, np.array([[0, -1], [1, 0]]))
+        elif trace_entity.dimension == 2:
+            result = np.cross(basis[0], basis[1])
+        else:
+            raise ValueError("Immersion of HDiv edges not defined in 3D")
+
+        return result
 
     def __repr__(self):
         return "HDiv"
@@ -113,6 +133,13 @@ class TrHCurl(Trace):
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         vec = np.matmul(tangent, subEntityBasis)[0]
         ax.quiver(*coord, *vec, **kwargs)
+
+    def tabulate(self, Qpts, trace_entity):
+        tangent = np.array(trace_entity.basis_vectors())
+        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+
+        result = np.matmul(tangent, subEntityBasis)
+        return result
 
     def __repr__(self):
         return "HCurl"
