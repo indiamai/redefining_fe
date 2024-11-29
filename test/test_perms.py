@@ -3,6 +3,7 @@ from test_convert_to_fiat import create_cg1, create_dg1, create_cg2
 from test_2d_examples_docs import construct_cg3
 import pytest
 import numpy as np
+import sympy as sp
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
@@ -43,12 +44,29 @@ def test_basic_perms(cell):
         print(np.linalg.solve(M, trans_bvs))
 
 
-@pytest.mark.parametrize("cell", [pytest.param(edge, marks=pytest.mark.xfail(reason='Dense Permutations needed'))])
+# @pytest.mark.parametrize("cell", [pytest.param(edge, marks=pytest.mark.xfail(reason='Dense Permutations needed'))])
+
+@pytest.mark.parametrize("cell", [tri])
 def test_nd_perms(cell):
-    xs = [DOF(L2InnerProd(), PointKernel(cell.basis_vectors()[0]))]
+    deg = 1
+    edge = cell.edges(get_class=True)[0]
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+
+    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
     dofs = DOFGenerator(xs, S1, S2)
-    int_ned = ElementTriple(cell, (P1, CellHCurl, C0), dofs)
-    int_ned.to_fiat_elem()
+    int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
+
+    xs = [immerse(cell, int_ned, TrHCurl)]
+    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+
+    M = sp.Matrix([[y, -x]])
+    vec_Pk = PolynomialSpace(deg - 1, set_shape=True)
+    Pk = PolynomialSpace(deg - 1)
+    nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
+
+    ned = ElementTriple(cell, (nd, CellHCurl, C0), [tri_dofs])
+    ned.to_fiat_elem()
 
 
 @pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed')

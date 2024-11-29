@@ -110,7 +110,12 @@ class ElementTriple():
         entity_perms, pure_perm = self.make_dof_perms(ref_el, entity_ids, nodes, poly_set)
 
         form_degree = 1 if self.spaces[0].set_shape else 0
-        dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
+        print("my", [n.pt_dict for n in nodes])
+        # TODO: Change this when Dense case in Firedrake
+        if pure_perm:
+            dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
+        else:
+            dual = DualSet(nodes, ref_el, entity_ids)
         return CiarletElement(poly_set, dual, degree, form_degree)
 
     def plot(self, filename="temp.png"):
@@ -230,6 +235,7 @@ class ElementTriple():
                     cell_dict[dof_gen] = [d]
 
         if pure_perm is False:
+            # TODO think about where this call goes
             return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
 
         dof_id_mat = np.eye(len(dofs))

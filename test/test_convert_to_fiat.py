@@ -375,3 +375,52 @@ def test_poisson_analytic(params, elem_gen):
     cell = n_sided_polygon(3)
     elem = elem_gen(cell)
     assert (run_test(2, elem.to_ufl_elem(), parameters=params) < 1.e-9)
+
+
+@pytest.mark.parametrize(['params', 'elem_gen'],
+                         [pytest.param(p, d, marks=pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed'))
+                          for p in [{}, {'snes_type': 'ksponly', 'ksp_type': 'preonly', 'pc_type': 'lu'}]
+                          for d in (create_cg1,)])
+def test_quad(params, elem_gen):
+    quad = n_sided_polygon(4)
+    elem = elem_gen(quad)
+    assert (run_test(2, elem.to_ufl_elem(), parameters=params, quadrilateral=True) < 1.e-9)
+
+
+@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg2_tri, "CG", 2, tri),
+                                                         (create_cg1, "CG", 1, tri),
+                                                         (create_dg1, "DG", 1, tri),
+                                                         (construct_cg3, "CG", 3, tri),
+                                                         pytest.param(construct_nd, "N1curl", 1, tri, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
+                                                         pytest.param(construct_rt, "RT", 1, tri, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
+def test_project(elem_gen, elem_code, deg, cell):
+    elem = elem_gen(cell)
+    mesh = UnitTriangleMesh()
+
+    U = FunctionSpace(mesh, elem_code, deg)
+
+    f = Function(U)
+    f.assign(1)
+
+    out = Function(U)
+    u = TrialFunction(U)
+    v = TestFunction(U)
+    a = inner(u, v)*dx
+    L = inner(f, v)*dx
+    solve(a == L, out)
+
+    assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+    U = FunctionSpace(mesh, elem.to_ufl_elem())
+
+    f = Function(U)
+    f.assign(1)
+
+    out = Function(U)
+    u = TrialFunction(U)
+    v = TestFunction(U)
+    a = inner(u, v)*dx
+    L = inner(f, v)*dx
+    solve(a == L, out)
+
+    assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)

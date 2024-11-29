@@ -1,7 +1,6 @@
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT.quadrature import FacetQuadratureRule
 from FIAT.functional import PointEvaluation, FrobeniusIntegralMoment
-from redefining_fe.cells import CellComplexToFiat
 from redefining_fe.utils import sympy_to_numpy
 import numpy as np
 import sympy as sp
@@ -65,7 +64,7 @@ class L2InnerProd(Pairing):
 
     def __call__(self, kernel, v):
         # print("evaluating", kernel, v, "on", self.entity)
-        quadrature = create_quadrature(CellComplexToFiat(self.entity), 5)
+        quadrature = create_quadrature(self.entity.to_fiat(), 5)
         # need quadrature here too - therefore need the information from the triple.
 
         def kernel_dot(x):
@@ -86,13 +85,12 @@ class L2InnerProd(Pairing):
         ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
         entity = ref_el.construct_subelement(self.entity.dim())
         Q_ref = create_quadrature(entity, total_deg)
-        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        Q = FacetQuadratureRule(ref_el, ref_el.get_spatial_dimension() - 1, ent_id, Q_ref)
         Jdet = Q.jacobian_determinant()
         qpts, _ = Q.get_points(), Q.get_weights()
         f_at_qpts = dof.tabulate(qpts).T / Jdet
         functional = FrobeniusIntegralMoment(ref_el, Q, f_at_qpts)
         return functional
-        # raise NotImplementedError("L2 functionals not yet fiat convertible")
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))

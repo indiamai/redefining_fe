@@ -11,7 +11,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
 from redefining_fe.utils import sympy_to_numpy, fold_reduce
-from FIAT.reference_element import Simplex
+from FIAT.reference_element import Simplex, UFCQuadrilateral
 from ufl.cell import Cell
 
 
@@ -591,7 +591,10 @@ class Point():
         return copy.deepcopy(self)
 
     def to_fiat(self):
-        return CellComplexToFiat(self)
+        if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
+            return CellComplexToFiatSimplex(self)
+        raise NotImplementedError("Non-Simplex elements are not yet supported")
+        return CellComplexToFiatCell(self)
 
     def to_ufl(self, name=None):
         return CellComplexToUFL(self, name)
@@ -660,7 +663,7 @@ class Edge():
         return Edge(o_dict["point"], o_dict["attachment"], o_dict["orientation"])
 
 
-class CellComplexToFiat(Simplex):
+class CellComplexToFiatSimplex(Simplex):
     """
     Convert cell complex to fiat
 
@@ -675,7 +678,7 @@ class CellComplexToFiat(Simplex):
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
         shape = cell.get_shape()
-        super(CellComplexToFiat, self).__init__(shape, verts, topology)
+        super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
 
     def cellname(self):
         return "India Def Cell"
@@ -691,6 +694,42 @@ class CellComplexToFiat(Simplex):
     def get_facet_element(self):
         dimension = self.get_spatial_dimension()
         return self.construct_subelement(dimension - 1)
+
+
+class CellComplexToFiatCell(UFCQuadrilateral):
+    """
+    Convert cell complex to fiat
+
+    :param: cell: a redefining_fe cell complex
+
+    Currently assumes simplex.
+    """
+
+    def __init__(self, cell):
+        self.fe_cell = cell
+
+        verts = cell.vertices(return_coords=True)
+        topology = cell.get_topology()
+        shape = cell.get_shape()
+        super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
+
+    def cellname(self):
+        return "India Def Cell"
+
+    def construct_subelement(self, dimension):
+        """Constructs the reference element of a cell
+        specified by subelement dimension.
+
+        :arg dimension: subentity dimension (integer)
+        """
+        return self.fe_cell.d_entities(dimension, get_class=True)[0].to_fiat()
+
+    def get_facet_element(self):
+        dimension = self.get_spatial_dimension()
+        return self.construct_subelement(dimension - 1)
+
+    def get_dimension(self):
+        return self.get_spatial_dimension()
 
 
 class CellComplexToUFL(Cell):
@@ -719,17 +758,17 @@ class CellComplexToUFL(Cell):
                 # Triangle
                 name = "triangle"
             elif num_verts == 4:
-                if self.dimension == 2:
+                if cell.dimension == 2:
                     # quadrilateral
                     name = "quadrilateral"
-                elif self.dimension == 3:
+                elif cell.dimension == 3:
                     # tetrahedron
                     name = "tetrahedron"
             elif num_verts == 8:
                 # hexahedron
                 name = "hexahedron"
             else:
-                raise TypeError("UFL cell conversion undefined for {}".format(str(self)))
+                raise TypeError("UFL cell conversion undefined for {}".format(str(cell)))
         super(CellComplexToUFL, self).__init__(name)
 
     def to_fiat(self):
@@ -757,11 +796,7 @@ def constructCellComplex(name):
     elif name == "triangle":
         return n_sided_polygon(3).to_ufl(name)
     elif name == "quadrilateral":
-        import warnings
-        warnings.warn("Using UFL quadrilateral - New Style elements only supported on simplices")
-        return Cell("quadrilateral")
-        # TODO fix this
-        # return n_sided_polygon(4).to_ufl(name)
+        return n_sided_polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
     else:
