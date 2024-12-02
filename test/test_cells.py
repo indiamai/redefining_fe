@@ -1,5 +1,6 @@
 from redefining_fe import *
 import pytest
+import numpy as np
 
 
 @pytest.fixture(scope='module', params=[0, 1, 2])
@@ -28,3 +29,12 @@ def test_basis_vectors(C):
         bv_ids = C.basis_vectors()
         bv_coords = C.basis_vectors(return_coords=True)
         assert len(bv_ids) == len(bv_coords)
+
+
+def test_orientation():
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
+
+    for g in cell.group.members():
+        if not g.perm.is_Identity:
+            oriented = cell.orient(g)
+            assert np.allclose(np.array(oriented.basis_vectors(return_coords=True)[0]), -1)
