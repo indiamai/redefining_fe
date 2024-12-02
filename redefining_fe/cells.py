@@ -378,9 +378,10 @@ class Point():
         levels = [sorted(generation)
                   for generation in nx.topological_generations(self.G)]
         if get_class:
-            return [self.G.nodes.data("point_class")[i]
-                    for i in levels[self.graph_dim() - d]]
-        return levels[self.graph_dim() - d]
+            res = [self.G.nodes.data("point_class")[i] for i in levels[self.graph_dim() - d]]
+        else:
+            res = levels[self.graph_dim() - d]
+        return res
 
     def get_node(self, node):
         return self.G.nodes.data("point_class")[node]
@@ -394,10 +395,10 @@ class Point():
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=False, return_coords=False):
-        if self.oriented:
-            verts = self.oriented.permute(self.d_entities(0, get_class))
-        else:
-            verts = self.d_entities(0, get_class)
+        # if self.oriented:
+        #     verts = self.oriented.permute(self.d_entities(0, get_class))
+        # else:
+        verts = self.d_entities(0, get_class)
         if return_coords:
             top_level_node = self.d_entities(self.graph_dim())[0]
             if self.dimension == 0:
@@ -406,8 +407,6 @@ class Point():
         return verts
 
     def edges(self, get_class=False):
-        if self.oriented:
-            return self.oriented.permute(self.d_entities(1, get_class))
         return self.d_entities(1, get_class)
 
     def permute_entities(self, g, d):
@@ -449,11 +448,13 @@ class Point():
     def basis_vectors(self, return_coords=True, entity=None):
         if not entity:
             entity = self
-        vertices = entity.vertices()
+        entity_levels = [sorted(generation) for generation in nx.topological_generations(entity.G)]
+        self_levels = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        vertices = entity_levels[entity.graph_dim()]
         if self.dimension == 0:
             # return [[]
             raise ValueError("Dimension 0 entities cannot have Basis Vectors")
-        top_level_node = self.d_entities(self.graph_dim())[0]
+        top_level_node = self_levels[0][0]
         v_0 = vertices[0]
         if return_coords:
             v_0_coords = self.attachment(top_level_node, v_0)()
@@ -796,6 +797,7 @@ def constructCellComplex(name):
     elif name == "triangle":
         return n_sided_polygon(3).to_ufl(name)
     elif name == "quadrilateral":
+        # return Cell(name)
         return n_sided_polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
