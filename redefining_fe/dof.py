@@ -276,7 +276,7 @@ class ImmersedDOF(DOF):
         return self.pairing(self.kernel, attached_fn)
 
     def tabulate(self, Qpts):
-        immersion = self.target_space.tabulate(Qpts, self.trace_entity)
+        immersion = self.target_space.tabulate(Qpts, self.trace_entity, self.g)
         res = self.kernel.tabulate(Qpts)
         return immersion*res
 

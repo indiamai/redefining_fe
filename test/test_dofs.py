@@ -1,5 +1,6 @@
 from redefining_fe import *
-from test_convert_to_fiat import create_cg1, create_dg1, construct_cg3, construct_rt
+from test_convert_to_fiat import create_cg1, create_dg1, construct_cg3, construct_rt, construct_nd
+import sympy as sp
 
 
 def test_permute_dg1():
@@ -48,6 +49,9 @@ def test_permute_rt():
     cell = n_sided_polygon(3)
 
     rt = construct_rt(cell)
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    func = MyTestFunction(sp.Matrix([x, -1/3 + 2*y]), symbols=(x, y))
 
     for dof in rt.generate():
         print(dof)
@@ -55,4 +59,21 @@ def test_permute_rt():
     for g in rt.cell.group.members():
         print(g.numeric_rep())
         for dof in rt.generate():
-            print(dof, "->", dof(g))
+            print(dof, "->", dof(g), "eval, ", dof(g).eval(func))
+
+
+def test_permute_nd():
+    cell = n_sided_polygon(3)
+
+    rt = construct_nd(cell)
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    func = MyTestFunction(sp.Matrix([x, -1/3 + 2*y]), symbols=(x, y))
+
+    for dof in rt.generate():
+        print(dof)
+
+    for g in rt.cell.group.members():
+        print(g.numeric_rep())
+        for dof in rt.generate():
+            print(dof, "->", dof(g), "eval, ", dof(g).eval(func))

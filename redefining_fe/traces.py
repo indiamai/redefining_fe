@@ -15,7 +15,7 @@ class Trace():
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         raise NotImplementedError("Trace uninstanitated")
 
-    def tabulate(self, Qpts, trace_entity):
+    def tabulate(self, Qpts, trace_entity, g):
         raise NotImplementedError("Tabulation uninstantiated")
 
     def _to_dict(self):
@@ -51,7 +51,7 @@ class TrH1(Trace):
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         ax.scatter(*coord, **kwargs)
 
-    def tabulate(self, Qpts, trace_entity):
+    def tabulate(self, Qpts, trace_entity, g):
         return np.ones_like(Qpts)
 
     def __repr__(self):
@@ -64,18 +64,8 @@ class TrHDiv(Trace):
         super(TrHDiv, self).__init__(cell)
 
     def __call__(self, v, trace_entity, g):
-        entityBasis = np.array(trace_entity.basis_vectors())
-        cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-        basis = np.matmul(entityBasis, cellEntityBasis)
-
         def apply(*x):
-            if len(v(*x)) == 2:
-                result = np.cross(np.array(v(*x)).squeeze(), basis)
-                # vec = np.matmul(np.array([[0, 1], [-1, 0]]), basis.T)
-            elif trace_entity.dimension == 2:
-                result = np.dot(np.array(v(*x)), np.cross(basis[0], basis[1]))
-            else:
-                raise ValueError("Immersion of HDiv edges not defined in 3D")
+            result = np.dot(self.tabulate(None, trace_entity, g), np.array(v(*x)).squeeze())
             if isinstance(result, np.float64):
                 # todo: might always be a float
                 return (result,)
@@ -84,7 +74,10 @@ class TrHDiv(Trace):
 
     def plot(self, ax, coord, trace_entity, g, **kwargs):
         # plot dofs of the type associated with this space
-        entityBasis = np.array(trace_entity.basis_vectors())
+        permuted = self.domain.permute_entities(g, trace_entity.dimension)
+        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
+
+        entityBasis = np.array(trace_entity.orient(orientation).basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
         if len(coord) == 2:
@@ -93,8 +86,11 @@ class TrHDiv(Trace):
             vec = np.cross(basis[0], basis[1])
         ax.quiver(*coord, *vec, **kwargs)
 
-    def tabulate(self, Qpts, trace_entity):
-        entityBasis = np.array(trace_entity.basis_vectors())
+    def tabulate(self, Qpts, trace_entity, g):
+        permuted = self.domain.permute_entities(g, trace_entity.dimension)
+        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
+
+        entityBasis = np.array(trace_entity.orient(orientation).basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
 
@@ -117,29 +113,31 @@ class TrHCurl(Trace):
         super(TrHCurl, self).__init__(cell)
 
     def __call__(self, v, trace_entity, g):
-        tangent = np.array(trace_entity.basis_vectors())
-        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-
         def apply(*x):
-            result = np.dot(np.matmul(tangent, subEntityBasis),
-                            np.array(v(*x)))
+            result = np.dot(self.tabulate(None, trace_entity, g), np.array(v(*x)).squeeze())
             if isinstance(result, np.float64):
                 return (result,)
             return tuple(result)
         return apply
 
-    def plot(self, ax, coord, trace_entity, g, **kwargs):
-        tangent = np.array(trace_entity.basis_vectors())
-        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-        vec = np.matmul(tangent, subEntityBasis)[0]
-        ax.quiver(*coord, *vec, **kwargs)
+    def tabulate(self, Qpts, trace_entity, g):
+        permuted = self.domain.permute_entities(g, trace_entity.dimension)
+        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
 
-    def tabulate(self, Qpts, trace_entity):
-        tangent = np.array(trace_entity.basis_vectors())
+        tangent = np.array(trace_entity.orient(orientation).basis_vectors())
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
 
         result = np.matmul(tangent, subEntityBasis)
         return result
+
+    def plot(self, ax, coord, trace_entity, g, **kwargs):
+        permuted = self.domain.permute_entities(g, trace_entity.dimension)
+        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
+
+        tangent = np.array(trace_entity.orient(orientation).basis_vectors())
+        subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
+        vec = np.matmul(tangent, subEntityBasis)[0]
+        ax.quiver(*coord, *vec, **kwargs)
 
     def __repr__(self):
         return "HCurl"
