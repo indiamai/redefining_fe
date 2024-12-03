@@ -1,6 +1,7 @@
 from redefining_fe import *
 from test_convert_to_fiat import create_cg1, create_dg1, construct_cg3, construct_rt, construct_nd
 import sympy as sp
+import numpy as np
 
 
 def test_permute_dg1():
@@ -65,15 +66,38 @@ def test_permute_rt():
 def test_permute_nd():
     cell = n_sided_polygon(3)
 
-    rt = construct_nd(cell)
+    nd = construct_nd(cell)
     x = sp.Symbol("x")
     y = sp.Symbol("y")
-    func = MyTestFunction(sp.Matrix([x, -1/3 + 2*y]), symbols=(x, y))
+    # func = MyTestFunction(sp.Matrix([x, -1/3 + 2*y]), symbols=(x, y))
 
-    for dof in rt.generate():
-        print(dof)
+    # phi_0 = MyTestFunction(sp.Matrix([-0.333333333333333*y - 0.192450089729875, 0.333333333333333*x + 0.333333333333333]), symbols=(x, y))
+    # phi_1 = MyTestFunction(sp.Matrix([0.333333333333333*y + 0.192450089729875, 0.333333333333333 - 0.333333333333333*x]), symbols=(x, y))
 
-    for g in rt.cell.group.members():
-        print(g.numeric_rep())
-        for dof in rt.generate():
-            print(dof, "->", dof(g), "eval, ", dof(g).eval(func))
+    # original dofs
+    phi_2 = MyTestFunction(sp.Matrix([1/3 - (np.sqrt(3)/6)*y, (np.sqrt(3)/6)*x]), symbols=(x, y))
+    phi_0 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y, (-np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+    phi_1 = MyTestFunction(sp.Matrix([-1/6 - (np.sqrt(3)/6)*y,
+                                     (np.sqrt(3)/6) + (np.sqrt(3)/6)*x]), symbols=(x, y))
+
+    for dof in nd.generate():
+        print(dof, "eval, ", dof.eval(phi_2), dof.eval(phi_0), dof.eval(phi_1))
+
+    # reflected dofs
+    # phi_2 = MyTestFunction(sp.Matrix([0.288675134594813*y - 0.333333333333333, -0.288675134594813*x]), symbols=(x, y))
+    # phi_0 = MyTestFunction(sp.Matrix([0.288675134594813*y + 0.166666666666667, -0.288675134594813*x - 0.288675134594813]), symbols=(x, y))
+    # phi_1 = MyTestFunction(sp.Matrix([0.288675134594813*y + 0.166666666666667, 0.288675134594813 - 0.288675134594813*x]), symbols=(x, y))
+    # reflect = nd.cell.group.get_member([0, 1, 2])
+    # print(nd.cell.permute_entities(reflect, 1))
+    # reflect = nd.cell.group.get_member([2, 0, 1])
+    # print(nd.cell.permute_entities(reflect, 1))
+    # print(reflect)
+    # print(nd.cell.get_topology())
+    # for dof in nd.generate():
+    #     print(dof, "->", dof(reflect), "eval p2 ", dof(reflect).eval(phi_2), "eval p0 ", dof(reflect).eval(phi_0), "eval p1 ", dof(reflect).eval(phi_1))
+        # print(dof.convert_to_fiat(cell.to_fiat(), 1)(lambda x: np.array([1/3 - (np.sqrt(3)/6)*x[1], (np.sqrt(3)/6)*x[0]])))
+
+    for g in nd.cell.group.members():
+        print(g)
+        print(nd.cell.permute_entities(g, 0))
+        print(nd.cell.permute_entities(g, 1))

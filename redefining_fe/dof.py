@@ -30,7 +30,7 @@ class DeltaPairing(Pairing):
     def __init__(self):
         super(DeltaPairing, self).__init__()
 
-    def __call__(self, kernel, v):
+    def __call__(self, kernel, v, cell):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
@@ -62,10 +62,20 @@ class L2InnerProd(Pairing):
     def __init__(self):
         super(L2InnerProd, self).__init__()
 
-    def __call__(self, kernel, v):
-        # print("evaluating", kernel, v, "on", self.entity)
+    def __call__(self, kernel, v, cell):
+        # print(self.entity)
+        # if cell == self.entity:
+        #     # print("evaluating", kernel, v, "on", self.entity)
+        #     quadrature = create_quadrature(self.entity.to_fiat(), 5)
+        #     # need quadrature here too - therefore need the information from the triple.
+        # else:
+        #     ref_el = cell.to_fiat()
+        #     print(cell)
+        #     ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        #     entity = ref_el.construct_subelement(self.entity.dim())
+        #     Q_ref = create_quadrature(entity, 5)
+        #     quadrature = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
         quadrature = create_quadrature(self.entity.to_fiat(), 5)
-        # need quadrature here too - therefore need the information from the triple.
 
         def kernel_dot(x):
             return np.dot(kernel(*x), v(*x))
@@ -85,7 +95,7 @@ class L2InnerProd(Pairing):
         ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
         entity = ref_el.construct_subelement(self.entity.dim())
         Q_ref = create_quadrature(entity, total_deg)
-        Q = FacetQuadratureRule(ref_el, ref_el.get_spatial_dimension() - 1, ent_id, Q_ref)
+        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
         Jdet = Q.jacobian_determinant()
         qpts, _ = Q.get_points(), Q.get_weights()
         f_at_qpts = dof.tabulate(qpts).T / Jdet
@@ -218,7 +228,7 @@ class DOF():
         return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id, self.cell)
 
     def eval(self, fn, pullback=True):
-        return self.pairing(self.kernel, fn)
+        return self.pairing(self.kernel, fn, self.cell)
 
     def tabulate(self, Qpts):
         return self.kernel.tabulate(Qpts)
@@ -273,7 +283,7 @@ class ImmersedDOF(DOF):
         if pullback:
             attached_fn = self.target_space(attached_fn, self.trace_entity, self.g)
 
-        return self.pairing(self.kernel, attached_fn)
+        return self.pairing(self.kernel, attached_fn, self.cell)
 
     def tabulate(self, Qpts):
         immersion = self.target_space.tabulate(Qpts, self.trace_entity, self.g)
@@ -283,7 +293,7 @@ class ImmersedDOF(DOF):
     def __call__(self, g):
         permuted = self.cell.permute_entities(g, self.trace_entity.dim())
         index_trace = self.cell.d_entities(self.trace_entity.dim()).index(self.trace_entity.id)
-        new_trace_entity = self.cell.get_node(permuted[index_trace][0])
+        new_trace_entity = self.cell.get_node(permuted[index_trace][0]).orient(permuted[index_trace][1])
 
         return ImmersedDOF(self.pairing, self.kernel.permute(permuted[index_trace][1]), new_trace_entity,
                            self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id, self.cell)

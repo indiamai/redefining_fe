@@ -330,7 +330,7 @@ class Point():
             raise TypeError("Shape undefined for {}".format(str(self)))
 
     def get_topology(self):
-        structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
+        structure = [sorted(generation) for generation in nx.topological_generations(self.graph())]
         structure.reverse()
 
         min_ids = [min(dimension) for dimension in structure]
@@ -395,9 +395,6 @@ class Point():
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=False, return_coords=False):
-        # if self.oriented:
-        #     verts = self.oriented.permute(self.d_entities(0, get_class))
-        # else:
         verts = self.d_entities(0, get_class)
         if return_coords:
             top_level_node = self.d_entities(self.graph_dim())[0]

@@ -111,6 +111,7 @@ class ElementTriple():
 
         form_degree = 1 if self.spaces[0].set_shape else 0
         print("my", [n.pt_dict for n in nodes])
+        print(entity_perms)
         # TODO: Change this when Dense case in Firedrake
         if pure_perm:
             dual = DualSet(nodes, ref_el, entity_ids, entity_perms)
@@ -234,9 +235,9 @@ class ElementTriple():
                 else:
                     cell_dict[dof_gen] = [d]
 
-        if pure_perm is False:
-            # TODO think about where this call goes
-            return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
+        # if pure_perm is False:
+        #     # TODO think about where this call goes
+        #     return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
 
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
@@ -269,6 +270,18 @@ class ElementTriple():
                             sub_mat = g.matrix_form()
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
+                        else:
+                            # sub component dense case
+                            degree = ent_dofs[0].triple.spaces[0].degree()
+                            new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in ent_dofs]
+                            sub_poly_set = ent_dofs[0].triple.spaces[0].to_ON_polynomial_set(ref_el)
+                            print(new_nodes)
+                            print([d(g) for d in ent_dofs])
+                            print(entity_ids[e.dimension][e_id])
+                            print(ent_dofs_ids)
+                            print(sub_poly_set)
+                            # transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, ent_dofs_ids, new_nodes, sub_poly_set)
+                            # res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
 
         oriented_mats_overall = {}
         dim = self.cell.dim()
@@ -363,22 +376,6 @@ class DOFGenerator():
             self.dof_numbers = len(self.ls)
             self.dof_ids = [dof.id for dof in self.ls]
         return self.ls
-
-    # def generate_by_x(self, cell, space, id_counter):
-    #     res_ls = []
-    #     for l_g in self.x:
-    #         ls = []
-    #         for g in self.g1.members():
-    #             generated = l_g(g)
-    #             if not isinstance(generated, list):
-    #                 generated = [generated]
-    #             for dof in generated:
-    #                 dof.add_context(self, cell, space, g, id=id_counter)
-    #                 id_counter += 1
-    #             ls.extend(generated)
-    #         res_ls.append(ls)
-
-        # return res_ls
 
     def __repr__(self):
         repr_str = "DOFGen("

@@ -166,7 +166,9 @@ def construct_nd(tri):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
 
-    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+    # xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+    xs = [DOF(L2InnerProd(), PolynomialKernel((1,)))]
+
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 

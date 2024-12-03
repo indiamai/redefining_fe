@@ -87,10 +87,7 @@ class TrHDiv(Trace):
         ax.quiver(*coord, *vec, **kwargs)
 
     def tabulate(self, Qpts, trace_entity, g):
-        permuted = self.domain.permute_entities(g, trace_entity.dimension)
-        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
-
-        entityBasis = np.array(trace_entity.orient(orientation).basis_vectors())
+        entityBasis = np.array(trace_entity.basis_vectors())
         cellEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
         basis = np.matmul(entityBasis, cellEntityBasis)
 
@@ -121,12 +118,8 @@ class TrHCurl(Trace):
         return apply
 
     def tabulate(self, Qpts, trace_entity, g):
-        permuted = self.domain.permute_entities(g, trace_entity.dimension)
-        orientation = [o for (ent, o) in permuted if ent == trace_entity.id][0]
-
-        tangent = np.array(trace_entity.orient(orientation).basis_vectors())
+        tangent = np.array(trace_entity.basis_vectors())
         subEntityBasis = np.array(self.domain.basis_vectors(entity=trace_entity))
-
         result = np.matmul(tangent, subEntityBasis)
         return result
 

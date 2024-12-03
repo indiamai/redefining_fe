@@ -151,6 +151,8 @@ class PermutationSetRepresentation():
         return self.get_member(~Permutation(perm1)) * self.get_member(Permutation(perm2))
 
     def get_member(self, perm):
+        if not isinstance(perm, Permutation):
+            perm = Permutation.from_sequence(perm)
         for m in self.members():
             if m.perm == perm:
                 return m
