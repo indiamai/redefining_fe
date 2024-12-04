@@ -50,3 +50,39 @@ def test_sub_basis_vectors():
         print(e)
         print(e.vertices())
         print(cell.basis_vectors(entity=e))
+
+
+def test_permute_entities():
+    cell = n_sided_polygon(3)
+    # cell.plot(filename="test_cell.png")
+
+    # for dof in nd.generate():
+    # print(dof, "->", dof(reflect), "eval p2 ", dof(reflect).eval(phi_2), "eval p0 ", dof(reflect).eval(phi_0), "eval p1 ", dof(reflect).eval(phi_1))
+    # print(dof.convert_to_fiat(cell.to_fiat(), 1)(lambda x: np.array([1/3 - (np.sqrt(3)/6)*x[1], (np.sqrt(3)/6)*x[0]])))
+
+    print(cell.vertices(return_coords=True))
+    print([c.point.connections for c in cell.connections])
+    print([[c.point.get_node(c2.point.id, return_coords=True) for c2 in c.point.connections] for c in cell.connections])
+    # cell.plot(filename="test_cell_flipped.png")
+    # import matplotlib.pyplot as plt
+    for i, g in enumerate(cell.group.members()):
+        print(i, g)
+        print(cell.permute_entities(g, 0))
+        print(cell.permute_entities(g, 1))
+    #     oriented = cell.orient(g)
+    #     print("Edges", oriented.connections)
+    #     fig, ax = plt.subplots()
+    #     oriented.plot(ax = ax, filename=f"test_cell{i}.png")
+    #     oriented.hasse_diagram(filename=f"test_hasse{i}.png")
+
+
+def test_ordered_coords():
+    vert = Point(0)
+    edge = Point(1, [Point(0), Point(0)], vertex_num=2)
+
+    print(vert.ordered_vertices())
+
+    print(edge.ordered_vertices())
+    for g in edge.group.members():
+        oriented = edge.orient(g)
+        print(oriented.ordered_vertices(return_coords=True))

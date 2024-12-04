@@ -368,11 +368,35 @@ class Point():
             return temp_G
         return self.G
 
-    def hasse_diagram(self, counter=0):
+    def hasse_diagram(self, counter=0, filename=None):
         ax = plt.axes()
-        nx.draw_networkx(self.graph(), pos=topo_pos(self.graph()),
+        nx.draw_networkx(self.G, pos=topo_pos(self.G),
                          with_labels=True, ax=ax)
-        plt.show()
+        edge_dict = {(u, v): self.G.edges[u, v]["edge_class"].o for (u, v) in self.G.edges()}
+        nx.draw_networkx_edge_labels(self.G, pos=topo_pos(self.G), edge_labels=edge_dict, ax=ax)
+        if filename:
+            ax.figure.savefig(filename)
+        else:
+            plt.show()
+
+    def ordered_vertices(self, get_class=False, return_coords=False):
+        # define a points vertex order by combining the order of the sub elements
+        # vertex list and removing duplicates
+        if self.dimension == 0:
+            if get_class:
+                return [self]
+            if return_coords:
+                return [()]
+            return [self.id]
+        else:
+            # convert to dict to remove duplicates while maintaining order
+            full_list = [c.ordered_vertices(get_class, return_coords) for c in self.connections]
+            flatten = itertools.chain.from_iterable(full_list)
+            verts = list(dict.fromkeys(flatten))
+            if self.oriented:
+                # make sure this is necessary
+                return self.oriented.permute(verts)
+            return verts
 
     def d_entities(self, d, get_class=False):
         levels = [sorted(generation)
@@ -383,7 +407,12 @@ class Point():
             res = levels[self.graph_dim() - d]
         return res
 
-    def get_node(self, node):
+    def get_node(self, node, return_coords=False):
+        if return_coords:
+            top_level_node = self.d_entities(self.graph_dim())[0]
+            if self.dimension == 0:
+                return [()]
+            return self.attachment(top_level_node, node)()
         return self.G.nodes.data("point_class")[node]
 
     def dim_of_node(self, node):
@@ -428,6 +457,8 @@ class Point():
             entity_dict[ent] = tuple(entity_verts)
             reordered_entity_dict[ent] = tuple([reordered[verts.index(i)] for i in entity_verts])
 
+        print(entity_dict)
+        print(reordered_entity_dict)
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
         entity_group = self.d_entities(d, get_class=True)[0].group
@@ -468,7 +499,7 @@ class Point():
                 basis_vecs.append((v, v_0))
         return basis_vecs
 
-    def plot(self, show=True, plain=False, ax=None):
+    def plot(self, show=True, plain=False, ax=None, filename=None):
         """ for now into 2 dimensional space """
 
         top_level_node = self.d_entities(self.graph_dim())[0]
@@ -514,6 +545,8 @@ class Point():
             #         plt.fill(vert_coords[hull.vertices, 0], vert_coords[hull.vertices, 1], alpha=0.5)
         if show:
             plt.show()
+        if filename:
+            ax.figure.savefig(filename)
 
     def plot3d(self, show=True, ax=None):
         assert self.dimension == 3
@@ -641,6 +674,14 @@ class Edge():
                 return tuple(res)
             return sympy_to_numpy(self.attachment, syms, x)
         return x
+
+    def ordered_vertices(self, get_class=False, return_coords=False):
+        verts = self.point.ordered_vertices(get_class, return_coords)
+        if self.o:
+            verts = self.o.permute(verts)
+        if return_coords:
+            return [self(v) for v in verts]
+        return verts
 
     def lower_dim(self):
         return self.point.dim()
