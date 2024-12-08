@@ -86,7 +86,7 @@ def create_cg2_tri(cell):
     edge_xs = [immerse(cell, edge_dg0, TrH1)]
 
     cg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, get_cyc_group(len(cell.vertices())), S1),
-                                                DOFGenerator(edge_xs, tri_C3, S1)])
+                                                DOFGenerator(edge_xs, C3, S1)])
     return cg
 
 

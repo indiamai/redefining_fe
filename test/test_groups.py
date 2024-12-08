@@ -31,8 +31,6 @@ def test_permsets():
     print(p.is_Identity)
     c3 = C3.add_cell(cell)
 
-    c3_reps = PermutationSetRepresentation([Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 0, 2])], cell)
-
     deg = 1
     vert_dg = create_dg1(cell.vertices(get_class=True)[0])
     xs = [immerse(cell, vert_dg, TrH1)]
@@ -53,14 +51,14 @@ def test_permsets():
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
     v_xs = [immerse(tri, dg0, TrH1)]
-    v_dofs = DOFGenerator(v_xs, c3_reps, S1)
+    v_dofs = DOFGenerator(v_xs, c3, S1)
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
     print([d.generation for d in dg0_int.generate()])
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
-    e_dofs = DOFGenerator(e_xs, c3_reps, S1)
+    e_dofs = DOFGenerator(e_xs, c3, S1)
 
     i_xs = [lambda g: DOF(DeltaPairing(), PointKernel(g((0, 0))))]
     i_dofs = DOFGenerator(i_xs, S1, S1)

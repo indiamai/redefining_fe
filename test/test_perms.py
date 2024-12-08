@@ -58,7 +58,7 @@ def test_nd_perms(cell):
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
     xs = [immerse(cell, int_ned, TrHCurl)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+    tri_dofs = DOFGenerator(xs, C3, S3)
 
     M = sp.Matrix([[y, -x]])
     vec_Pk = PolynomialSpace(deg - 1, set_shape=True)

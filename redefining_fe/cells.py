@@ -282,11 +282,11 @@ class Point():
         """
         Systematically work out the symmetry group of the constructed cell
         """
-        verts = self.vertices()
-        v_coords = self.vertices(return_coords=True)
+        verts = self.ordered_vertices()
+        v_coords = [self.get_node(v, return_coords=True) for v in verts]
         n = len(verts)
         max_group = SymmetricGroup(n)
-        edges = [edge.vertices() for edge in self.edges(get_class=True)]
+        edges = [edge.ordered_vertices() for edge in self.edges(get_class=True)]
         accepted_perms = max_group.elements.copy()
         if n > 2:
             for element in max_group.elements:
@@ -297,6 +297,7 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
+        print(len(list(accepted_perms)))
         return fe_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):
@@ -379,18 +380,16 @@ class Point():
         else:
             plt.show()
 
-    def ordered_vertices(self, get_class=False, return_coords=False):
+    def ordered_vertices(self, get_class=False):
         # define a points vertex order by combining the order of the sub elements
         # vertex list and removing duplicates
         if self.dimension == 0:
             if get_class:
                 return [self]
-            if return_coords:
-                return [()]
             return [self.id]
         else:
             # convert to dict to remove duplicates while maintaining order
-            full_list = [c.ordered_vertices(get_class, return_coords) for c in self.connections]
+            full_list = [c.ordered_vertices(get_class) for c in self.connections]
             flatten = itertools.chain.from_iterable(full_list)
             verts = list(dict.fromkeys(flatten))
             if self.oriented:
@@ -448,17 +447,10 @@ class Point():
         entity_dict = {}
         reordered_entity_dict = {}
 
-        for ent in entities:
-            entity_verts = []
-            for v in verts:
-                connected = list(nx.all_simple_edge_paths(self.G, ent, v))
-                if len(connected) > 0:
-                    entity_verts.append(v)
-            entity_dict[ent] = tuple(entity_verts)
-            reordered_entity_dict[ent] = tuple([reordered[verts.index(i)] for i in entity_verts])
+        for e in self.d_entities(d, get_class=True):
+            entity_dict[e.id] = tuple(e.ordered_vertices())
+            reordered_entity_dict[e.id] = tuple([reordered[verts.index(i)] for i in e.ordered_vertices()])
 
-        print(entity_dict)
-        print(reordered_entity_dict)
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
         entity_group = self.d_entities(d, get_class=True)[0].group
@@ -675,12 +667,10 @@ class Edge():
             return sympy_to_numpy(self.attachment, syms, x)
         return x
 
-    def ordered_vertices(self, get_class=False, return_coords=False):
-        verts = self.point.ordered_vertices(get_class, return_coords)
+    def ordered_vertices(self, get_class=False):
+        verts = self.point.ordered_vertices(get_class)
         if self.o:
             verts = self.o.permute(verts)
-        if return_coords:
-            return [self(v) for v in verts]
         return verts
 
     def lower_dim(self):

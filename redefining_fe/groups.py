@@ -430,4 +430,4 @@ tet_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation
 tet_faces = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([0, 2, 1, 3]), Permutation([1, 0, 2, 3]),
                                           Permutation([0, 3, 1, 2])])
 
-sq_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([1, 2, 3, 0]), Permutation([3, 0, 1, 2]), Permutation([1, 0, 3, 2])])
+sq_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([1, 2, 3, 0]), Permutation([3, 0, 1, 2]), Permutation([2, 3, 0, 1])])

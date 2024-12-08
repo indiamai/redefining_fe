@@ -109,13 +109,13 @@ def construct_cg3(tri=None):
     dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
     v_xs = [immerse(tri, dg0, TrH1)]
-    v_dofs = DOFGenerator(v_xs, tri_C3, S1)
+    v_dofs = DOFGenerator(v_xs, C3, S1)
 
     xs = [DOF(DeltaPairing(), PointKernel((-1/3)))]
     dg0_int = ElementTriple(edge, (P1, CellH1, C0), DOFGenerator(xs, S2, S1))
 
     e_xs = [immerse(tri, dg0_int, TrH1)]
-    e_dofs = DOFGenerator(e_xs, tri_C3, S1)
+    e_dofs = DOFGenerator(e_xs, C3, S1)
 
     i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
     i_dofs = DOFGenerator(i_xs, S1, S1)
@@ -173,7 +173,7 @@ def construct_nd(tri):
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
     xs = [immerse(tri, int_ned, TrHCurl)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+    tri_dofs = DOFGenerator(xs, C3, S3)
 
     M = sp.Matrix([[y, -x]])
     vec_Pk = PolynomialSpace(deg - 1, set_shape=True)
@@ -222,7 +222,7 @@ def construct_rt(tri=None):
     int_rt = ElementTriple(edge, (rt_space, CellHDiv, C0), dofs)
 
     xs = [immerse(tri, int_rt, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+    tri_dofs = DOFGenerator(xs, C3, S3)
 
     rt = ElementTriple(tri, (rt_space, CellHDiv, C0), [tri_dofs])
     return rt
@@ -325,7 +325,7 @@ def test_rt_second_order():
     int_rt2 = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
 
     xs = [immerse(tri, int_rt2, TrHDiv)]
-    tri_dofs = DOFGenerator(xs, tri_C3, S3)
+    tri_dofs = DOFGenerator(xs, C3, S3)
 
     i_xs = [lambda g: DOF(L2InnerProd(), PointKernel(g((1, 0)))),
             lambda g: DOF(L2InnerProd(), PointKernel(g((0, 1))))]

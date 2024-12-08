@@ -76,13 +76,32 @@ def test_permute_entities():
     #     oriented.hasse_diagram(filename=f"test_hasse{i}.png")
 
 
-def test_ordered_coords():
-    vert = Point(0)
+def test_oriented_verts():
     edge = Point(1, [Point(0), Point(0)], vertex_num=2)
 
-    print(vert.ordered_vertices())
-
-    print(edge.ordered_vertices())
     for g in edge.group.members():
         oriented = edge.orient(g)
-        print(oriented.ordered_vertices(return_coords=True))
+        assert g.permute(edge.ordered_vertices()) == oriented.ordered_vertices()
+
+    tri = n_sided_polygon(3)
+    cyclic_tri = C3.add_cell(tri)
+
+    for g in tri.group.members():
+        oriented = tri.orient(g)
+        if g in cyclic_tri.members():
+            # test that rotating does not change the order of edges
+            permuted = oriented.permute_entities(g, 1)
+            assert all([o.perm.is_Identity for (e, o) in permuted])
+        assert g.permute(tri.ordered_vertices()) == oriented.ordered_vertices()
+
+    sq = n_sided_polygon(4)
+    for g in sq.group.members():
+        oriented = sq.orient(g)
+        print(oriented.permute_entities(g, 1))
+        assert g.permute(sq.ordered_vertices()) == oriented.ordered_vertices()
+
+    # tetra = make_tetrahedron()
+    # for g in tetra.group.members():
+    #     oriented = sq.orient(g)
+    #     print(g, oriented.permute_entities(g, 1))
+    #     assert g.permute(sq.ordered_vertices()) == oriented.ordered_vertices()
