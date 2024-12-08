@@ -22,8 +22,8 @@ def test_unscaled_construction():
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
-    vec_P0 = PolynomialSpace(0, 0, set_shape=True)
-    vec_P1 = PolynomialSpace(1, 1, set_shape=True)
+    vec_P0 = PolynomialSpace(0, set_shape=True)
+    vec_P1 = PolynomialSpace(1, set_shape=True)
 
     composite = vec_P0 + vec_P1
     assert composite.set_shape
@@ -54,7 +54,7 @@ def test_complete_space(deg):
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
-    Pd = PolynomialSpace(deg, deg)
+    Pd = PolynomialSpace(deg)
     my_space = Pd.to_ON_polynomial_set(cell)
 
     from FIAT.lagrange import Lagrange
