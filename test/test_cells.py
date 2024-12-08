@@ -100,8 +100,9 @@ def test_oriented_verts():
         print(oriented.permute_entities(g, 1))
         assert g.permute(sq.ordered_vertices()) == oriented.ordered_vertices()
 
-    # tetra = make_tetrahedron()
-    # for g in tetra.group.members():
-    #     oriented = sq.orient(g)
-    #     print(g, oriented.permute_entities(g, 1))
-    #     assert g.permute(sq.ordered_vertices()) == oriented.ordered_vertices()
+    tetra = make_tetrahedron()
+    for g in tetra.group.members():
+        oriented = tetra.orient(g)
+        permuted = oriented.permute_entities(g, 0)
+        print(g, permuted)
+        assert g.permute(tetra.ordered_vertices()) == oriented.ordered_vertices()

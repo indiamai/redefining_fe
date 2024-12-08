@@ -184,10 +184,10 @@ def make_tetrahedron():
     edges.append(
         Point(1, vertex_num=2, edges=[vertices[2], vertices[3]]))
 
-    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: r})
+    face1 = Point(2, vertex_num=3, edges=[edges[5], edges[3], edges[2]], edge_orientations={2: [1, 0]})
     face2 = Point(2, vertex_num=3, edges=[edges[3], edges[0], edges[4]])
     face3 = Point(2, vertex_num=3, edges=[edges[2], edges[0], edges[1]])
-    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: r, 2: r})
+    face4 = Point(2, vertex_num=3, edges=[edges[1], edges[4], edges[5]], edge_orientations={0: [1, 0], 2: [1, 0]})
 
     return Point(3, vertex_num=4, edges=[face3, face1, face4, face2])
 
@@ -253,7 +253,7 @@ class Point():
                 c, d = coords[(i + 1) % n]
 
                 if i in orientations.keys():
-                    edges.append(Edge(points[i], construct_attach_2d(a, b, c, d), o=orientations[i]))
+                    edges.append(Edge(points[i], construct_attach_2d(a, b, c, d), o=points[i].group.get_member(orientations[i])))
                 else:
                     edges.append(Edge(points[i], construct_attach_2d(a, b, c, d)))
         if self.dimension == 3:
@@ -271,7 +271,7 @@ class Point():
                 assert np.allclose(np.array(res_fn.subs({"x": coords_2d[1][1], "y": coords_2d[1][2]})).astype(np.float64), faces[i][1])
                 assert np.allclose(np.array(res_fn.subs({"x": coords_2d[2][1], "y": coords_2d[2][2]})).astype(np.float64), faces[i][2])
                 if i in orientations.keys():
-                    edges.append(Edge(points[i], construct_attach_3d(res), o=orientations[i]))
+                    edges.append(Edge(points[i], construct_attach_3d(res), o=points[i].group.get_member(orientations[i])))
                 else:
                     edges.append(Edge(points[i], construct_attach_3d(res)))
 
