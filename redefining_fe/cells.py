@@ -166,7 +166,6 @@ def n_sided_polygon(n):
 
 
 def make_tetrahedron():
-    r = fe_groups.r
     vertices = []
     for i in range(4):
         vertices.append(Point(0))
@@ -297,7 +296,6 @@ class Point():
                     if not np.allclose(edge_len, 2):
                         accepted_perms.remove(element)
                         break
-        print(len(list(accepted_perms)))
         return fe_groups.PermutationSetRepresentation(list(accepted_perms))
 
     def get_spatial_dimension(self):

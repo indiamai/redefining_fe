@@ -350,53 +350,6 @@ class GroupRepresentation(PermutationSetRepresentation):
         return GroupRepresentation(perm_group)
 
 
-# Function Representation of the coordinate transforms that make up the groups.
-
-
-def e(*x):
-    return x
-
-
-def r(x):
-    # reflection in the first component
-    if isinstance(x, int):
-        x = [x]
-    x_list = list(x)
-    x_list[0] = -x_list[0]
-    return tuple(x_list)
-
-
-def r_y(x):
-    # reflection in the second component
-    if isinstance(x, int) or len(x) < 2:
-        raise ValueError("Input array too short")
-    x_list = list(x)
-    x_list[1] = -x_list[1]
-    return tuple(x_list)
-
-
-def rot(xs, rad=2*np.pi/3):
-    #  anticlockwise rotation by rad radians, default is 120 deg
-    x, y = xs[0], xs[1]
-    res = (x*np.cos(rad) - y*np.sin(rad), x*np.sin(rad) + y*np.cos(rad))
-    return res
-
-
-def sqrot(xs):
-    # 90 degree rotation
-    return rot(xs, np.pi / 2)
-
-
-def g1(xs):
-    raise NotImplementedError("Tetrahedron implementation incomplete")
-
-
-def g2(xs):
-    # 120 degree rotation clockwise
-    raise NotImplementedError("Tetrahedron implementation incomplete")
-    return rot(xs, - 2*np.pi / 3)
-
-
 def get_sym_group(n):
     return GroupRepresentation(SymmetricGroup(n))
 
@@ -427,9 +380,9 @@ A3 = GroupRepresentation(AlternatingGroup(3))
 tri_C3 = PermutationSetRepresentation([Permutation([0, 1, 2]), Permutation([2, 0, 1]), Permutation([1, 0, 2])])
 # tet_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([0, 2, 3, 1]), Permutation([1, 2, 0, 3]),
 #                                           Permutation([0, 3, 1, 2]), Permutation([1, 3, 2, 0]), Permutation([2, 3, 0, 1])])
-tet_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([2, 0, 1, 3]), Permutation([1, 2, 0, 3]),
-                                          Permutation([3, 1, 0, 2]), Permutation([0, 3, 1, 2]), Permutation([1, 0, 3, 2])])
-tet_faces = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([0, 2, 1, 3]), Permutation([1, 0, 2, 3]),
-                                          Permutation([0, 3, 1, 2])])
+tet_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([1, 2, 3, 0]), Permutation([2, 3, 0, 1]),
+                                          Permutation([1, 3, 0, 2]), Permutation([2, 0, 1, 3]), Permutation([3, 0, 1, 2])])
+tet_faces = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([1, 2, 3, 0]), Permutation([1, 3, 2, 0]),
+                                          Permutation([3, 0, 2, 1])])
 
 sq_edges = PermutationSetRepresentation([Permutation([0, 1, 2, 3]), Permutation([1, 2, 3, 0]), Permutation([3, 0, 1, 2]), Permutation([2, 3, 0, 1])])
