@@ -710,7 +710,6 @@ class CellComplexToFiatSimplex(Simplex):
 
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
-        print(topology)
         shape = cell.get_shape()
         super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
 

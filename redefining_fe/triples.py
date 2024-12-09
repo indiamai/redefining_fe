@@ -262,6 +262,28 @@ class ElementTriple():
                         ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
                         dof_gen_class = ent_dofs[0].generation[dim]
+
+                        # if not len(dof_gen_class.g2.members()) == 1:
+                        #     print("NOT PERM")
+                        #     degree = ent_dofs[0].triple.spaces[0].degree()
+                        #     nodes = [d.convert_to_fiat(ref_el, degree) for d in ent_dofs]
+                        #     new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in ent_dofs]
+                        #     sub_ref_el = ref_el.construct_subelement(dim)
+                        #     print("sub ref el", sub_ref_el.fe_cell.get_topology())
+                        #     print("sub ref el", sub_ref_el.get_spatial_dimension())
+                        #     sub_poly_set = ent_dofs[0].triple.spaces[0].to_ON_polynomial_set(sub_ref_el)
+                        #     print(new_nodes)
+                        #     print([d(g) for d in ent_dofs])
+                        #     print(entity_ids)
+                        #     print(entity_ids[e.dimension][e_id])
+                        #     print(ent_dofs_ids)
+                        #     print(sub_poly_set)
+                        #     sub_entity_ids = dof_gen_class.make_entity_ids()
+                        #     print(sub_ref_el.get_topology())
+                        #     transformed_V, transformed_basis = self.compute_dense_matrix(sub_ref_el, sub_entity_ids, new_nodes, sub_poly_set)
+                        #     original_V, original_basis = self.compute_dense_matrix(sub_ref_el, sub_entity_ids, nodes, sub_poly_set)
+                        #     print(transformed_V)
+                            # res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
                         # TODO not sure about correctness of this
                         if g.perm.is_Identity or (pure_perm and len(ent_dofs_ids) == 1):
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
@@ -271,15 +293,16 @@ class ElementTriple():
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
                             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
                         else:
-                            # sub component dense case
-                            degree = ent_dofs[0].triple.spaces[0].degree()
-                            new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in ent_dofs]
-                            sub_poly_set = ent_dofs[0].triple.spaces[0].to_ON_polynomial_set(ref_el)
-                            print(new_nodes)
-                            print([d(g) for d in ent_dofs])
-                            print(entity_ids[e.dimension][e_id])
-                            print(ent_dofs_ids)
-                            print(sub_poly_set)
+                            pass
+                            # # sub component dense case
+                            # degree = ent_dofs[0].triple.spaces[0].degree()
+                            # new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in ent_dofs]
+                            # sub_poly_set = ent_dofs[0].triple.spaces[0].to_ON_polynomial_set(ref_el)
+                            # print(new_nodes)
+                            # print([d(g) for d in ent_dofs])
+                            # print(entity_ids[e.dimension][e_id])
+                            # print(ent_dofs_ids)
+                            # print(sub_poly_set)
                             # transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, ent_dofs_ids, new_nodes, sub_poly_set)
                             # res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
 
@@ -376,6 +399,22 @@ class DOFGenerator():
             self.dof_numbers = len(self.ls)
             self.dof_ids = [dof.id for dof in self.ls]
         return self.ls
+
+    def make_entity_ids(self):
+        dofs = self.ls
+        entity_ids = {}
+        min_ids = dofs[0].cell.get_starter_ids()
+
+        top = dofs[0].cell.get_topology()
+
+        for dim in sorted(top):
+            entity_ids[dim] = {i: [] for i in top[dim]}
+
+        for i in range(len(dofs)):
+            entity = dofs[i].trace_entity
+            dim = entity.dim()
+            entity_ids[dim][entity.id - min_ids[dim]].append(i)
+        return entity_ids
 
     def __repr__(self):
         repr_str = "DOFGen("

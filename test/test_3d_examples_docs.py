@@ -60,6 +60,7 @@ def test_tet_cg3():
         print(dof)
         dof.eval(test_func)
 
+
 def construct_tet_rt(cell):
     face = cell.d_entities(2, get_class=True)[0]
     deg = 1
@@ -67,24 +68,23 @@ def construct_tet_rt(cell):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
     z = sp.Symbol("z")
-
     M = sp.Matrix([[x, y, z]])
+
     vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
     Pd = PolynomialSpace(deg - 1)
     rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
-
     xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
     dofs = DOFGenerator(xs, S1, S3)
-    face_vec = ElementTriple(face, (PolynomialSpace(1, set_shape=True), CellHDiv, "C0"), dofs)
-    ls = face_vec.generate()
+    face_vec = ElementTriple(face, (rt_space, CellHDiv, "C0"), dofs)
 
     im_xs = [immerse(cell, face_vec, TrHDiv)]
     face = DOFGenerator(im_xs, tet_faces, S4)
 
-    rt1 = ElementTriple(cell, (PolynomialSpace(1, set_shape=True), CellHDiv, "C0"),
+    rt1 = ElementTriple(cell, (rt_space, CellHDiv, "C0"),
                         [face])
     return rt1
+
 
 def test_tet_rt():
     tetra = make_tetrahedron()

@@ -6,6 +6,7 @@ from firedrake import *
 from FIAT.quadrature_schemes import create_quadrature
 from ufl.cell import simplex
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
+from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
 
 vert = Point(0)
@@ -191,7 +192,9 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
                                                          (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
                                                          (construct_nd, "N1curl", 1, tri),
-                                                         (create_dg1_tet, "DG", 1, tetra)])
+                                                         (create_dg1_tet, "DG", 1, tetra),
+                                                         pytest.param(construct_tet_rt, "RT", 1, tetra, marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
+                                                         ])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
 
@@ -237,6 +240,8 @@ def test_2d(elem_gen, elem_code, deg):
 @pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = n_sided_polygon(3)
+    fake = construct_cg3(cell)
+    print(fake.to_fiat_elem())
     elem = elem_gen(cell)
 
     diff = [0 for i in range(3, 6)]
@@ -256,6 +261,14 @@ def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     conv = np.log2(diff[:-1] / diff[1:])
     print("convergence order:", conv)
     assert (np.array(conv) > conv_rate).all()
+
+# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}, {(-0.3333333333333334, 0.577350269189626): [(1.0, ())]}, {(-0.6666666666666667, 3.3306690738754696e-16): [(1.0, ())]}, {(-0.33333333333333354, -0.5773502691896258): [(1.0, ())]}, {(0.333333333333333, -0.5773502691896261): [(1.0, ())]}, {(0.6666666666666665, -2.220446049250313e-16): [(1.0, ())]}, {(0.3333333333333333, 0.5773502691896256): [(1.0, ())]}, {(1.3075696143712455e-16, -9.491303112816474e-17): [(1.0, ())]}]
+# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [0, 1], 1: [1, 0]}, 1: {0: [0, 1], 1: [1, 0]}, 2: {0: [0, 1], 1: [1, 0]}}, 2: {0: {0: [0], 4: [0], 3: [0], 1: [0], 2: [0], 5: [0]}}}
+# <FIAT.finite_element.CiarletElement object at 0x7ff920646240>
+# my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}]
+# {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [], 1: []}, 1: {0: [], 1: []}, 2: {0: [], 1: []}}, 2: {0: {0: [], 4: [], 3: [], 1: [], 2: [], 5: []}}}
+# l2 error norms: [0.4341573028691119, 0.3880244805894439, 0.39368517563304845]
+# convergence order: [ 0.16207018 -0.02089471]
 
 
 def helmholtz_solve(mesh, V):
