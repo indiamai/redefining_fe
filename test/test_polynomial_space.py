@@ -22,8 +22,8 @@ def test_unscaled_construction():
     on_set = composite.to_ON_polynomial_set(cell)
     assert isinstance(on_set, polynomial_set.PolynomialSet)
 
-    vec_P0 = PolynomialSpace(0, 0, set_shape=True)
-    vec_P1 = PolynomialSpace(1, 1, set_shape=True)
+    vec_P0 = PolynomialSpace(0, set_shape=True)
+    vec_P1 = PolynomialSpace(1, set_shape=True)
 
     composite = vec_P0 + vec_P1
     assert composite.set_shape
@@ -54,7 +54,7 @@ def test_complete_space(deg):
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
-    Pd = PolynomialSpace(deg, deg)
+    Pd = PolynomialSpace(deg)
     my_space = Pd.to_ON_polynomial_set(cell)
 
     from FIAT.lagrange import Lagrange
@@ -151,3 +151,38 @@ def flatten(coeffs):
     newshape = (new_shape0, new_shape1)
     nc = np.reshape(coeffs, newshape)
     return nc
+
+
+@pytest.mark.parametrize("deg", [1, 2, 3, 4])
+def test_3d_rt_construction(deg):
+    cell = make_tetrahedron()
+    ref_el = cell.to_fiat()
+    sd = ref_el.get_spatial_dimension()
+    x = sp.Symbol("x")
+    y = sp.Symbol("y")
+    z = sp.Symbol("z")
+    M = sp.Matrix([[x, y, z]])
+
+    vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
+    Pd = PolynomialSpace(deg - 1)
+    composite = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+
+    assert composite.set_shape
+    assert isinstance(composite, ConstructedPolynomialSpace)
+    on_set = composite.to_ON_polynomial_set(ref_el)
+
+    from FIAT.raviart_thomas import RTSpace
+    rt_space = RTSpace(ref_el, deg)
+
+    Q = create_quadrature(ref_el, 2*(deg + 1))
+    Qpts, _ = Q.get_points(), Q.get_weights()
+    fiat_vals = rt_space.tabulate(Qpts)[(0,) * sd]
+    my_vals = on_set.tabulate(Qpts)[(0,) * sd]
+    fiat_vals = flatten(fiat_vals)
+    my_vals = flatten(my_vals)
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
