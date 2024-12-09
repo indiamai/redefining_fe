@@ -11,6 +11,7 @@ from test_polynomial_space import flatten
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
 tri = n_sided_polygon(3)
+tetra = make_tetrahedron()
 
 
 def create_dg1(cell):
@@ -36,6 +37,13 @@ def create_dg1_uneven(cell):
     dg = ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(xs, S1, S2),
                                                 DOFGenerator(center, S1, S2)])
     return dg
+
+
+def create_dg1_tet(cell):
+    xs = [DOF(DeltaPairing(), PointKernel(tuple(cell.vertices(return_coords=True)[0])))]
+    dg1 = ElementTriple(cell, (P1, CellL2, "C0"), DOFGenerator(xs, Z4, S1))
+
+    return dg1
 
 
 def create_cg1(cell):
@@ -182,7 +190,8 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
                                                          (create_cg1, "CG", 1, tri),
                                                          (create_dg1, "DG", 1, tri),
                                                          (construct_cg3, "CG", 3, tri),
-                                                         (construct_nd, "N1curl", 1, tri)])
+                                                         (construct_nd, "N1curl", 1, tri),
+                                                         (create_dg1_tet, "DG", 1, tetra)])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
 
@@ -396,6 +405,41 @@ def test_quad(params, elem_gen):
 def test_project(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
     mesh = UnitTriangleMesh()
+
+    U = FunctionSpace(mesh, elem_code, deg)
+
+    f = Function(U)
+    f.assign(1)
+
+    out = Function(U)
+    u = TrialFunction(U)
+    v = TestFunction(U)
+    a = inner(u, v)*dx
+    L = inner(f, v)*dx
+    solve(a == L, out)
+
+    assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+    U = FunctionSpace(mesh, elem.to_ufl_elem())
+
+    f = Function(U)
+    f.assign(1)
+
+    out = Function(U)
+    u = TrialFunction(U)
+    v = TestFunction(U)
+    a = inner(u, v)*dx
+    L = inner(f, v)*dx
+    solve(a == L, out)
+
+    assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+
+@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [pytest.param(create_dg1_tet, "DG", 1, tetra, marks=pytest.mark.xfail(reason='Issue with fiat vs plexcone - 3D'))])
+def test_project_3d(elem_gen, elem_code, deg, cell):
+    elem = elem_gen(cell)
+
+    mesh = UnitCubeMesh(3, 3, 3)
 
     U = FunctionSpace(mesh, elem_code, deg)
 

@@ -333,18 +333,24 @@ class Point():
         structure.reverse()
 
         min_ids = [min(dimension) for dimension in structure]
+        print(min_ids)
         self.topology = {}
+        self.topology_verts = {}
         for i in range(len(structure)):
             dimension = structure[i]
             self.topology[i] = {}
+            self.topology_verts[i] = {}
             for node in dimension:
                 neighbours = list(self.G.neighbors(node))
+                self.topology_verts[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
                 if len(neighbours) > 0:
                     renumbered_neighbours = tuple([neighbour - min_ids[i-1] for neighbour in neighbours])
                     self.topology[i][node - min_ids[i]] = renumbered_neighbours
                 else:
                     self.topology[i][node - min_ids[i]] = (node - min_ids[i], )
-        return self.topology
+        print("top", self.topology)
+        print("verts", self.topology_verts)
+        return self.topology_verts
 
     def get_starter_ids(self):
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
@@ -704,6 +710,7 @@ class CellComplexToFiatSimplex(Simplex):
 
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
+        print(topology)
         shape = cell.get_shape()
         super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
 
