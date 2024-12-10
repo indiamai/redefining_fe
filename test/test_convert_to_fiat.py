@@ -36,9 +36,17 @@ def create_dg1_uneven(cell):
 
 def create_dg1_tet(cell):
     xs = [DOF(DeltaPairing(), PointKernel(tuple(cell.vertices(return_coords=True)[0])))]
-    dg1 = ElementTriple(cell, (P1, CellL2, "C0"), DOFGenerator(xs, Z4, S1))
+    dg1 = ElementTriple(cell, (P1, CellL2, C0), DOFGenerator(xs, Z4, S1))
 
     return dg1
+
+
+def create_cr(cell):
+    Pk = PolynomialSpace(1)
+    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1))
+    edge_xs = [immerse(cell, edge_dg0, TrH1)]
+
+    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1)])
 
 
 def create_cg1(cell):
@@ -406,6 +414,7 @@ def test_quad(params, elem_gen):
 @pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
                                                     (create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
+                                                    (create_cr, "CR", 1),
                                                     (construct_cg3, "CG", 3),
                                                     pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
                                                     pytest.param(construct_rt, "RT", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
