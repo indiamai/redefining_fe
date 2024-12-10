@@ -4,8 +4,6 @@ import numpy as np
 
 np.set_printoptions(legacy="1.25")
 
-np.set_printoptions(legacy="1.25")
-
 
 def construct_dg0():
     # [test_dg0 0]

@@ -235,9 +235,9 @@ class ElementTriple():
                 else:
                     cell_dict[dof_gen] = [d]
 
-        # if pure_perm is False:
-        #     # TODO think about where this call goes
-        #     return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
+        if pure_perm is False:
+            # TODO think about where this call goes
+            return self.make_overall_dense_matrices(ref_el, entity_ids, nodes, poly_set), pure_perm
 
         dof_id_mat = np.eye(len(dofs))
         oriented_mats_by_entity = {}
@@ -283,7 +283,7 @@ class ElementTriple():
                         #     transformed_V, transformed_basis = self.compute_dense_matrix(sub_ref_el, sub_entity_ids, new_nodes, sub_poly_set)
                         #     original_V, original_basis = self.compute_dense_matrix(sub_ref_el, sub_entity_ids, nodes, sub_poly_set)
                         #     print(transformed_V)
-                            # res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
+                        #     res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
                         # TODO not sure about correctness of this
                         if g.perm.is_Identity or (pure_perm and len(ent_dofs_ids) == 1):
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
@@ -493,7 +493,6 @@ class IndiaTripleUFL(finat.ufl.FiniteElementBase):
 
         # this isn't really correct
         degree = self.triple.spaces[0].degree()
-
         super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape())
 
     def __repr__(self):

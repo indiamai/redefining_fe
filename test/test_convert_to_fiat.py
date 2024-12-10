@@ -4,15 +4,9 @@ import numpy as np
 from redefining_fe import *
 from firedrake import *
 from FIAT.quadrature_schemes import create_quadrature
-from ufl.cell import simplex
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
-
-vert = Point(0)
-edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-tri = n_sided_polygon(3)
-tetra = make_tetrahedron()
 
 
 def create_dg1(cell):
@@ -99,8 +93,8 @@ def create_cg2_tri(cell):
     return cg
 
 
-@pytest.mark.parametrize("cell", [tri])
-def test_create_fiat_nd(cell):
+def test_create_fiat_nd():
+    cell = n_sided_polygon(3)
     nd = construct_nd(cell)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
@@ -126,8 +120,8 @@ def test_create_fiat_nd(cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("cell", [tri])
-def test_create_fiat_rt(cell):
+def test_create_fiat_rt():
+    cell = n_sided_polygon(3)
     rt = construct_rt(cell)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
@@ -153,11 +147,12 @@ def test_create_fiat_rt(cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, edge),
-                                                         (create_dg1, "DG", 1, edge),
-                                                         (create_dg2, "DG", 2, edge),
-                                                         (create_cg2, "CG", 2, edge)])
-def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
+@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg1, "CG", 1),
+                                                    (create_dg1, "DG", 1),
+                                                    (create_dg2, "DG", 2),
+                                                    (create_cg2, "CG", 2)])
+def test_create_fiat_lagrange(elem_gen, elem_code, deg):
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
     elem = elem_gen(cell)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
@@ -183,17 +178,17 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg, cell):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, edge),
-                                                         (create_dg1, "DG", 1, edge),
-                                                         (create_dg2, "DG", 2, edge),
-                                                         (create_cg2, "CG", 2, edge),
-                                                         (create_cg2_tri, "CG", 2, tri),
-                                                         (create_cg1, "CG", 1, tri),
-                                                         (create_dg1, "DG", 1, tri),
-                                                         (construct_cg3, "CG", 3, tri),
-                                                         (construct_nd, "N1curl", 1, tri),
-                                                         (create_dg1_tet, "DG", 1, tetra),
-                                                         pytest.param(construct_tet_rt, "RT", 1, tetra, marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
+@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                                         (create_dg1, "DG", 1, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                                         (create_dg2, "DG", 2, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                                         (create_cg2, "CG", 2, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                                         (create_cg2_tri, "CG", 2, n_sided_polygon(3)),
+                                                         (create_cg1, "CG", 1, n_sided_polygon(3)),
+                                                         (create_dg1, "DG", 1, n_sided_polygon(3)),
+                                                         (construct_cg3, "CG", 3, n_sided_polygon(3)),
+                                                         (construct_nd, "N1curl", 1, n_sided_polygon(3)),
+                                                         (create_dg1_tet, "DG", 1, make_tetrahedron()),
+                                                         pytest.param(construct_tet_rt, "RT", 1, make_tetrahedron(), marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
                                                          ])
 def test_entity_perms(elem_gen, elem_code, deg, cell):
     elem = elem_gen(cell)
@@ -207,7 +202,7 @@ def test_entity_perms(elem_gen, elem_code, deg, cell):
                                                     (create_cg2, "CG", 2)
                                                     ])
 def test_2d(elem_gen, elem_code, deg):
-    cell = edge
+    cell = Point(1, [Point(0), Point(0)], vertex_num=2)
     elem = elem_gen(cell)
 
     mesh = UnitIntervalMesh(5)
@@ -240,8 +235,6 @@ def test_2d(elem_gen, elem_code, deg):
 @pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = n_sided_polygon(3)
-    fake = construct_cg3(cell)
-    print(fake.to_fiat_elem())
     elem = elem_gen(cell)
 
     diff = [0 for i in range(3, 6)]
@@ -285,85 +278,85 @@ def helmholtz_solve(mesh, V):
     return sqrt(assemble(dot(u - f, u - f) * dx))
 
 
-@pytest.mark.parametrize("cell", [vert, edge, tri])
-def test_ufl_cell_conversion(cell):
-    existing_cell = simplex(len(cell.vertices()))
-    print(type(existing_cell))
-    ufl_cell = cell.to_ufl()
-    print(isinstance(ufl_cell, ufl.Cell))
-    print(ufl_cell.cell_complex)
-    print(ufl_cell.cellname())
+# @pytest.mark.parametrize("cell", [vert, edge, tri])
+# def test_ufl_cell_conversion(cell):
+#     existing_cell = simplex(len(cell.vertices()))
+#     print(type(existing_cell))
+#     ufl_cell = cell.to_ufl()
+#     print(isinstance(ufl_cell, ufl.Cell))
+#     print(ufl_cell.cell_complex)
+#     print(ufl_cell.cellname())
 
 
-@pytest.mark.parametrize("cell", [edge])
-def test_functional_evaluation(cell):
-    cg = create_cg1(cell)
-    cg_f = create_cg1_flipped(cell)
-    ref_el = cell.to_fiat()
-    deg = 1
+# @pytest.mark.parametrize("cell", [edge])
+# def test_functional_evaluation(cell):
+#     cg = create_cg1(cell)
+#     cg_f = create_cg1_flipped(cell)
+#     ref_el = cell.to_fiat()
+#     deg = 1
 
-    from FIAT.lagrange import Lagrange
-    fiat_elem = Lagrange(ref_el, deg)
-    my_elem = cg.to_fiat_elem()
-    my_elem_f = cg_f.to_fiat_elem()
+#     from FIAT.lagrange import Lagrange
+#     fiat_elem = Lagrange(ref_el, deg)
+#     my_elem = cg.to_fiat_elem()
+#     my_elem_f = cg_f.to_fiat_elem()
 
-    print([n.pt_dict for n in my_elem.dual.nodes])
-    print([n.pt_dict for n in my_elem_f.dual.nodes])
-    print([n.pt_dict for n in fiat_elem.dual.nodes])
+#     print([n.pt_dict for n in my_elem.dual.nodes])
+#     print([n.pt_dict for n in my_elem_f.dual.nodes])
+#     print([n.pt_dict for n in fiat_elem.dual.nodes])
 
-    print("my poly set")
-    print(np.matmul(my_elem.V, my_elem.get_coeffs().T))
-    print(np.matmul(my_elem_f.V, my_elem.get_coeffs().T))
-    # print(np.matmul(fiat_elem.V.T, my_elem.get_coeffs()))
+#     print("my poly set")
+#     print(np.matmul(my_elem.V, my_elem.get_coeffs().T))
+#     print(np.matmul(my_elem_f.V, my_elem.get_coeffs().T))
+#     # print(np.matmul(fiat_elem.V.T, my_elem.get_coeffs()))
 
-    print("my poly set")
-    print(np.matmul(my_elem.V, my_elem_f.get_coeffs().T))
-    print(np.matmul(my_elem_f.V, my_elem_f.get_coeffs().T))
-
-
-@pytest.mark.parametrize("cell", [edge])
-def test_functional_evaluation_uneven(cell):
-    dg = create_dg1(cell)
-    dg_f = create_dg1_uneven(cell)
-
-    print("EVEN")
-    my_elem = dg.to_fiat_elem()
-    print("UNEVEN")
-    my_elem_f = dg_f.to_fiat_elem()
-    print(my_elem_f)
-    print(my_elem)
+#     print("my poly set")
+#     print(np.matmul(my_elem.V, my_elem_f.get_coeffs().T))
+#     print(np.matmul(my_elem_f.V, my_elem_f.get_coeffs().T))
 
 
-@pytest.mark.parametrize("cell", [tri])
-def test_functional_evaluation_vector(cell):
-    rt = construct_rt(cell)
+# @pytest.mark.parametrize("cell", [edge])
+# def test_functional_evaluation_uneven(cell):
+#     dg = create_dg1(cell)
+#     dg_f = create_dg1_uneven(cell)
 
-    from FIAT.raviart_thomas import RaviartThomas
-    ref_el = cell.to_fiat()
-    deg = 1
-    fiat_elem = RaviartThomas(ref_el, deg)
-    my_elem = rt.to_fiat_elem()
-    print(my_elem)
-    print(fiat_elem)
-    # deg = 1
+#     print("EVEN")
+#     my_elem = dg.to_fiat_elem()
+#     print("UNEVEN")
+#     my_elem_f = dg_f.to_fiat_elem()
+#     print(my_elem_f)
+#     print(my_elem)
 
-    # x = sp.Symbol("x")
-    # y = sp.Symbol("y")
 
-    # M = sp.Matrix([[x, y]])
-    # vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
-    # Pd = PolynomialSpace(deg - 1)
-    # rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
+# @pytest.mark.parametrize("cell", [tri])
+# def test_functional_evaluation_vector(cell):
+#     rt = construct_rt(cell)
 
-    # tri = n_sided_polygon(3)
-    # edge = tri.edges(get_class=True)[0]
+#     from FIAT.raviart_thomas import RaviartThomas
+#     ref_el = cell.to_fiat()
+#     deg = 1
+#     fiat_elem = RaviartThomas(ref_el, deg)
+#     my_elem = rt.to_fiat_elem()
+#     print(my_elem)
+#     print(fiat_elem)
+#     # deg = 1
 
-    # xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
-    # dofs = DOFGenerator(xs, S1, S2)
+#     # x = sp.Symbol("x")
+#     # y = sp.Symbol("y")
 
-    # int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+#     # M = sp.Matrix([[x, y]])
+#     # vec_Pd = PolynomialSpace(deg - 1, set_shape=True)
+#     # Pd = PolynomialSpace(deg - 1)
+#     # rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
-    # int_rt.to_fiat_elem()
+#     # tri = n_sided_polygon(3)
+#     # edge = tri.edges(get_class=True)[0]
+
+#     # xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
+#     # dofs = DOFGenerator(xs, S1, S2)
+
+#     # int_rt = ElementTriple(edge, (P1, CellHDiv, C0), dofs)
+
+#     # int_rt.to_fiat_elem()
 
 
 def run_test(r, elem, parameters={}, quadrilateral=False):
@@ -371,7 +364,8 @@ def run_test(r, elem, parameters={}, quadrilateral=False):
     mesh = UnitSquareMesh(2 ** r, 2 ** r, quadrilateral=quadrilateral)
     x = SpatialCoordinate(mesh)
     V = FunctionSpace(mesh, elem)
-
+    print(elem)
+    print(V)
     # Define variational problem
     u = Function(V)
     v = TestFunction(V)
@@ -409,13 +403,14 @@ def test_quad(params, elem_gen):
     assert (run_test(2, elem.to_ufl_elem(), parameters=params, quadrilateral=True) < 1.e-9)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg2_tri, "CG", 2, tri),
-                                                         (create_cg1, "CG", 1, tri),
-                                                         (create_dg1, "DG", 1, tri),
-                                                         (construct_cg3, "CG", 3, tri),
-                                                         pytest.param(construct_nd, "N1curl", 1, tri, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
-                                                         pytest.param(construct_rt, "RT", 1, tri, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
-def test_project(elem_gen, elem_code, deg, cell):
+@pytest.mark.parametrize("elem_gen,elem_code,deg", [(create_cg2_tri, "CG", 2),
+                                                    (create_cg1, "CG", 1),
+                                                    (create_dg1, "DG", 1),
+                                                    (construct_cg3, "CG", 3),
+                                                    pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
+                                                    pytest.param(construct_rt, "RT", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
+def test_project(elem_gen, elem_code, deg):
+    cell = n_sided_polygon(3)
     elem = elem_gen(cell)
     mesh = UnitTriangleMesh()
 
@@ -448,8 +443,9 @@ def test_project(elem_gen, elem_code, deg, cell):
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [pytest.param(create_dg1_tet, "DG", 1, tetra, marks=pytest.mark.xfail(reason='Issue with fiat vs plexcone - 3D'))])
-def test_project_3d(elem_gen, elem_code, deg, cell):
+@pytest.mark.parametrize("elem_gen,elem_code,deg", [pytest.param(create_dg1_tet, "DG", 1, marks=pytest.mark.xfail(reason='Issue with fiat vs plexcone - 3D'))])
+def test_project_3d(elem_gen, elem_code, deg):
+    cell = make_tetrahedron()
     elem = elem_gen(cell)
 
     mesh = UnitCubeMesh(3, 3, 3)

@@ -190,7 +190,10 @@ class PolynomialKernel(BaseKernel):
         return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        return sympy_to_numpy(self.fn, self.syms, args[:len(self.syms)])
+        res = sympy_to_numpy(self.fn, self.syms, args[:len(self.syms)])
+        if not hasattr(res, '__iter__'):
+            return [res]
+        return res
 
     def tabulate(self, Qpts):
         return np.array([self(*pt) for pt in Qpts]).astype(np.float64)
