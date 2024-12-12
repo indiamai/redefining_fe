@@ -258,9 +258,11 @@ class ElementTriple():
                     val = g.numeric_rep()
                     oriented_mats_by_entity[dim][e_id][val] = dof_id_mat.copy()
                     flat_by_entity[dim][e_id][val] = []
+                    total_ent_dof_ids = []
                     for dof_gen in entity_associations[dim][e_id].keys():
                         ent_dofs = entity_associations[dim][e_id][dof_gen]
                         ent_dofs_ids = np.array([ed.id for ed in ent_dofs], dtype=int)
+                        total_ent_dof_ids += [ed.id for ed in ent_dofs]
                         dof_gen_class = ent_dofs[0].generation[dim]
 
                         # if not len(dof_gen_class.g2.members()) == 1:
@@ -287,24 +289,13 @@ class ElementTriple():
                         # TODO not sure about correctness of this
                         if g.perm.is_Identity or (pure_perm and len(ent_dofs_ids) == 1):
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
-                            flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(np.eye(len(ent_dofs_ids)))
                         elif g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
-                            flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(sub_mat)
                         else:
                             pass
                             # # sub component dense case
-                            # degree = ent_dofs[0].triple.spaces[0].degree()
-                            # new_nodes = [d(g).convert_to_fiat(ref_el, degree) for d in ent_dofs]
-                            # sub_poly_set = ent_dofs[0].triple.spaces[0].to_ON_polynomial_set(ref_el)
-                            # print(new_nodes)
-                            # print([d(g) for d in ent_dofs])
-                            # print(entity_ids[e.dimension][e_id])
-                            # print(ent_dofs_ids)
-                            # print(sub_poly_set)
-                            # transformed_V, transformed_basis = self.compute_dense_matrix(ref_el, ent_dofs_ids, new_nodes, sub_poly_set)
-                            # res_dict[dim][e_id][val] = np.matmul(transformed_basis, original_V.T)
+                    flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(oriented_mats_by_entity[dim][e_id][val][np.ix_(total_ent_dof_ids, total_ent_dof_ids)])
 
         oriented_mats_overall = {}
         dim = self.cell.dim()
@@ -326,24 +317,22 @@ class ElementTriple():
                         for sub_e, sub_g in e.permute_entities(g, immersed_dim):
                             sub_e = e.get_node(sub_e)
                             sub_e_id = sub_e.id - min_ids[sub_e.dim()]
-                            sub_ent_assoc = entity_associations[immersed_dim][sub_e_id][str(dof_gen_class[immersed_dim])]
-                            sub_mat = oriented_mats_by_entity[immersed_dim][sub_e_id][sub_g.numeric_rep()][np.ix_(ent_dofs_ids, ent_dofs_ids)]
-
+                            sub_ent_ids = []
+                            for (k, v) in entity_associations[immersed_dim][sub_e_id].items():
+                                sub_ent_ids += [e.id for e in v]
+                            sub_mat = oriented_mats_by_entity[immersed_dim][sub_e_id][sub_g.numeric_rep()][np.ix_(sub_ent_ids, sub_ent_ids)]
                             g_sub_mat = g.matrix_form()
-                            expanded = np.kron(g_sub_mat, np.eye(len(sub_ent_assoc)))
-                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.matmul(sub_mat, expanded).copy()
+                            expanded = np.kron(g_sub_mat, sub_mat)
+                            # potentially permute the dof ids instead
+                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = expanded.copy()
                     elif len(dof_gen_class.keys()) == 1:
-                        if g in dof_gen_class[dim].g1.members():
-                            sub_mat = g.matrix_form()
-                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
-                        elif pure_perm and len(dof_gen_class[dim].g1.members()) > 1:
+                        if g in dof_gen_class[dim].g1.members() or (pure_perm and len(dof_gen_class[dim].g1.members()) > 1):
                             sub_mat = g.matrix_form()
                             oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
 
         for val, mat in oriented_mats_overall.items():
             cell_dofs = entity_ids[dim][0]
             flat_by_entity[dim][e_id][val] = perm_matrix_to_perm_array(mat[np.ix_(cell_dofs, cell_dofs)])
-
         return flat_by_entity, pure_perm
 
     def _to_dict(self):

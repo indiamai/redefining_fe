@@ -1,8 +1,8 @@
 import pytest
 import numpy as np
-# import sympy as sp
 from redefining_fe import *
 from firedrake import *
+from sympy.combinatorics import Permutation
 from FIAT.quadrature_schemes import create_quadrature
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
@@ -47,6 +47,36 @@ def create_cr(cell):
     edge_xs = [immerse(cell, edge_dg0, TrH1)]
 
     return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1)])
+
+
+def create_cr3(cell):
+    Pk = PolynomialSpace(3)  # This is not the right polyspace - TODO method for solving stokes 1973
+    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((-np.sqrt(3/5),)))], S2, S1),
+                                                                               DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
+    edge_xs = [immerse(cell, edge_dg0, TrH1)]
+
+    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1)])
+
+
+def create_fortin_soulie(cell):
+    Pk = PolynomialSpace(2)
+    edge_2 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((-1/3,)))], S2, S1)])
+    edge_1 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
+    edge_2xs = [immerse(cell, edge_2, TrH1)]
+    edge_1xs = [immerse(cell, edge_1, TrH1, node=1)]
+
+    group_2 = PermutationSetRepresentation([Permutation([2, 0, 1]), Permutation([0, 1, 2])])
+    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_2xs, group_2, S1), DOFGenerator(edge_1xs, S1, S1)])
+
+
+def create_cf(cell):
+    Pk = PolynomialSpace(3)
+    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((-1/2,)))], S2, S1),
+                                                                               DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
+    edge_xs = [immerse(cell, edge_dg0, TrH1)]
+    center = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+
+    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1), DOFGenerator(center, S1, S1)])
 
 
 def create_cg1(cell):
@@ -186,19 +216,22 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,cell", [(create_cg1, "CG", 1, Point(1, [Point(0), Point(0)], vertex_num=2)),
-                                                         (create_dg1, "DG", 1, Point(1, [Point(0), Point(0)], vertex_num=2)),
-                                                         (create_dg2, "DG", 2, Point(1, [Point(0), Point(0)], vertex_num=2)),
-                                                         (create_cg2, "CG", 2, Point(1, [Point(0), Point(0)], vertex_num=2)),
-                                                         (create_cg2_tri, "CG", 2, n_sided_polygon(3)),
-                                                         (create_cg1, "CG", 1, n_sided_polygon(3)),
-                                                         (create_dg1, "DG", 1, n_sided_polygon(3)),
-                                                         (construct_cg3, "CG", 3, n_sided_polygon(3)),
-                                                         (construct_nd, "N1curl", 1, n_sided_polygon(3)),
-                                                         (create_dg1_tet, "DG", 1, make_tetrahedron()),
-                                                         pytest.param(construct_tet_rt, "RT", 1, make_tetrahedron(), marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
-                                                         ])
-def test_entity_perms(elem_gen, elem_code, deg, cell):
+@pytest.mark.parametrize("elem_gen, cell", [(create_cg1, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                            (create_dg1, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                            (create_dg2, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                            (create_cg2, Point(1, [Point(0), Point(0)], vertex_num=2)),
+                                            (create_cg2_tri, n_sided_polygon(3)),
+                                            (create_cg1, n_sided_polygon(3)),
+                                            (create_dg1, n_sided_polygon(3)),
+                                            (construct_cg3, n_sided_polygon(3)),
+                                            (construct_nd, n_sided_polygon(3)),
+                                            (create_cr, n_sided_polygon(3)),
+                                            (create_cf, n_sided_polygon(3)),
+                                            pytest.param(create_fortin_soulie, n_sided_polygon(3), marks=pytest.mark.xfail(reason='Entity perms for non symmetric elements')),
+                                            (create_dg1_tet, make_tetrahedron()),
+                                            pytest.param(construct_tet_rt, make_tetrahedron(), marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
+                                            ])
+def test_entity_perms(elem_gen, cell):
     elem = elem_gen(cell)
 
     print(elem.to_fiat_elem())
@@ -415,6 +448,7 @@ def test_quad(params, elem_gen):
                                                     (create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
                                                     (create_cr, "CR", 1),
+                                                    (create_cf, "CR", 1),
                                                     (construct_cg3, "CG", 3),
                                                     pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
                                                     pytest.param(construct_rt, "RT", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
