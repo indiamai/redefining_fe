@@ -1,6 +1,7 @@
 from redefining_fe import *
 from redefining_fe.serialisation import ElementSerialiser
 from test_convert_to_fiat import create_cg1
+# from test_2d_examples_docs import construct_nd
 import numpy as np
 
 vert = Point(0)
@@ -55,3 +56,15 @@ def test_cg_examples():
         for d in decoded.generate():
             dof_val = d.eval(MyTestFunction(lambda *x: x))
             assert any([np.allclose(dof_val, dof_val2) for dof_val2 in dofs])
+
+
+# def test_ned():
+#     cell = n_sided_polygon(3)
+#     triple = construct_nd(cell)
+#     converter = ElementSerialiser()
+#     encoded = converter.encode(triple)
+
+#     decoded = converter.decode(encoded)
+#     for d in decoded.generate():
+#         dof_val = d.eval(phi_2)
+#         assert any([np.allclose(dof_val, dof_val2) for dof_val2 in dofs])

@@ -50,12 +50,13 @@ def create_cr(cell):
 
 
 def create_cr3(cell):
-    Pk = PolynomialSpace(3)  # This is not the right polyspace - TODO method for solving stokes 1973
+    Pk = PolynomialSpace(3)
     edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((-np.sqrt(3/5),)))], S2, S1),
                                                                                DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
     edge_xs = [immerse(cell, edge_dg0, TrH1)]
+    center = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 
-    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1)])
+    return ElementTriple(cell, (Pk, CellL2, C0), [DOFGenerator(edge_xs, C3, S1), DOFGenerator(center, S1, S1)])
 
 
 def create_fortin_soulie(cell):
@@ -71,8 +72,9 @@ def create_fortin_soulie(cell):
 
 def create_cf(cell):
     Pk = PolynomialSpace(3)
-    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0), [DOFGenerator([DOF(DeltaPairing(), PointKernel((-1/2,)))], S2, S1),
-                                                                               DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
+    edge_dg0 = ElementTriple(cell.edges(get_class=True)[0], (Pk, CellL2, C0),
+                             [DOFGenerator([DOF(DeltaPairing(), PointKernel((-1/2,)))], S2, S1),
+                              DOFGenerator([DOF(DeltaPairing(), PointKernel((0,)))], S1, S1)])
     edge_xs = [immerse(cell, edge_dg0, TrH1)]
     center = [DOF(DeltaPairing(), PointKernel((0, 0)))]
 
@@ -448,7 +450,8 @@ def test_quad(params, elem_gen):
                                                     (create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
                                                     (create_cr, "CR", 1),
-                                                    (create_cf, "CR", 1),
+                                                    (create_cr3, "CR", 1),
+                                                    (create_cf, "CR", 1),  # Don't think Crouzeix Falk in in Firedrake
                                                     (construct_cg3, "CG", 3),
                                                     pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
                                                     pytest.param(construct_rt, "RT", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed'))])
