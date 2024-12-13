@@ -41,7 +41,7 @@ class PolynomialSpace(object):
         return self.mindegree == self.maxdegree
 
     def degree(self):
-        return self.mindegree
+        return self.maxdegree
 
     def to_ON_polynomial_set(self, ref_el, k=None):
         # how does super/sub degrees work here
@@ -53,15 +53,17 @@ class PolynomialSpace(object):
         else:
             shape = tuple()
 
-        base_ON = ONPolynomialSet(ref_el, self.maxdegree, shape, scale="orthonormal")
         if self.mindegree > 0:
+            base_ON = ONPolynomialSet(ref_el, self.maxdegree, shape, scale="orthonormal")
             dimPmin = expansions.polynomial_dimension(ref_el, self.mindegree)
             dimPmax = expansions.polynomial_dimension(ref_el, self.maxdegree)
-
-            indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
+            if self.set_shape:
+                indices = list(chain(*(range(i * dimPmin, i * dimPmax) for i in range(sd))))
+            else:
+                indices = list(range(dimPmin, dimPmax))
             restricted_ON = base_ON.take(indices)
             return restricted_ON
-        return base_ON
+        return ONPolynomialSet(ref_el, self.maxdegree, shape, scale="orthonormal")
 
     def __repr__(self):
         res = ""
