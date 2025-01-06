@@ -13,7 +13,7 @@ def test_numerical_orientations():
     # group = S2.add_cell(edge)
     print(edge.group.compute_num_reps())
 
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     # group = S3.add_cell(cell)
     print(cell.group.compute_num_reps())
     print(cell.group.compute_num_reps(base_val=5))
@@ -25,7 +25,7 @@ def test_numerical_orientations():
 
 def test_permsets():
 
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     p = Permutation([0, 2, 1])
     print(p.size)
     print(p.is_Identity)
@@ -70,7 +70,7 @@ def test_permsets():
 
 
 def test_conj():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     g = cell.group.members()[4]
     print("g", g)
 
@@ -102,7 +102,7 @@ def test_conj():
 
 
 # def test_group_equality():
-#     cell = n_sided_polygon(3)
+#     cell = polygon(3)
 
 #     s1 = S1.add_cell(cell)
 #     s1_new = S1.add_cell(cell)
@@ -117,7 +117,7 @@ def test_conj():
     # assert not s1 == s1_new
 
 def test_perm_mat_conversion():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     cS3 = S3.add_cell(cell)
 
     for g in cS3.members():

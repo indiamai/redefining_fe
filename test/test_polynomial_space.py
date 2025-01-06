@@ -9,14 +9,14 @@ import pytest
 
 
 def test_instantiation():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
 
     on_set = P2.to_ON_polynomial_set(cell)
     assert isinstance(on_set, ONPolynomialSet)
 
 
 def test_unscaled_construction():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     composite = P0 + P1
     assert not composite.set_shape
     on_set = composite.to_ON_polynomial_set(cell)
@@ -32,7 +32,7 @@ def test_unscaled_construction():
 
 
 def test_restriction():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     restricted = P3.restrict(2, 3)
 
     # doesn't contain constants
@@ -50,7 +50,7 @@ def test_restriction():
 
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_complete_space(deg):
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 
@@ -77,7 +77,7 @@ def test_complete_space(deg):
 
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_rt_construction(deg):
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
     x = sp.Symbol("x")
@@ -111,7 +111,7 @@ def test_rt_construction(deg):
 
 @pytest.mark.parametrize("deg", [1, 2, 3, 4])
 def test_nedelec_construction(deg):
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     ref_el = cell.to_fiat()
     sd = ref_el.get_spatial_dimension()
 

@@ -27,7 +27,7 @@ def triangle_coords(n, verts=[(-1, -np.sqrt(3)/3), (0, 2*np.sqrt(3)/3), (1, -np.
 
 
 def CR_n(deg):
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     points = np.polynomial.legendre.leggauss(deg)[0]
     print(points)
     Pk = PolynomialSpace(3)

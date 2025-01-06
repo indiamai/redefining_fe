@@ -23,9 +23,9 @@ def test_dg1():
 
 def test_tet_cg3():
     tetra = make_tetrahedron()
-    vert = tetra.vertices(get_class=True)[0]
-    edge = tetra.edges(get_class=True)[0]
-    face = tetra.d_entities(2, get_class=True)[0]
+    vert = tetra.vertices()[0]
+    edge = tetra.edges()[0]
+    face = tetra.d_entities(2)[0]
 
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(vert, (P0, CellL2, "C0"),
@@ -74,7 +74,7 @@ def construct_tet_rt(cell):
     Pd = PolynomialSpace(deg - 1)
     rt_space = vec_Pd + (Pd.restrict(deg - 2, deg - 1))*M
 
-    xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
+    xs = [DOF(L2Pairing(), PolynomialKernel(1))]
     dofs = DOFGenerator(xs, S1, S3)
     face_vec = ElementTriple(face, (rt_space, CellHDiv, "C0"), dofs)
 
@@ -97,9 +97,9 @@ def test_tet_rt():
 
 def test_tet_ned():
     tetra = make_tetrahedron()
-    edge = tetra.edges(get_class=True)[0]
+    edge = tetra.edges()[0]
 
-    xs = [DOF(L2InnerProd(), PolynomialKernel(1))]
+    xs = [DOF(L2Pairing(), PolynomialKernel(1))]
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, "C0"), dofs)
     ls = int_ned.generate()

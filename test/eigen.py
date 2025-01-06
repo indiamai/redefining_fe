@@ -22,10 +22,10 @@ target_eigenvalue = 9
 # exact eigenvalues are n^2 + m^2, n, m \in \mathbb{N}
 exact_eigenvalues = [2, 5, 5, 8, 10, 10, 13, 13, 17, 17, 18, 20, 20, 25, 25, 26, 26]
 
-cg3 = construct_cg3(n_sided_polygon(3))
-cr3 = create_cr3(n_sided_polygon(3))
-cr1 = create_cr(n_sided_polygon(3))
-cg1 = create_cg1(n_sided_polygon(3))
+cg3 = construct_cg3(polygon(3))
+cr3 = create_cr3(polygon(3))
+cr1 = create_cr(polygon(3))
+cg1 = create_cg1(polygon(3))
 
 for N in [50, 100, 200]:
     mesh = RectangleMesh(N, N, pi, pi)

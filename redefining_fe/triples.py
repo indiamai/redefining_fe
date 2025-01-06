@@ -1,6 +1,6 @@
 from redefining_fe.cells import Point
 from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
-from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
+from redefining_fe.dof import DeltaPairing, L2Pairing, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
 from redefining_fe.groups import perm_matrix_to_perm_array
 from FIAT.dual_set import DualSet
@@ -84,10 +84,10 @@ class ElementTriple():
         else:
             return ()
 
-    def to_ufl_elem(self):
+    def to_ufl(self):
         return FuseElement(self)
 
-    def to_fiat_elem(self):
+    def to_fiat(self):
         ref_el = self.cell.to_fiat()
         dofs = self.generate()
         degree = self.spaces[0].degree()
@@ -135,7 +135,7 @@ class ElementTriple():
                 center, color = self.get_dof_info(dof)
                 if isinstance(dof.pairing, DeltaPairing) and isinstance(dof.kernel, PointKernel):
                     coord = dof.eval(identity, pullback=False)
-                elif isinstance(dof.pairing, L2InnerProd):
+                elif isinstance(dof.pairing, L2Pairing):
                     coord = center
                 if len(coord) == 1:
                     coord = (coord[0], 0)
@@ -160,7 +160,7 @@ class ElementTriple():
                         dof.target_space.plot(ax, coord, dof.trace_entity, dof.g, color=color)
                     else:
                         ax.scatter(*coord, color=color)
-                elif isinstance(dof.pairing, L2InnerProd):
+                elif isinstance(dof.pairing, L2Pairing):
                     dof.target_space.plot(ax, center, dof.trace_entity, dof.g, color=color, length=0.2)
                 ax.text(*coord, dof.id)
 
@@ -208,7 +208,7 @@ class ElementTriple():
     def make_dof_perms(self, ref_el, entity_ids, nodes, poly_set):
         dofs = self.generate()
         min_ids = self.cell.get_starter_ids()
-        entity_associations = {dim: {e.id - min_ids[dim]: {} for e in self.cell.d_entities(dim, get_class=True)}
+        entity_associations = {dim: {e.id - min_ids[dim]: {} for e in self.cell.d_entities(dim)}
                                for dim in range(self.cell.dim() + 1)}
         cell_dim = self.cell.dim()
         cell_dict = entity_associations[cell_dim][self.cell.id - min_ids[cell_dim]]
@@ -248,7 +248,7 @@ class ElementTriple():
         for dim in range(self.cell.dim()):
             oriented_mats_by_entity[dim] = {}
             flat_by_entity[dim] = {}
-            ents = self.cell.d_entities(dim, get_class=True)
+            ents = self.cell.d_entities(dim)
             for e in ents:
                 e_id = e.id - min_ids[dim]
                 members = e.group.members()

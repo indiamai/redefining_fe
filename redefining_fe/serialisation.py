@@ -39,7 +39,7 @@ class ElementSerialiser():
                           "ImmersedDOF": ImmersedDOFs,
                           "DOFGen": DOFGenerator,
                           "Delta": DeltaPairing,
-                          "L2Inner": L2InnerProd,
+                          "L2Inner": L2Pairing,
                           "PolynomialKernel": PolynomialKernel,
                           "PointKernel": PointKernel,
                           "Trace": Trace

@@ -6,7 +6,7 @@ import numpy as np
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-tri = n_sided_polygon(3)
+tri = polygon(3)
 
 
 def test_dg_examples():
@@ -59,7 +59,7 @@ def test_cg_examples():
 
 
 # def test_ned():
-#     cell = n_sided_polygon(3)
+#     cell = polygon(3)
 #     triple = construct_nd(cell)
 #     converter = ElementSerialiser()
 #     encoded = converter.encode(triple)

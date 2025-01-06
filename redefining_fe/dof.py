@@ -55,12 +55,12 @@ class DeltaPairing(Pairing):
         return new_obj
 
 
-class L2InnerProd(Pairing):
+class L2Pairing(Pairing):
     """ need to think about the abstraction level here -
     are we wanting to define them as quadrature now? or defer this?
     """
     def __init__(self):
-        super(L2InnerProd, self).__init__()
+        super(L2Pairing, self).__init__()
 
     def __call__(self, kernel, v, cell):
         # print(self.entity)
@@ -86,7 +86,7 @@ class L2InnerProd(Pairing):
         pass
 
     def add_entity(self, entity):
-        res = L2InnerProd()
+        res = L2Pairing()
         res.entity = entity
         return res
 
@@ -113,7 +113,7 @@ class L2InnerProd(Pairing):
         return "L2Inner"
 
     def _from_dict(obj_dict):
-        new_obj = L2InnerProd()
+        new_obj = L2Pairing()
         new_obj.add_entity(obj_dict["entity"])
         return new_obj
 
@@ -299,7 +299,7 @@ class ImmersedDOF(DOF):
 
     def __call__(self, g):
         permuted = self.cell.permute_entities(g, self.trace_entity.dim())
-        index_trace = self.cell.d_entities(self.trace_entity.dim()).index(self.trace_entity.id)
+        index_trace = self.cell.d_entities_ids(self.trace_entity.dim()).index(self.trace_entity.id)
         new_trace_entity = self.cell.get_node(permuted[index_trace][0]).orient(permuted[index_trace][1])
 
         return ImmersedDOF(self.pairing, self.kernel.permute(permuted[index_trace][1]), new_trace_entity,

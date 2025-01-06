@@ -11,7 +11,7 @@ def C(request):
     elif dim == 1:
         return Point(1, [Point(0), Point(0)], vertex_num=2)
     elif dim == 2:
-        return n_sided_polygon(3)
+        return polygon(3)
 
 
 def test_vertices(C):
@@ -41,7 +41,7 @@ def test_orientation():
 
 
 def test_sub_basis_vectors():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
 
     edges = cell.edges(get_class=True)
     print(cell.vertices())
@@ -53,7 +53,7 @@ def test_sub_basis_vectors():
 
 
 def test_permute_entities():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
     # cell.plot(filename="test_cell.png")
 
     # for dof in nd.generate():
@@ -83,7 +83,7 @@ def test_oriented_verts():
         oriented = edge.orient(g)
         assert g.permute(edge.ordered_vertices()) == oriented.ordered_vertices()
 
-    tri = n_sided_polygon(3)
+    tri = polygon(3)
     cyclic_tri = C3.add_cell(tri)
 
     for g in tri.group.members():
@@ -94,7 +94,7 @@ def test_oriented_verts():
             assert all([o.perm.is_Identity for (e, o) in permuted])
         assert g.permute(tri.ordered_vertices()) == oriented.ordered_vertices()
 
-    sq = n_sided_polygon(4)
+    sq = polygon(4)
     for g in sq.group.members():
         oriented = sq.orient(g)
         print(oriented.permute_entities(g, 1))

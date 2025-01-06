@@ -7,33 +7,33 @@ import sympy as sp
 
 vert = Point(0)
 edge = Point(1, [Point(0), Point(0)], vertex_num=2)
-tri = n_sided_polygon(3)
+tri = polygon(3)
 
 
 @pytest.mark.parametrize("cell", [edge])
 def test_cg_perms(cell):
     cg1 = create_cg1(cell)
-    cg1.to_fiat_elem()
+    cg1.to_fiat()
 
 
 @pytest.mark.parametrize("cell", [edge])
 def test_cg2_perms(cell):
     cg2 = create_cg2(cell)
-    cg2.to_fiat_elem()
+    cg2.to_fiat()
 
 
 def test_cg3_perms():
     cg3 = construct_cg3()
-    cg3.to_fiat_elem()
+    cg3.to_fiat()
 
 
 @pytest.mark.parametrize("cell", [edge])
 def test_dg_perms(cell):
     dg1 = create_dg1(cell)
-    dg1.to_fiat_elem()
+    dg1.to_fiat()
 
 
-@pytest.mark.parametrize("cell", [Point(1, [Point(0), Point(0)], vertex_num=2), n_sided_polygon(3)])
+@pytest.mark.parametrize("cell", [Point(1, [Point(0), Point(0)], vertex_num=2), polygon(3)])
 def test_basic_perms(cell):
     cell_group = cell.group
     bvs = cell.basis_vectors()
@@ -53,7 +53,7 @@ def test_nd_perms(cell):
     x = sp.Symbol("x")
     y = sp.Symbol("y")
 
-    xs = [DOF(L2InnerProd(), PointKernel(edge.basis_vectors()[0]))]
+    xs = [DOF(L2Pairing(), PointKernel(edge.basis_vectors()[0]))]
     dofs = DOFGenerator(xs, S1, S2)
     int_ned = ElementTriple(edge, (P1, CellHCurl, C0), dofs)
 
@@ -66,16 +66,16 @@ def test_nd_perms(cell):
     nd = vec_Pk + (Pk.restrict(deg - 2, deg - 1))*M
 
     ned = ElementTriple(cell, (nd, CellHCurl, C0), [tri_dofs])
-    ned.to_fiat_elem()
+    ned.to_fiat()
 
 
 @pytest.mark.xfail(reason='Conversion of non simplex ref els to fiat needed')
 def test_square():
-    square = n_sided_polygon(4)
+    square = polygon(4)
     print("testsq", square.group.size())
     edge = square.d_entities(1, get_class=True)[0]
 # edge.basis_vectors()[0]
-    xs = [DOF(L2InnerProd(), PointKernel(-0.5))]
+    xs = [DOF(L2Pairing(), PointKernel(-0.5))]
     dg0_int = ElementTriple(edge, (P0, CellL2, C0),
                             DOFGenerator(xs, S2, S2))
 
@@ -88,4 +88,4 @@ def test_square():
     sq = ElementTriple(square, (P3, CellH1, C0), [e_dofs])
     for dof in sq.generate():
         print(dof)
-    sq.to_fiat_elem()
+    sq.to_fiat()

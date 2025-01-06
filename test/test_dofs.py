@@ -33,7 +33,7 @@ def test_permute_cg1():
 
 
 def test_permute_cg3():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
 
     cg3 = construct_cg3(cell)
 
@@ -47,7 +47,7 @@ def test_permute_cg3():
 
 
 def test_permute_rt():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
 
     rt = construct_rt(cell)
     x = sp.Symbol("x")
@@ -64,7 +64,7 @@ def test_permute_rt():
 
 
 def test_permute_nd():
-    cell = n_sided_polygon(3)
+    cell = polygon(3)
 
     nd = construct_nd(cell)
     x = sp.Symbol("x")
