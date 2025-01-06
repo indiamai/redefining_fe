@@ -1,5 +1,5 @@
 from redefining_fe.cells import Point
-from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace, CellHCurl, CellHDiv
+from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
 from redefining_fe.dof import DeltaPairing, L2InnerProd, MyTestFunction, PointKernel
 from redefining_fe.traces import Trace
 from redefining_fe.groups import perm_matrix_to_perm_array
@@ -9,7 +9,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import inspect
-import finat.ufl
+from finat.ufl import FuseElement
 import warnings
 import numpy as np
 import scipy
@@ -85,7 +85,7 @@ class ElementTriple():
             return ()
 
     def to_ufl_elem(self):
-        return IndiaTripleUFL(self)
+        return FuseElement(self)
 
     def to_fiat_elem(self):
         ref_el = self.cell.to_fiat()
@@ -468,40 +468,3 @@ class ImmersedDOFs():
 
 def immerse(target_cell, triple, target_space, node=0):
     return ImmersedDOFs(target_cell, triple, target_space, node)
-
-
-class IndiaTripleUFL(finat.ufl.FiniteElementBase):
-    """
-    TODO: Need to deal with cases where value shape and reference value shape are different
-    """
-
-    def __init__(self, triple, cell=None):
-        self.triple = triple
-        if not cell:
-            cell = self.triple.cell.to_ufl()
-
-        # this isn't really correct
-        degree = self.triple.spaces[0].degree()
-        super(IndiaTripleUFL, self).__init__("IT", cell, degree, None, triple.get_value_shape())
-
-    def __repr__(self):
-        return "FiniteElement(%s, %s, (%s, %s, %s), %s)" % (
-               repr(self.triple.DOFGenerator), repr(self.triple.cell), repr(self.triple.spaces[0]), repr(self.triple.spaces[1]), repr(self.triple.spaces[2]), "X")
-
-    def __str__(self):
-        return "<Custom%sElem on %s>" % (self.triple.spaces[0], self.triple.cell)
-
-    def mapping(self):
-        if isinstance(self.sobolev_space, CellHCurl):
-            return "covariant Piola"
-        elif isinstance(self.sobolev_space, CellHDiv):
-            return "contravariant Piola"
-        else:
-            return "identity"
-
-    def sobolev_space(self):
-        return self.triple.spaces[1]
-
-    def reconstruct(self, family=None, cell=None, degree=None, quad_scheme=None, variant=None):
-        warnings.warn("Modifying FE triple")
-        return IndiaTripleUFL(self.triple, cell=cell)
