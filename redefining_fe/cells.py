@@ -400,7 +400,7 @@ class Point():
                 # make sure this is necessary
                 return self.oriented.permute(verts)
             return verts
-    
+
     def d_entities_ids(self, d):
         return self.d_entities(d, get_class=False)
 
@@ -430,7 +430,7 @@ class Point():
         raise "Error: Node not found in graph"
 
     def vertices(self, get_class=True, return_coords=False):
-        #TODO maybe refactor with get_node
+        # TODO maybe refactor with get_node
         verts = self.d_entities(0, get_class)
         if return_coords:
             verts = self.d_entities_ids(0)
@@ -458,11 +458,7 @@ class Point():
 
         for e in self.d_entities(d):
             entity_dict[e.id] = tuple(e.ordered_vertices())
-            try:
-                reordered_entity_dict[e.id] = tuple([reordered[verts.index(i)] for i in e.ordered_vertices()])
-            except:
-                import pdb
-                breakpoint()
+            reordered_entity_dict[e.id] = tuple([reordered[verts.index(i)] for i in e.ordered_vertices()])
 
         reordered_entities = [tuple() for e in range(len(entities))]
         min_id = min(entities)
