@@ -617,11 +617,11 @@ class Point():
     def copy(self):
         return copy.deepcopy(self)
 
-    def to_fiat(self):
+    def to_fiat(self, name=None):
         if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
-            return CellComplexToFiatSimplex(self)
+            return CellComplexToFiatSimplex(self, name)
         raise NotImplementedError("Non-Simplex elements are not yet supported")
-        return CellComplexToFiatCell(self)
+        return CellComplexToFiatCell(self, name)
 
     def to_ufl(self, name=None):
         return CellComplexToUFL(self, name)
@@ -705,8 +705,11 @@ class CellComplexToFiatSimplex(Simplex):
     Currently assumes simplex.
     """
 
-    def __init__(self, cell):
+    def __init__(self, cell, name=None):
         self.fe_cell = cell
+        if name is not None:
+            name = "IndiaDefCell"
+        self.name = name
 
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
@@ -714,7 +717,7 @@ class CellComplexToFiatSimplex(Simplex):
         super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
 
     def cellname(self):
-        return "India Def Cell"
+        return self.name
 
     def construct_subelement(self, dimension):
         """Constructs the reference element of a cell
@@ -738,8 +741,11 @@ class CellComplexToFiatCell(UFCQuadrilateral):
     Currently assumes simplex.
     """
 
-    def __init__(self, cell):
+    def __init__(self, cell, name=None):
         self.fe_cell = cell
+        if name is not None:
+            name = "IndiaDefCell"
+        self.name = name
 
         verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
@@ -747,7 +753,7 @@ class CellComplexToFiatCell(UFCQuadrilateral):
         super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
 
     def cellname(self):
-        return "India Def Cell"
+        return self.name
 
     def construct_subelement(self, dimension):
         """Constructs the reference element of a cell
@@ -805,7 +811,7 @@ class CellComplexToUFL(Cell):
         super(CellComplexToUFL, self).__init__(name)
 
     def to_fiat(self):
-        return self.cell_complex.to_fiat()
+        return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
         return super(CellComplexToUFL, self).__repr__() + " Complex"
