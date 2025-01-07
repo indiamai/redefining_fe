@@ -1,7 +1,9 @@
 from FIAT.quadrature_schemes import create_quadrature
-from FIAT.functional import PointEvaluation
-from redefining_fe.cells import CellComplexToFiat
+from FIAT.quadrature import FacetQuadratureRule
+from FIAT.functional import PointEvaluation, FrobeniusIntegralMoment
+from redefining_fe.utils import sympy_to_numpy
 import numpy as np
+import sympy as sp
 
 
 class Pairing():
@@ -11,9 +13,6 @@ class Pairing():
 
     def __init__(self):
         self.entity = None
-
-    def add_entity(self, entity):
-        self.entity = entity
 
     def _to_dict(self):
         o_dict = {"entity": self.entity}
@@ -31,13 +30,18 @@ class DeltaPairing(Pairing):
     def __init__(self):
         super(DeltaPairing, self).__init__()
 
-    def __call__(self, kernel, v):
+    def __call__(self, kernel, v, cell):
         assert isinstance(kernel, PointKernel)
         return v(*kernel.pt)
 
-    def convert_to_fiat(self, ref_el, pt):
-        # assert isinstance(kernel, PointKernel)
+    def convert_to_fiat(self, ref_el, dof, interpolant_deg):
+        pt = dof.eval(MyTestFunction(lambda *x: x))
         return PointEvaluation(ref_el, pt)
+
+    def add_entity(self, entity):
+        res = DeltaPairing()
+        res.entity = entity
+        return res
 
     def __repr__(self):
         return "{fn}({kernel})"
@@ -51,23 +55,56 @@ class DeltaPairing(Pairing):
         return new_obj
 
 
-class L2InnerProd(Pairing):
+class L2Pairing(Pairing):
     """ need to think about the abstraction level here -
     are we wanting to define them as quadrature now? or defer this?
     """
     def __init__(self):
-        super(L2InnerProd, self).__init__()
+        super(L2Pairing, self).__init__()
 
-    def __call__(self, kernel, v):
-        # print("evaluating", kernel, v, "on", self.entity)
-        quadrature = create_quadrature(CellComplexToFiat(self.entity), 5)
+    def __call__(self, kernel, v, cell):
+        # print(self.entity)
+        # if cell == self.entity:
+        #     # print("evaluating", kernel, v, "on", self.entity)
+        #     quadrature = create_quadrature(self.entity.to_fiat(), 5)
+        #     # need quadrature here too - therefore need the information from the triple.
+        # else:
+        #     ref_el = cell.to_fiat()
+        #     print(cell)
+        #     ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        #     entity = ref_el.construct_subelement(self.entity.dim())
+        #     Q_ref = create_quadrature(entity, 5)
+        #     quadrature = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        quadrature = create_quadrature(self.entity.to_fiat(), 5)
 
         def kernel_dot(x):
             return np.dot(kernel(*x), v(*x))
+
         return quadrature.integrate(kernel_dot)
 
-    def convert_to_fiat(self, ref_el, kernel):
-        raise NotImplementedError("L2 functionals not yet fiat convertible")
+    def tabulate(self):
+        pass
+
+    def add_entity(self, entity):
+        res = L2Pairing()
+        res.entity = entity
+        return res
+
+    def convert_to_fiat(self, ref_el, dof, interpolant_degree):
+        total_deg = interpolant_degree + dof.kernel.degree()
+        ent_id = self.entity.id - ref_el.fe_cell.get_starter_ids()[self.entity.dim()]
+        entity = ref_el.construct_subelement(self.entity.dim())
+        Q_ref = create_quadrature(entity, total_deg)
+        Q = FacetQuadratureRule(ref_el, self.entity.dim(), ent_id, Q_ref)
+        Jdet = Q.jacobian_determinant()
+        qpts, _ = Q.get_points(), Q.get_weights()
+        print(qpts)
+        print(dof.tabulate(qpts))
+        f_at_qpts = dof.tabulate(qpts).T / Jdet
+        print(len(Q.pts))
+        print(f_at_qpts.shape)
+        functional = FrobeniusIntegralMoment(ref_el, Q, f_at_qpts)
+        return functional
 
     def __repr__(self):
         return "integral_{}({{kernel}} * {{fn}}) dx)".format(str(self.entity))
@@ -76,27 +113,49 @@ class L2InnerProd(Pairing):
         return "L2Inner"
 
     def _from_dict(obj_dict):
-        new_obj = L2InnerProd()
+        new_obj = L2Pairing()
         new_obj.add_entity(obj_dict["entity"])
         return new_obj
 
 
-class PointKernel():
+class BaseKernel():
+
+    def __init__(self):
+        self.attachment = False
+
+    def permute(self, g):
+        raise NotImplementedError("This method should be implemented by the subclass")
+
+    def __repr__(self):
+        return "BaseKernel"
+
+    def __call__(self, *args):
+        raise NotImplementedError("This method should be implemented by the subclass")
+
+
+class PointKernel(BaseKernel):
 
     def __init__(self, x):
         if not isinstance(x, tuple):
             x = (x,)
         self.pt = x
+        super(PointKernel, self).__init__()
 
     def __repr__(self):
         x = list(map(str, list(self.pt)))
         return ','.join(x)
+
+    def degree(self):
+        return 1
 
     def permute(self, g):
         return PointKernel(g(self.pt))
 
     def __call__(self, *args):
         return self.pt
+
+    def tabulate(self, Qpts):
+        return np.array([self.pt for _ in Qpts]).astype(np.float64)
 
     def _to_dict(self):
         o_dict = {"pt": self.pt}
@@ -109,22 +168,35 @@ class PointKernel():
         return PointKernel(tuple(obj_dict["pt"]))
 
 
-class PolynomialKernel():
+class PolynomialKernel(BaseKernel):
 
-    def __init__(self, fn):
-        self.fn = fn
+    def __init__(self, fn, symbols=[]):
+        if len(symbols) != 0 and not sp.sympify(fn).as_poly():
+            raise ValueError("Function argument must be able to be interpreted as a sympy polynomial")
+        self.fn = sp.sympify(fn)
+        self.syms = symbols
+        super(PolynomialKernel, self).__init__()
 
     def __repr__(self):
         return str(self.fn)
 
+    def degree(self):
+        if len(self.fn.free_symbols) == 0:
+            return 1
+        return self.fn.as_poly().total_degree()
+
     def permute(self, g):
-        def permuting(*x):
-            return self.fn(*g(x))
-        return PolynomialKernel(permuting)
+        new_fn = self.fn.subs({self.syms[i]: g(self.syms)[i] for i in range(len(self.syms))})
+        return PolynomialKernel(new_fn, symbols=self.syms)
 
     def __call__(self, *args):
-        res = self.fn(*args)
+        res = sympy_to_numpy(self.fn, self.syms, args[:len(self.syms)])
+        if not hasattr(res, '__iter__'):
+            return [res]
         return res
+
+    def tabulate(self, Qpts):
+        return np.array([self(*pt) for pt in Qpts]).astype(np.float64)
 
     def _to_dict(self):
         o_dict = {"fn": self.fn}
@@ -139,7 +211,7 @@ class PolynomialKernel():
 
 class DOF():
 
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=dict({}), sub_id=None):
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, immersed=False, generation=None, sub_id=None, cell=None):
         self.pairing = pairing
         self.kernel = kernel
         self.immersed = immersed
@@ -149,23 +221,32 @@ class DOF():
         self.g = g
         self.id = None
         self.sub_id = sub_id
-        self.generation = generation
+        self.cell = cell
+
+        if generation is None:
+            self.generation = {}
+        else:
+            self.generation = generation
         if entity is not None:
-            self.pairing.add_entity(entity)
+            self.pairing = self.pairing.add_entity(entity)
 
     def __call__(self, g):
         new_generation = self.generation.copy()
-        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id)
+        return DOF(self.pairing, self.kernel.permute(g), self.trace_entity, self.attachment, self.target_space, g, self.immersed, new_generation, self.sub_id, self.cell)
 
     def eval(self, fn, pullback=True):
-        return self.pairing(self.kernel, fn)
+        return self.pairing(self.kernel, fn, self.cell)
 
-    def add_context(self, cell, space, g, overall_id=None, generator_id=None):
-        # We only want to store the first instance of each
+    def tabulate(self, Qpts):
+        return self.kernel.tabulate(Qpts)
+
+    def add_context(self, dof_gen, cell, space, g, overall_id=None, generator_id=None):
+        # For some of these, we only want to store the first instance of each
+        self.generation[cell.dim()] = dof_gen
+        self.cell = cell
         if self.trace_entity is None:
             self.trace_entity = cell
-            self.generation[self.trace_entity.dim()] = g
-            self.pairing.add_entity(cell)
+            self.pairing = self.pairing.add_entity(cell)
         if self.target_space is None:
             self.target_space = space
         if self.id is None and overall_id is not None:
@@ -173,10 +254,8 @@ class DOF():
         if self.sub_id is None and generator_id is not None:
             self.sub_id = generator_id
 
-    def convert_to_fiat(self, ref_el):
-        if isinstance(self.kernel, PointKernel):
-            pt = self.eval(MyTestFunction(lambda *x: x))
-            return self.pairing.convert_to_fiat(ref_el, pt)
+    def convert_to_fiat(self, ref_el, interpolant_degree):
+        return self.pairing.convert_to_fiat(ref_el, self, interpolant_degree)
         raise NotImplementedError("Fiat conversion only implemented for Point eval")
 
     def __repr__(self, fn="v"):
@@ -184,8 +263,7 @@ class DOF():
 
     def immerse(self, entity, attachment, target_space, g, triple):
         new_generation = self.generation.copy()
-        new_generation[target_space.domain.dim()] = g
-        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id)
+        return ImmersedDOF(self.pairing, self.kernel, entity, attachment, target_space, g, triple, new_generation, self.sub_id, self.cell)
 
     def _to_dict(self):
         """ almost certainly needs more things"""
@@ -200,23 +278,32 @@ class DOF():
 
 
 class ImmersedDOF(DOF):
-    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation={}, sub_id=None):
+    # probably need to add a convert to fiat method here to capture derivatives from immersion
+    def __init__(self, pairing, kernel, entity=None, attachment=None, target_space=None, g=None, triple=None, generation=None, sub_id=None, cell=None):
         self.immersed = True
         self.triple = triple
-        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id)
+        super(ImmersedDOF, self).__init__(pairing, kernel, entity=entity, attachment=attachment, target_space=target_space, g=g, immersed=True, generation=generation, sub_id=sub_id, cell=cell)
 
     def eval(self, fn, pullback=True):
         attached_fn = fn.attach(self.attachment)
 
-        if not pullback:
-            return self.pairing(self.kernel, attached_fn)
+        if pullback:
+            attached_fn = self.target_space(attached_fn, self.trace_entity, self.g)
 
-        return self.pairing(self.kernel,
-                            self.target_space(attached_fn, self.trace_entity, self.g))
+        return self.pairing(self.kernel, attached_fn, self.cell)
+
+    def tabulate(self, Qpts):
+        immersion = self.target_space.tabulate(Qpts, self.trace_entity, self.g)
+        res = self.kernel.tabulate(Qpts)
+        return immersion*res
 
     def __call__(self, g):
-        return ImmersedDOF(self.pairing, self.kernel.permute(g), self.trace_entity,
-                           self.attachment, self.target_space, g, self.immersed, self.sub_id)
+        permuted = self.cell.permute_entities(g, self.trace_entity.dim())
+        index_trace = self.cell.d_entities_ids(self.trace_entity.dim()).index(self.trace_entity.id)
+        new_trace_entity = self.cell.get_node(permuted[index_trace][0]).orient(permuted[index_trace][1])
+
+        return ImmersedDOF(self.pairing, self.kernel.permute(permuted[index_trace][1]), new_trace_entity,
+                           self.attachment, self.target_space, g, self.triple, self.generation, self.sub_id, self.cell)
 
     def __repr__(self):
         fn = "tr_{1}_{0}(v)".format(str(self.trace_entity), str(self.target_space))

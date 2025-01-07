@@ -46,7 +46,7 @@ exclude_patterns = []
 
 # -- Autodoc configuration ---------------------------------------------------
 
-autodoc_mock_imports = ["firedrake", "networkx", "FIAT"]
+autodoc_mock_imports = ["firedrake", "networkx", "FIAT", "finat"]
 
 # Make sure the target is unique
 autosectionlabel_prefix_document = True

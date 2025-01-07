@@ -1,0 +1,26 @@
+[build-system]
+requires = [
+  "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "redefining_fe"
+version = "0.1"
+dependencies = [
+  "numpy",
+  "networkx",
+  "sympy",
+  "sphinx",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+]
+
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]

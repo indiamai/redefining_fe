@@ -14,7 +14,7 @@ def construct_dg1():
 
 
 def plot_dg1():
-    # tri = n_sided_polygon(3)
+    # tri = polygon(3)
     # cg1 = create_cg1(tri)
     cg3 = construct_cg3()
     # dg1 = construct_dg1()
