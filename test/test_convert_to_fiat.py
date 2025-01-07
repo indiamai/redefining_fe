@@ -7,6 +7,7 @@ from FIAT.quadrature_schemes import create_quadrature
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
+from element_examples import CR_n
 
 
 def create_dg1(cell):
@@ -459,6 +460,7 @@ def test_quad(params, elem_gen):
                                                     (create_dg1, "DG", 1),
                                                     (create_cr, "CR", 1),
                                                     (create_cr3, "CR", 1),
+                                                    (lambda cell: CR_n(cell, 3), "CR", 1),
                                                     (create_cf, "CR", 1),  # Don't think Crouzeix Falk in in Firedrake
                                                     (construct_cg3, "CG", 3),
                                                     pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
