@@ -291,7 +291,10 @@ class ElementTriple():
                             oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = np.eye(len(ent_dofs_ids))
                         elif g in dof_gen_class.g1.members():
                             sub_mat = g.matrix_form()
-                            oriented_mats_by_entity[dim][e_id][val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+                            generators = list(set([ed.sub_id for ed in ent_dofs]))
+                            for gen in generators:
+                                sub_ids = [ed.id for ed in ent_dofs if ed.sub_id == gen]
+                                oriented_mats_by_entity[dim][e_id][val][np.ix_(sub_ids, sub_ids)] = sub_mat.copy()
                         else:
                             pass
                             # # sub component dense case
@@ -328,7 +331,10 @@ class ElementTriple():
                     elif len(dof_gen_class.keys()) == 1:
                         if g in dof_gen_class[dim].g1.members() or (pure_perm and len(dof_gen_class[dim].g1.members()) > 1):
                             sub_mat = g.matrix_form()
-                            oriented_mats_overall[val][np.ix_(ent_dofs_ids, ent_dofs_ids)] = sub_mat.copy()
+                            generators = list(set([ed.sub_id for ed in ent_dofs]))
+                            for gen in generators:
+                                sub_ids = [ed.id for ed in ent_dofs if ed.sub_id == gen]
+                                oriented_mats_overall[val][np.ix_(sub_ids, sub_ids)] = sub_mat.copy()
 
         for val, mat in oriented_mats_overall.items():
             cell_dofs = entity_ids[dim][0]
@@ -375,7 +381,7 @@ class DOFGenerator():
         if self.ls is None:
             self.ls = []
             for l_g in self.x:
-                i = 0
+                i = id_counter
                 for g in self.g1.members():
                     generated = l_g(g)
                     if not isinstance(generated, list):
@@ -383,7 +389,6 @@ class DOFGenerator():
                     for dof in generated:
                         dof.add_context(self, cell, space, g, id_counter, i)
                         id_counter += 1
-                        i += 1
                     self.ls.extend(generated)
             self.dof_numbers = len(self.ls)
             self.dof_ids = [dof.id for dof in self.ls]
