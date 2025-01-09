@@ -5,7 +5,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "redefining_fe"
+name = "fuse"
 version = "0.1"
 dependencies = [
   "numpy",

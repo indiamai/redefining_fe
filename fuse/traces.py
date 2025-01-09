@@ -1,7 +1,7 @@
 import numpy as np
 import sympy as sp
 import matplotlib.pyplot as plt
-from redefining_fe.utils import sympy_to_numpy
+from fuse.utils import sympy_to_numpy
 
 
 class Trace():

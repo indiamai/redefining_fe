@@ -1,5 +1,5 @@
-from redefining_fe import *
-from redefining_fe.serialisation import ElementSerialiser
+from fuse import *
+from fuse.serialisation import ElementSerialiser
 from test_convert_to_fiat import create_cg1
 # from test_2d_examples_docs import construct_nd
 import numpy as np

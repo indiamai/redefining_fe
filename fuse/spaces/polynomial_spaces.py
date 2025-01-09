@@ -2,7 +2,7 @@ from FIAT.polynomial_set import ONPolynomialSet
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT import expansions, polynomial_set, reference_element
 from itertools import chain
-from redefining_fe.utils import tabulate_sympy, max_deg_sp_mat
+from fuse.utils import tabulate_sympy, max_deg_sp_mat
 import sympy as sp
 import numpy as np
 
