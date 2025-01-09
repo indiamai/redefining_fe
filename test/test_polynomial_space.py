@@ -1,6 +1,6 @@
-from redefining_fe import *
+from fuse import *
 import sympy as sp
-from redefining_fe.spaces.polynomial_spaces import PolynomialSpace, ConstructedPolynomialSpace
+from fuse.spaces.polynomial_spaces import PolynomialSpace, ConstructedPolynomialSpace
 from FIAT.polynomial_set import ONPolynomialSet
 from FIAT import polynomial_set
 from FIAT.quadrature_schemes import create_quadrature

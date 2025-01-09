@@ -1,6 +1,6 @@
 DOFs
 ==============
 
-.. automodule:: redefining_fe.dof
+.. automodule:: fuse.dof
    :members:
    :show-inheritance:

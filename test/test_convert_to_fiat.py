@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from redefining_fe import *
+from fuse import *
 from firedrake import *
 from sympy.combinatorics import Permutation
 from FIAT.quadrature_schemes import create_quadrature

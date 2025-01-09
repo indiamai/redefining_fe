@@ -1,4 +1,4 @@
-import redefining_fe.cells as cells
+import fuse.cells as cells
 from sympy.combinatorics import PermutationGroup, Permutation
 from sympy.combinatorics.named_groups import SymmetricGroup, DihedralGroup, CyclicGroup, AlternatingGroup
 from sympy.matrices.expressions import PermutationMatrix

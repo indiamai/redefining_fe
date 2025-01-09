@@ -1,7 +1,7 @@
 from FIAT.quadrature_schemes import create_quadrature
 from FIAT.quadrature import FacetQuadratureRule
 from FIAT.functional import PointEvaluation, FrobeniusIntegralMoment
-from redefining_fe.utils import sympy_to_numpy
+from fuse.utils import sympy_to_numpy
 import numpy as np
 import sympy as sp
 

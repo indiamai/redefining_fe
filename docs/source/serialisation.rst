@@ -1,6 +1,6 @@
 Serialisation
 ==============
 
-.. automodule:: redefining_fe.serialisation
+.. automodule:: fuse.serialisation
    :members:
    :show-inheritance:
