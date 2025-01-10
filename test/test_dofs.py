@@ -1,4 +1,4 @@
-from redefining_fe import *
+from fuse import *
 from test_convert_to_fiat import create_cg1, create_dg1, construct_cg3, construct_rt, construct_nd
 import sympy as sp
 import numpy as np

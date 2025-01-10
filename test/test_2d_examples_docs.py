@@ -1,4 +1,4 @@
-from redefining_fe import *
+from fuse import *
 import sympy as sp
 import numpy as np
 

@@ -4,13 +4,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import itertools
 import networkx as nx
-import redefining_fe.groups as fe_groups
+import fuse.groups as fe_groups
 import copy
 import sympy as sp
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from sympy.combinatorics.named_groups import SymmetricGroup
-from redefining_fe.utils import sympy_to_numpy, fold_reduce
+from fuse.utils import sympy_to_numpy, fold_reduce
 from FIAT.reference_element import Simplex, Cell as FiatCell
 from ufl.cell import Cell
 
@@ -627,7 +627,7 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        # raise NotImplementedError("Non-Simplex elements are not yet supported")
+        raise NotImplementedError("Non-Simplex elements are not yet supported")
         return CellComplexToFiatCell(self, name)
 
     def to_ufl(self, name=None):
@@ -707,7 +707,7 @@ class CellComplexToFiatSimplex(Simplex):
     """
     Convert cell complex to fiat
 
-    :param: cell: a redefining_fe cell complex
+    :param: cell: a fuse cell complex
 
     Currently assumes simplex.
     """
@@ -743,7 +743,7 @@ class CellComplexToFiatCell(FiatCell):
     """
     Convert cell complex to fiat
 
-    :param: cell: a redefining_fe cell complex
+    :param: cell: a fuse cell complex
 
     Currently assumes simplex.
     """
@@ -782,7 +782,7 @@ class CellComplexToUFL(Cell):
     """
     Convert cell complex to UFL
 
-    :param: cell: a redefining_fe cell complex
+    :param: cell: a fuse cell complex
 
     Currently just maps to a subset of existing UFL cells
     TODO work out generic way around the naming issue

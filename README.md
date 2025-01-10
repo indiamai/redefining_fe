@@ -1,1 +1,1 @@
-# redefining_fe
+# FUSE - a unified, serialisable finite element
