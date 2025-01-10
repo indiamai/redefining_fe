@@ -1,5 +1,5 @@
 from firedrake import *
-from redefining_fe import *
+from fuse import *
 import numpy as np
 from test_2d_examples_docs import construct_cg3
 from test_convert_to_fiat import create_cr, create_cg1

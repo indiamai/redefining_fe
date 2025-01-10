@@ -1,8 +1,8 @@
-from redefining_fe.cells import Point
-from redefining_fe.spaces.element_sobolev_spaces import ElementSobolevSpace
-from redefining_fe.dof import DeltaPairing, L2Pairing, MyTestFunction, PointKernel
-from redefining_fe.traces import Trace
-from redefining_fe.groups import perm_matrix_to_perm_array
+from fuse.cells import Point
+from fuse.spaces.element_sobolev_spaces import ElementSobolevSpace
+from fuse.dof import DeltaPairing, L2Pairing, MyTestFunction, PointKernel
+from fuse.traces import Trace
+from fuse.groups import perm_matrix_to_perm_array
 from FIAT.dual_set import DualSet
 from FIAT.finite_element import CiarletElement
 import matplotlib as mpl

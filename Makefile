@@ -10,9 +10,9 @@ doc:
 	@(cd docs/ && make html)
 
 lint:
-	@echo "    Linting redefining_fe codebase"
-	@python -m flake8 $(FLAKE8_FORMAT) redefining_fe
-	@echo "    Linting redefining_fe test suite"
+	@echo "    Linting FUSE codebase"
+	@python -m flake8 $(FLAKE8_FORMAT) fuse
+	@echo "    Linting FUSE test suite"
 	@python -m flake8 $(FLAKE8_FORMAT) test
 
 test_examples:
