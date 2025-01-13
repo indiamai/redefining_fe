@@ -84,6 +84,8 @@ def check_multiple(coord_1, coord_2):
 
 
 def CR_n(cell, deg):
+    if deg % 2 == 0:
+        raise ValueError("Non-Conforming CR only well defined for odd orders")
     points = np.polynomial.legendre.leggauss(deg)[0]
     Pk = PolynomialSpace(deg)
     sym_points = [DOF(DeltaPairing(), PointKernel((pt,))) for pt in points[:len(points)//2]]
@@ -114,8 +116,6 @@ def CR_n(cell, deg):
 
 
 def CG_n(cell, deg):
-    if deg % 2 == 0:
-        raise ValueError("Non-Conforming CR only well defined for odd orders")
     xs = [DOF(DeltaPairing(), PointKernel(()))]
     dg0 = ElementTriple(cell.vertices()[0], (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
 
