@@ -3,6 +3,7 @@ from fuse import *
 import numpy as np
 from test_2d_examples_docs import construct_cg3
 from test_convert_to_fiat import create_cr, create_cg1
+from element_examples import CR_n, CG_n
 
 
 def create_cr3(cell):
@@ -26,12 +27,14 @@ cg3 = construct_cg3(polygon(3))
 cr3 = create_cr3(polygon(3))
 cr1 = create_cr(polygon(3))
 cg1 = create_cg1(polygon(3))
+cg5 = CG_n(polygon(3), 5)
+cr5 = CR_n(polygon(3), 5)
 
 for N in [50, 100, 200]:
     mesh = RectangleMesh(N, N, pi, pi)
 
-    for elem, space in zip([cg3, cr3], ["CG", "CR"]):
-        V = FunctionSpace(mesh, elem.to_ufl_elem())
+    for elem, space in zip([cg5, cr5], ["CG", "CR"]):
+        V = FunctionSpace(mesh, elem.to_ufl())
         u = TrialFunction(V)
         v = TestFunction(V)
 

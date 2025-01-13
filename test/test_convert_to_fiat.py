@@ -7,7 +7,7 @@ from FIAT.quadrature_schemes import create_quadrature
 from test_2d_examples_docs import construct_nd, construct_rt, construct_cg3
 from test_3d_examples_docs import construct_tet_rt
 from test_polynomial_space import flatten
-from element_examples import CR_n
+from element_examples import CR_n, CG_n
 
 
 def create_dg1(cell):
@@ -276,7 +276,13 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
+@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8),
+                                                              (create_cg2_tri, "CG", 2, 2.8),
+                                                              #   (construct_cg3, "CG", 3, 3.8),
+                                                              #   (lambda cell: CG_n(cell, 3), "CG", 3, 3.8),
+                                                              #   (lambda cell: CG_n(cell, 4), "CG", 4, 4.8)])
+                                                              pytest.param(lambda cell: CG_n(cell, 3), "CG", 3, 3.8, marks=pytest.mark.xfail(reason='Need generic orientations ? or other reason unsure')),
+                                                              pytest.param(lambda cell: CG_n(cell, 4), "CG", 4, 4.8, marks=pytest.mark.xfail(reason='Need generic orientations ? or other reason unsure'))])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = polygon(3)
     elem = elem_gen(cell)
@@ -459,8 +465,9 @@ def test_quad(params, elem_gen):
                                                     (create_cg1, "CG", 1),
                                                     (create_dg1, "DG", 1),
                                                     (create_cr, "CR", 1),
-                                                    (create_cr3, "CR", 1),
-                                                    (lambda cell: CR_n(cell, 3), "CR", 1),
+                                                    (create_cr3, "CR", 1),  # higher order
+                                                    (lambda cell: CR_n(cell, 5), "CR", 1),
+                                                    (lambda cell: CG_n(cell, 5), "CG", 5),
                                                     (create_cf, "CR", 1),  # Don't think Crouzeix Falk in in Firedrake
                                                     (construct_cg3, "CG", 3),
                                                     pytest.param(construct_nd, "N1curl", 1, marks=pytest.mark.xfail(reason='Dense Matrices needed')),
