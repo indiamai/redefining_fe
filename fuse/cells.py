@@ -839,7 +839,7 @@ def constructCellComplex(name):
     elif name == "interval":
         return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
-        return polygon(3).to_ufl(name)
+        return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
         # return Cell(name)
         return polygon(4).to_ufl(name)
