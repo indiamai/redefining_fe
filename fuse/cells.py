@@ -165,7 +165,18 @@ def polygon(n):
     return Point(2, edges, vertex_num=n)
 
 def firedrake_triangle():
-    tri = polygon(3)
+    vertices = []
+    for i in range(3):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(
+            Point(1, [vertices[1], vertices[2]], vertex_num=2))
+    edges.append(
+            Point(1, [vertices[0], vertices[2]], vertex_num=2))
+    edges.append(
+            Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    tri = Point(2, edges, vertex_num=3, edge_orientations={1: [1, 0]})
+    # tri = polygon(3)
     s3 = tri.group
     perm = s3.get_member([2, 0, 1])
     return tri.orient(perm)
@@ -626,7 +637,7 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        raise NotImplementedError("Non-Simplex elements are not yet supported")
+        # raise NotImplementedError("Non-Simplex elements are not yet supported")
         return CellComplexToFiatCell(self, name)
 
     def to_ufl(self, name=None):
@@ -717,7 +728,7 @@ class CellComplexToFiatSimplex(Simplex):
             name = "IndiaDefCell"
         self.name = name
 
-        verts = cell.vertices(return_coords=True)
+        verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
@@ -753,7 +764,7 @@ class CellComplexToFiatCell(UFCQuadrilateral):
             name = "IndiaDefCell"
         self.name = name
 
-        verts = cell.vertices(return_coords=True)
+        verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
@@ -820,7 +831,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__() + " Complex"
+        return super(CellComplexToUFL, self).__repr__()
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
@@ -839,6 +850,7 @@ def constructCellComplex(name):
     elif name == "interval":
         return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
+        # return polygon(3).to_ufl(name)
         return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
         # return Cell(name)
