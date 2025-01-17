@@ -354,13 +354,16 @@ class Point():
         relabelled_verts = {vertices[i]: i for i in range(len(vertices))}
 
         self.topology = {}
+        self.topology_unrelabelled = {}
         for i in range(len(structure)):
             dimension = structure[i]
             self.topology[i] = {}
+            self.topology_unrelabelled[i] = {}
             for node in dimension:
                 neighbours = list(self.G.neighbors(node))
                 self.topology[i][node - min_ids[i]] = tuple([relabelled_verts[vert] for vert in self.get_node(node).ordered_vertices()])
-        return self.topology
+                self.topology_unrelabelled[i][node - min_ids[i]] = tuple([vert - min_ids[0] for vert in self.get_node(node).ordered_vertices()])
+        return self.topology_unrelabelled
 
     def get_starter_ids(self):
         structure = [sorted(generation) for generation in nx.topological_generations(self.G)]
@@ -728,6 +731,8 @@ class CellComplexToFiatSimplex(Simplex):
             name = "IndiaDefCell"
         self.name = name
 
+        # vertices = sorted(cell.ordered_vertices())
+
         verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
         topology = cell.get_topology()
         shape = cell.get_shape()
@@ -831,7 +836,7 @@ class CellComplexToUFL(Cell):
         return self.cell_complex.to_fiat(name=self.cellname())
 
     def __repr__(self):
-        return super(CellComplexToUFL, self).__repr__()
+        return super(CellComplexToUFL, self).__repr__() 
 
     def reconstruct(self, **kwargs):
         """Reconstruct this cell, overwriting properties by those in kwargs."""
@@ -850,8 +855,8 @@ def constructCellComplex(name):
     elif name == "interval":
         return Point(1, [Point(0), Point(0)], vertex_num=2).to_ufl(name)
     elif name == "triangle":
-        # return polygon(3).to_ufl(name)
-        return firedrake_triangle().to_ufl(name)
+        return polygon(3).to_ufl(name)
+        # return firedrake_triangle().to_ufl(name)
     elif name == "quadrilateral":
         # return Cell(name)
         return polygon(4).to_ufl(name)
