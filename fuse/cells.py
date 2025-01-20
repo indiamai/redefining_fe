@@ -164,6 +164,22 @@ def polygon(n):
 
     return Point(2, edges, vertex_num=n)
 
+def firedrake_quad():
+    """
+    Constructs the a quad cell that matches the firedrake default.
+    """
+    vertices = []
+    for i in range(4):
+        vertices.append(Point(0))
+    edges = []
+    edges.append(Point(1, [vertices[0], vertices[1]], vertex_num=2))
+    edges.append(Point(1, [vertices[2], vertices[3]], vertex_num=2))
+    edges.append(Point(1, [vertices[0], vertices[2]], vertex_num=2))
+    edges.append(Point(1, [vertices[1], vertices[3]], vertex_num=2))
+
+    return Point(2, edges, vertex_num=4)
+
+
 
 def make_tetrahedron():
     vertices = []
@@ -627,7 +643,7 @@ class Point():
     def to_fiat(self, name=None):
         if len(self.get_topology()[self.dimension][0]) == self.dimension + 1:
             return CellComplexToFiatSimplex(self, name)
-        raise NotImplementedError("Non-Simplex elements are not yet supported")
+        # raise NotImplementedError("Non-Simplex elements are not yet supported")
         return CellComplexToFiatCell(self, name)
 
     def to_ufl(self, name=None):
@@ -843,7 +859,8 @@ def constructCellComplex(name):
         return polygon(3).to_ufl(name)
     elif name == "quadrilateral":
         # return Cell(name)
-        return polygon(4).to_ufl(name)
+        return firedrake_quad().to_ufl(name)
+        # return polygon(4).to_ufl(name)
     elif name == "tetrahedron":
         return make_tetrahedron().to_ufl(name)
     else:
