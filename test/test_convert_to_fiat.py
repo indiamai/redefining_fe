@@ -280,26 +280,27 @@ def test_2d(elem_gen, elem_code, deg):
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = polygon(3)
     elem = elem_gen(cell)
+    scale_range = range(1, 2)
 
-    diff = [0 for i in range(3, 6)]
-    diff2 = [0 for i in range(3, 6)]
-    for i in range(3, 6):
+    diff = [0 for i in scale_range]
+    diff2 = [0 for i in scale_range]
+    for i in scale_range:
         mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
         V = FunctionSpace(mesh, elem_code, deg)
         res1 = helmholtz_solve(mesh, V)
-        diff2[i - 3] = res1
+        diff2[i-1] = res1
 
         V2 = FunctionSpace(mesh, elem.to_ufl())
         res2 = helmholtz_solve(mesh, V2)
-        diff[i - 3] = res2
-        # assert np.allclose(res1, res2)
+        diff[i-1] = res2
+        assert np.allclose(res1, res2)
 
     print("l2 error norms:", diff2)
     diff2 = np.array(diff2)
     conv = np.log2(diff2[:-1] / diff2[1:])
     print("convergence order:", conv)
-    # assert (np.array(conv) > conv_rate).all()
+    assert (np.array(conv) > conv_rate).all()
 
     print("l2 error norms:", diff)
     diff = np.array(diff)
@@ -325,6 +326,12 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
+    l_a = assemble(L)
+    elem = V.finat_element.fiat_equivalent
+    W = VectorFunctionSpace(mesh, V.ufl_element())
+    X = assemble(interpolate(mesh.coordinates, W))
+    print(X.dat.data)
+    breakpoint()
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))

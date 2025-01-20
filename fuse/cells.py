@@ -731,9 +731,10 @@ class CellComplexToFiatSimplex(Simplex):
             name = "IndiaDefCell"
         self.name = name
 
-        # vertices = sorted(cell.ordered_vertices())
+        
 
-        verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
+        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
+        verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiatSimplex, self).__init__(shape, verts, topology)
@@ -769,7 +770,8 @@ class CellComplexToFiatCell(UFCQuadrilateral):
             name = "IndiaDefCell"
         self.name = name
 
-        verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
+        # verts = [cell.get_node(v, return_coords=True) for v in cell.ordered_vertices()]
+        verts = cell.vertices(return_coords=True)
         topology = cell.get_topology()
         shape = cell.get_shape()
         super(CellComplexToFiatCell, self).__init__(shape, verts, topology)
