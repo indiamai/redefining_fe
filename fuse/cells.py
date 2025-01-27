@@ -866,3 +866,4 @@ def constructCellComplex(name):
         return make_tetrahedron().to_ufl(name)
     else:
         raise TypeError("Cell complex construction undefined for {}".format(str(name)))
+
