@@ -148,7 +148,6 @@ def mock_cell_complex(mocker, expect):
 @pytest.mark.usefixtures("mock_cell_complex")
 @pytest.mark.parametrize(["expect"],[(firedrake_triangle(),), (polygon(3),)])
 def test_ref_els(expect):
-    run_helm_solve()
     scale_range = range(3, 6)
 
     diff2 = [0 for i in scale_range]
