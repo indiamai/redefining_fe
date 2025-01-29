@@ -22,7 +22,12 @@ test_examples:
 
 tests:
 	@echo "    Running all tests"
-	@python -m pytest -rx -rP test
+	@python -m coverage run pytest -rx -rP test
+
+coverage:
+	@python -m coverage combine
+	@python -m coverage report -m --skip-covered
+	@python -m coverage json
 
 test_cells:
 	@echo "    Running all cell comparison tests"
