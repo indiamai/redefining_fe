@@ -34,7 +34,7 @@ jobs:
           /usr/bin/git config --global --add safe.directory /home/firedrake/firedrake/src/fiat
           cd /home/firedrake/firedrake/src/fiat
           git fetch
-          git checkout indiamai/fuse-elements
+          git checkout indiamai/integrate_fuse
           git status
       - name: Checkout correct firedrake branch
         run: |
