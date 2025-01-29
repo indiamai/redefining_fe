@@ -53,6 +53,7 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           make tests
           ls -a
+          pwd
       - name: Upload coverage
         uses: actions/upload-artifact@v3
         with:
