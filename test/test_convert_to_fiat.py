@@ -134,6 +134,26 @@ def create_cg2_tri(cell):
     return cg
 
 
+def create_hermite(tri):
+    vert = tri.vertices()[0]
+
+    xs = [DOF(DeltaPairing(), PointKernel(()))]
+    dg0 = ElementTriple(vert, (P0, CellL2, C0), DOFGenerator(xs, S1, S1))
+
+    v_xs = [immerse(tri, dg0, TrH1)]
+    v_dofs = DOFGenerator(v_xs, S3/S2, S1)
+
+    v_derv_xs = [immerse(tri, dg0, TrGrad)]
+    v_derv_dofs = DOFGenerator(v_derv_xs, S3/S2, S1)
+
+    i_xs = [DOF(DeltaPairing(), PointKernel((0, 0)))]
+    i_dofs = DOFGenerator(i_xs, S1, S1)
+
+    her = ElementTriple(tri, (P3, CellH2, C0),
+                        [v_dofs, v_derv_dofs, i_dofs])
+    return her
+
+
 def test_create_fiat_nd():
     cell = polygon(3)
     nd = construct_nd(cell)
@@ -232,7 +252,7 @@ def test_create_fiat_lagrange(elem_gen, elem_code, deg):
                                             (create_cf, polygon(3)),
                                             pytest.param(create_fortin_soulie, polygon(3), marks=pytest.mark.xfail(reason='Entity perms for non symmetric elements')),
                                             (create_dg1_tet, make_tetrahedron()),
-                                            pytest.param(construct_tet_rt, make_tetrahedron(), marks=pytest.mark.xfail(reason='Something wrong with Dense Matrices for 3D'))
+                                            (construct_tet_rt, make_tetrahedron())
                                             ])
 def test_entity_perms(elem_gen, cell):
     elem = elem_gen(cell)
@@ -276,36 +296,39 @@ def test_2d(elem_gen, elem_code, deg):
     assert np.allclose(res, 0)
 
 
-@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8)])
+@pytest.mark.parametrize("elem_gen,elem_code,deg,conv_rate", [(create_cg1, "CG", 1, 1.8), (create_cg2_tri, "CG", 2, 2.8),
+                                                              pytest.param(construct_cg3, "CG", 3, 3.8, marks=pytest.mark.xfail(reason='Orientation of edges')),])
 def test_helmholtz(elem_gen, elem_code, deg, conv_rate):
     cell = polygon(3)
     elem = elem_gen(cell)
+    scale_range = range(3, 6)
 
-    diff = [0 for i in range(3, 6)]
-    diff2 = [0 for i in range(3, 6)]
-    for i in range(3, 6):
+    diff = [0 for i in scale_range]
+    diff2 = [0 for i in scale_range]
+    for i in scale_range:
         mesh = UnitSquareMesh(2 ** i, 2 ** i)
 
         V = FunctionSpace(mesh, elem_code, deg)
         res1 = helmholtz_solve(mesh, V)
-        diff2[i - 3] = res1
+        diff2[i-3] = res1
 
         V2 = FunctionSpace(mesh, elem.to_ufl())
         res2 = helmholtz_solve(mesh, V2)
-        diff[i - 3] = res2
-        # assert np.allclose(res1, res2)
+        diff[i-3] = res2
+        assert np.allclose(res1, res2)
 
-    print("l2 error norms:", diff2)
+    print("firedrake l2 error norms:", diff2)
     diff2 = np.array(diff2)
-    conv = np.log2(diff2[:-1] / diff2[1:])
-    print("convergence order:", conv)
-    # assert (np.array(conv) > conv_rate).all()
+    conv1 = np.log2(diff2[:-1] / diff2[1:])
+    print("firedrake convergence order:", conv1)
 
-    print("l2 error norms:", diff)
+    print("fuse l2 error norms:", diff)
     diff = np.array(diff)
-    conv = np.log2(diff[:-1] / diff[1:])
-    print("convergence order:", conv)
-    assert (np.array(conv) > conv_rate).all()
+    conv2 = np.log2(diff[:-1] / diff[1:])
+    print("fuse convergence order:", conv2)
+
+    assert (np.array(conv1) > conv_rate).all()
+    assert (np.array(conv2) > conv_rate).all()
 
 # my [{(0.9999999999999998, -0.5773502691896262): [(1.0, ())]}, {(0.0, 1.1547005383792517): [(1.0, ())]}, {(-1.0000000000000002, -0.5773502691896255): [(1.0, ())]}, {(-0.3333333333333334, 0.577350269189626): [(1.0, ())]}, {(-0.6666666666666667, 3.3306690738754696e-16): [(1.0, ())]}, {(-0.33333333333333354, -0.5773502691896258): [(1.0, ())]}, {(0.333333333333333, -0.5773502691896261): [(1.0, ())]}, {(0.6666666666666665, -2.220446049250313e-16): [(1.0, ())]}, {(0.3333333333333333, 0.5773502691896256): [(1.0, ())]}, {(1.3075696143712455e-16, -9.491303112816474e-17): [(1.0, ())]}]
 # {0: {0: {0: [0]}, 1: {0: [0]}, 2: {0: [0]}}, 1: {0: {0: [0, 1], 1: [1, 0]}, 1: {0: [0, 1], 1: [1, 0]}, 2: {0: [0, 1], 1: [1, 0]}}, 2: {0: {0: [0], 4: [0], 3: [0], 1: [0], 2: [0], 5: [0]}}}
@@ -325,6 +348,10 @@ def helmholtz_solve(mesh, V):
     a = (inner(grad(u), grad(v)) + inner(u, v)) * dx
     L = inner(f, v) * dx
     u = Function(V)
+    # l_a = assemble(L)
+    # elem = V.finat_element.fiat_equivalent
+    # W = VectorFunctionSpace(mesh, V.ufl_element())
+    # X = assemble(interpolate(mesh.coordinates, W))
     solve(a == L, u)
     f.interpolate(cos(x*pi*2)*cos(y*pi*2))
     return sqrt(assemble(dot(u - f, u - f) * dx))
@@ -533,3 +560,32 @@ def test_project_3d(elem_gen, elem_code, deg):
     solve(a == L, out)
 
     assert np.allclose(out.dat.data, f.dat.data, rtol=1e-5)
+
+
+@pytest.mark.xfail(reason='Handling generation of multiple fiat nodes from one in permutations')
+def test_create_hermite():
+    deg = 3
+    cell = polygon(3)
+    elem = create_hermite(cell)
+    ref_el = cell.to_fiat()
+    sd = ref_el.get_spatial_dimension()
+
+    from FIAT.hermite import CubicHermite
+    fiat_elem = CubicHermite(ref_el, deg)
+
+    my_elem = elem.to_fiat()
+
+    Q = create_quadrature(ref_el, 2*(deg+1))
+    Qpts, _ = Q.get_points(), Q.get_weights()
+
+    fiat_vals = fiat_elem.tabulate(0, Qpts)
+    my_vals = my_elem.tabulate(0, Qpts)
+
+    fiat_vals = flatten(fiat_vals[(0,) * sd])
+    my_vals = flatten(my_vals[(0,) * sd])
+
+    (x, res, _, _) = np.linalg.lstsq(fiat_vals.T, my_vals.T)
+    x1 = np.linalg.inv(x)
+    assert np.allclose(np.linalg.norm(my_vals.T - fiat_vals.T @ x), 0)
+    assert np.allclose(np.linalg.norm(fiat_vals.T - my_vals.T @ x1), 0)
+    assert np.allclose(res, 0)
