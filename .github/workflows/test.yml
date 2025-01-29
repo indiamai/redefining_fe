@@ -52,13 +52,13 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           make tests
-          ls -a
           pwd
+          realpath -s .coverage.*
       - name: Upload coverage
         uses: actions/upload-artifact@v3
         with:
           name: covdata
-          path: /__w/fuse/fuse/.coverage.*
+          path: /home/firedrake/firedrake/src/fuse/.coverage.*
 
   coverage:
       name: Coverage
