@@ -60,7 +60,7 @@ jobs:
 
   coverage:
       name: Coverage
-      needs: tests
+      needs: test
       runs-on: ubuntu-latest
       steps:
         - name: "Check out the repo"
