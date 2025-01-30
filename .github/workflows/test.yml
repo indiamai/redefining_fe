@@ -58,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: covdata
-          path: fuse/fuse/.coverage.*
+          path: /__w/fuse/fuse/.coverage.*
 
   coverage:
       name: Coverage
