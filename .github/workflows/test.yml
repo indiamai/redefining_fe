@@ -18,8 +18,8 @@ jobs:
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
-      volumes:
-        - ${{ github.workspace }}:/home/firedrake/output
+      # volumes:
+      #   - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
