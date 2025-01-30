@@ -22,7 +22,7 @@ test_examples:
 
 tests:
 	@echo "    Running all tests"
-	@python -m coverage run -p -m pytest -rx -rP test
+	@python -m coverage run -p -m pytest -rx test
 
 coverage:
 	@python -m coverage combine
