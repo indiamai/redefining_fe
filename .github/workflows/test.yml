@@ -18,8 +18,8 @@ jobs:
       # Github hosted runners require running as root user:
       # https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#docker-container-filesystem
       options: --user root
-      volumes:
-        - ${{ github.workspace }}:/home/firedrake/output
+      # volumes:
+      #   - ${{ github.workspace }}:/home/firedrake/output
     # Steps represent a sequence of tasks that will be executed as
     # part of the jobs
     steps:
@@ -52,3 +52,44 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           make tests
+          pwd
+          realpath -s .coverage.*
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: covdata
+          path: /__w/fuse/fuse/.coverage.*
+
+  coverage:
+      name: Coverage
+      needs: test
+      runs-on: ubuntu-latest
+      steps:
+        - name: "Check out the repo"
+          uses: "actions/checkout@v2"
+
+        - name: "Download coverage data"
+          uses: actions/download-artifact@v4
+          with:
+            name: covdata
+
+        - name: "Combine"
+          run: |
+            . /home/firedrake/firedrake/bin/activate
+            make coverage
+            export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+            echo "total=$TOTAL" >> $GITHUB_ENV
+            echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
+
+        - name: "Make badge"
+          uses: schneegans/dynamic-badges-action@v1.4.0
+          with:
+            # GIST_TOKEN is a GitHub personal access token with scope "gist".
+            auth: ${{ secrets.GIST_SECRET }}
+            gistID: 8d09e14999153441dba99d1759e90707  # replace with your real Gist id.
+            filename: covbadge.json
+            label: Coverage
+            message: ${{ env.total }}%
+            minColorRange: 50
+            maxColorRange: 90
+            valColorRange: ${{ env.total }}
